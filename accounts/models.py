@@ -1,8 +1,8 @@
+import random
 import string
 
-from django.db import models
 from django.contrib.auth.models import User
-import random
+from django.db import models
 
 
 def profile_photo_upload(instance, filename):
@@ -11,7 +11,7 @@ def profile_photo_upload(instance, filename):
 
 
 class UserProfileModel(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="Profile")
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     profile_photo = models.ImageField(upload_to=profile_photo_upload)
 
     def __str__(self):

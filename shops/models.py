@@ -22,7 +22,7 @@ def profile_photo_upload(instance, filename):
 class ShopProfileModel(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="Profile")
     profile_photo = models.ImageField(upload_to=profile_photo_upload)
-    name = models.CharField()
+    name = models.CharField(max_length=255)
     is_active = models.BooleanField()
     is_open = models.BooleanField()
     location_longitude = models.DecimalField(max_digits=9, decimal_places=6)
@@ -33,12 +33,29 @@ class ShopProfileModel(models.Model):
         return self.name
 
 
+class ProductModel(models.Model):
+    pass
+
+
 class ShopReview(models.Model):
-    user = models.ForeignKey(to=UserProfileModel, on_delete=models.SET_NULL)
-    driver = models.ForeignKey(to=ShopProfileModel, on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey(to=UserProfileModel, on_delete=models.SET_NULL, null=True)
+    shop = models.ForeignKey(to=ShopProfileModel, on_delete=models.CASCADE, related_name='reviews')
     stars = models.PositiveIntegerField()
+    title = models.CharField(max_length=255)
     text = models.TextField()
     time_stamp = models.TimeField()
 
     def __str__(self):
-        return self.text
+        return self.title
+
+
+class ProductReview(models.Model):
+    user = models.ForeignKey(to=UserProfileModel, on_delete=models.SET_NULL, null=True)
+    product = models.ForeignKey(to=ProductModel, on_delete=models.CASCADE, related_name='reviews')
+    stars = models.PositiveIntegerField()
+    title = models.CharField(max_length=255)
+    text = models.TextField()
+    time_stamp = models.TimeField()
+
+    def __str__(self):
+        return self.title

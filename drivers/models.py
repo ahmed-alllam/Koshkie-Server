@@ -20,7 +20,7 @@ def profile_photo_upload(instance, filename):
 
 
 class DriverProfileModel(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="Profile")
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="driver_profile")
     profile_photo = models.ImageField(upload_to=profile_photo_upload)
     is_active = models.BooleanField()
     last_time_online = models.TimeField()
@@ -33,11 +33,12 @@ class DriverProfileModel(models.Model):
 
 
 class DriverReview(models.Model):
-    user = models.ForeignKey(to=UserProfileModel, on_delete=models.SET_NULL)
+    user = models.ForeignKey(to=UserProfileModel, on_delete=models.SET_NULL, null=True)
     driver = models.ForeignKey(to=DriverProfileModel, on_delete=models.CASCADE, related_name='reviews')
     stars = models.PositiveIntegerField()
+    title = models.CharField(max_length=255)
     text = models.TextField()
     time_stamp = models.TimeField()
 
     def __str__(self):
-        return self.text
+        return self.title
