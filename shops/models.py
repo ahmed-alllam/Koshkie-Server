@@ -23,8 +23,8 @@ class ShopProfileModel(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="Profile")
     profile_photo = models.ImageField(upload_to=profile_photo_upload)
     name = models.CharField(max_length=255)
-    is_active = models.BooleanField()
-    is_open = models.BooleanField()
+    is_active = models.BooleanField(default=False)
+    is_open = models.BooleanField(default=True)
     location_longitude = models.DecimalField(max_digits=9, decimal_places=6)
     location_latitude = models.DecimalField(max_digits=9, decimal_places=6)
     shop_type = models.PositiveIntegerField()
@@ -43,7 +43,7 @@ class ShopReview(models.Model):
     stars = models.PositiveIntegerField()
     title = models.CharField(max_length=255)
     text = models.TextField()
-    time_stamp = models.TimeField()
+    time_stamp = models.DateTimeField()
 
     def __str__(self):
         return self.title
@@ -55,7 +55,7 @@ class ProductReview(models.Model):
     stars = models.PositiveIntegerField()
     title = models.CharField(max_length=255)
     text = models.TextField()
-    time_stamp = models.TimeField()
+    time_stamp = models.DateTimeField()
 
     def __str__(self):
         return self.title

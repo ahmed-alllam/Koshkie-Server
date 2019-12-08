@@ -22,14 +22,14 @@ def profile_photo_upload(instance, filename):
 class DriverProfileModel(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="driver_profile")
     profile_photo = models.ImageField(upload_to=profile_photo_upload)
-    is_active = models.BooleanField()
+    is_active = models.BooleanField(default=False)
     last_time_online = models.TimeField()
     live_location_longitude = models.DecimalField(max_digits=9, decimal_places=6)
     live_location_latitude = models.DecimalField(max_digits=9, decimal_places=6)
     vehicle_type = models.PositiveIntegerField()
 
     def __str__(self):
-        return self.user.__str__()
+        return self.user.username
 
 
 class DriverReview(models.Model):
@@ -38,7 +38,7 @@ class DriverReview(models.Model):
     stars = models.PositiveIntegerField()
     title = models.CharField(max_length=255)
     text = models.TextField()
-    time_stamp = models.TimeField()
+    time_stamp = models.DateTimeField()
 
     def __str__(self):
         return self.title

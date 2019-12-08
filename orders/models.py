@@ -10,5 +10,5 @@ class OrderModel(models.Model):
     driver = models.ForeignKey(to=DriverProfileModel, on_delete=models.SET_NULL, related_name='served_orders',
                                null=True)
     shops = models.ManyToManyField(to=ShopProfileModel, related_name='served_orders')
-    ordered_at = models.TimeField()
+    ordered_at = models.DateTimeField()
     arrived = models.BooleanField(default=False)

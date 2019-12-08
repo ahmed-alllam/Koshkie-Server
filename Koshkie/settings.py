@@ -53,7 +53,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'Koshkie.urls'
+ROOT_URLCONF = 'koshkie.urls'
 
 TEMPLATES = [
     {
@@ -71,7 +71,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'Koshkie.wsgi.application'
+WSGI_APPLICATION = 'koshkie.wsgi.application'
 
 
 # Database

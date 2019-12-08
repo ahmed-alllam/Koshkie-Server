@@ -15,4 +15,4 @@ class UserProfileModel(models.Model):
     profile_photo = models.ImageField(upload_to=profile_photo_upload)
 
     def __str__(self):
-        return self.user.__str__()
+        return self.user.username
