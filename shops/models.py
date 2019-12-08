@@ -14,14 +14,19 @@ class ShopType(enum.Enum):
     Pharmacies = 3
 
 
-def profile_photo_upload(instance, filename):
+def photo_upload(instance, filename):
     res = instance.id.join(random.choices(string.ascii_letters, k=20))
     return 'shops/{0}'.format(res)
 
 
+def product_photo_upload(instance, filename):
+    res = instance.id.join(random.choices(string.ascii_letters, k=20))
+    return 'shops/products/{0}'.format(res)
+
+
 class ShopProfileModel(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="Profile")
-    profile_photo = models.ImageField(upload_to=profile_photo_upload)
+    profile_photo = models.ImageField(upload_to=photo_upload)
     name = models.CharField(max_length=255)
     is_active = models.BooleanField(default=False)
     is_open = models.BooleanField(default=True)
@@ -34,10 +39,30 @@ class ShopProfileModel(models.Model):
 
 
 class ProductModel(models.Model):
-    pass
+    shop = models.ForeignKey(to=ShopProfileModel, related_name="products", on_delete=models.CASCADE)
+    photo = models.ImageField(upload_to=product_photo_upload)
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    category = models.CharField(max_length=255)
+    sort = models.PositiveIntegerField(unique=True)
+    base_price = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=10)
+
+    def __str__(self):
+        return self.title
 
 
-class ShopReview(models.Model):
+class AddOn(models.Model):
+    product = models.ForeignKey(to=ProductModel, related_name="add_ons", on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)
+    added_price = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=10)
+
+    def __str__(self):
+        return self.title
+
+
+class ShopReviewModel(models.Model):
     user = models.ForeignKey(to=UserProfileModel, on_delete=models.SET_NULL, null=True)
     shop = models.ForeignKey(to=ShopProfileModel, on_delete=models.CASCADE, related_name='reviews')
     stars = models.PositiveIntegerField()
@@ -49,7 +74,7 @@ class ShopReview(models.Model):
         return self.title
 
 
-class ProductReview(models.Model):
+class ProductReviewModel(models.Model):
     user = models.ForeignKey(to=UserProfileModel, on_delete=models.SET_NULL, null=True)
     product = models.ForeignKey(to=ProductModel, on_delete=models.CASCADE, related_name='reviews')
     stars = models.PositiveIntegerField()
