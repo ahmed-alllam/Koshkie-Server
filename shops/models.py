@@ -26,11 +26,13 @@ def product_photo_upload(instance, filename):
 
 class ShopProfileModel(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="Profile")
+    favourite_user = models.ManyToManyField(to=UserProfileModel)
     profile_photo = models.ImageField(upload_to=photo_upload)
+    shop_type = models.PositiveIntegerField()
     name = models.CharField(max_length=255)
     is_active = models.BooleanField(default=False)
     is_open = models.BooleanField(default=True)
-    shop_type = models.PositiveIntegerField()
+    currency = models.CharField(max_length=10)
 
     def __str__(self):
         return self.name
@@ -49,7 +51,6 @@ class ProductCategoryModel(models.Model):
 
 
 class ProductModel(models.Model):
-    currency = models.ForeignKey(to=ProductCategoryModel, related_name="products", on_delete=models.CASCADE)
     photo = models.ImageField(upload_to=product_photo_upload)
     title = models.CharField(max_length=255)
     description = models.TextField()
@@ -65,7 +66,6 @@ class AddOn(models.Model):
     product = models.ForeignKey(to=ProductModel, related_name="add_ons", on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     added_price = models.FloatField()
-    currency = models.CharField(max_length=10)
 
     def __str__(self):
         return self.title
