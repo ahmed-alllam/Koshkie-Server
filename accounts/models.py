@@ -16,3 +16,20 @@ class UserProfileModel(models.Model):
 
     def __str__(self):
         return self.user.username
+
+
+class UserAddressModel(models.Model):
+    user = models.ForeignKey(to=UserProfileModel, related_name="addresses", on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)
+    area = models.CharField(max_length=255)
+    type = models.CharField(max_length=15)  # house , office or apartment
+    street = models.CharField(max_length=255)
+    building = models.CharField(max_length=255)
+    floor = models.PositiveIntegerField(default=1)
+    apartment_no = models.PositiveIntegerField(default=1)
+    special_notes = models.TextField()
+    phone_number = models.BigIntegerField()
+    land_line_number = models.BigIntegerField()
+
+    def __str__(self):
+        return self.title
