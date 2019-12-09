@@ -2,7 +2,7 @@ from django.db import models
 
 from accounts.models import UserProfileModel, UserAddressModel
 from drivers.models import DriverProfileModel
-from shops.models import ShopProfileModel, ProductModel, AddOn
+from shops.models import ShopProfileModel, ProductModel, AddOn, OptionGroupModel
 
 
 class OrderModel(models.Model):
@@ -26,6 +26,7 @@ class OrderItemModel(models.Model):
     product = models.ForeignKey(to=ProductModel, on_delete=models.SET_NULL, null=True)
     quantity = models.PositiveIntegerField()
     add_ons = models.ManyToManyField(to=AddOn)
+    option_groups = models.ManyToManyField(to=OptionGroupModel)
 
     def __str__(self):
         return self.product.title
