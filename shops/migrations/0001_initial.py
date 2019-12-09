@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
             name='ProductModel',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('photo', models.ImageField(upload_to=shops.models.product_photo_upload)),
+                ('photo', models.ImageField(upload_to=shops.models.photo_upload)),
                 ('title', models.CharField(max_length=255)),
                 ('description', models.TextField()),
                 ('category', models.CharField(max_length=255)),

@@ -30,7 +30,7 @@ class ShopProfileModel(models.Model):
     name = models.CharField(max_length=255)
     is_active = models.BooleanField(default=False)
     is_open = models.BooleanField(default=True)
-    currency = models.CharField(max_length=10)
+    currency = models.CharField(max_length=10, default='')
     minimum_charge = models.PositiveIntegerField(default=0)
 
     def __str__(self):
