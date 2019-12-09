@@ -16,12 +16,10 @@ class ShopType(enum.Enum):
 
 def photo_upload(instance, filename):
     res = instance.id.join(random.choices(string.ascii_letters, k=20))
-    return 'shops/{0}'.format(res)
-
-
-def product_photo_upload(instance, filename):
-    res = instance.id.join(random.choices(string.ascii_letters, k=20))
-    return 'shops/products/{0}'.format(res)
+    extra = ''
+    if type(instance) is ProductModel:
+        extra = 'products/'
+    return 'shops/{0}{1}'.format(res, extra)
 
 
 class ShopProfileModel(models.Model):
@@ -33,6 +31,7 @@ class ShopProfileModel(models.Model):
     is_active = models.BooleanField(default=False)
     is_open = models.BooleanField(default=True)
     currency = models.CharField(max_length=10)
+    minimum_charge = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return self.name
@@ -51,7 +50,7 @@ class ProductCategoryModel(models.Model):
 
 
 class ProductModel(models.Model):
-    photo = models.ImageField(upload_to=product_photo_upload)
+    photo = models.ImageField(upload_to=photo_upload)
     title = models.CharField(max_length=255)
     description = models.TextField()
     category = models.CharField(max_length=255)
@@ -62,6 +61,14 @@ class ProductModel(models.Model):
         return self.title
 
 
+class OptionGroupModel(models.Model):
+    pass
+
+
+class OptionModel(models.Model):
+    pass
+
+
 class AddOn(models.Model):
     product = models.ForeignKey(to=ProductModel, related_name="add_ons", on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
@@ -69,6 +76,14 @@ class AddOn(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class RelyOn(models.Model):
+    add_on = models.ForeignKey(AddOn, on_delete=models.CASCADE, related_name="rely_ons", null=True, default=None)
+    option_group = models.ForeignKey(OptionGroupModel, on_delete=models.CASCADE,
+                                     related_name="rely_ons", null=True, default=None)
+    key = models.CharField(max_length=255)
+    value = models.CharField(max_length=255)
 
 
 class ShopAddressModel(models.Model):
