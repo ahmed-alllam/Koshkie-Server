@@ -2,7 +2,7 @@ from django.db import models
 
 from accounts.models import UserProfileModel, UserAddressModel
 from drivers.models import DriverProfileModel
-from shops.models import ShopProfileModel, ProductModel, AddOn, OptionGroupModel
+from shops.models import ShopProfileModel, ProductModel, AddOn, OptionGroupModel, OptionModel
 
 
 class OrderModel(models.Model):
@@ -13,6 +13,7 @@ class OrderModel(models.Model):
     ordered_at = models.DateTimeField()
     shipping_address = models.ForeignKey(to=UserAddressModel, on_delete=models.SET_NULL, null=True)
     arrived = models.BooleanField(default=False)
+    final_price = models.FloatField()
 
     def get_total_price(self):
         total = 0
@@ -26,7 +27,6 @@ class OrderItemModel(models.Model):
     product = models.ForeignKey(to=ProductModel, on_delete=models.SET_NULL, null=True)
     quantity = models.PositiveIntegerField()
     add_ons = models.ManyToManyField(to=AddOn)
-    option_groups = models.ManyToManyField(to=OptionGroupModel)
 
     def __str__(self):
         return self.product.title
@@ -38,4 +38,14 @@ class OrderItemModel(models.Model):
         return total
 
     def get_item_price(self):
-        return (self.product.base_price * self.quantity) + self.get_add_ons_price()
+        product_price = 0
+        for choice in self.choices.all():
+            if choice.option_group.changes_price:
+                product_price = choice.choosed_option.price
+        return (product_price * self.quantity) + self.get_add_ons_price()
+
+
+class Choice(models.Model):
+    order_item = models.ForeignKey(to=OrderItemModel, related_name='choices', on_delete=models.CASCADE)
+    option_group = models.ForeignKey(to=OptionGroupModel, on_delete=models.CASCADE)
+    choosed_option = models.ForeignKey(to=OptionModel, on_delete=models.CASCADE)
