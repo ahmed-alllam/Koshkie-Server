@@ -44,6 +44,7 @@ class ProductCategoryModel(models.Model):
 
     class Meta:
         unique_together = ("shop", "sort")
+        ordering = ['sort']
 
     def __str__(self):
         return self.title
@@ -53,7 +54,7 @@ class ProductModel(models.Model):
     photo = models.ImageField(upload_to=photo_upload)
     title = models.CharField(max_length=255)
     description = models.TextField()
-    category = models.CharField(max_length=255)
+    category = models.ForeignKey(to=ProductCategoryModel, related_name="products", on_delete=models.CASCADE)
     base_price = models.FloatField()
     is_available = models.BooleanField(default=True)
 

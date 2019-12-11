@@ -30,6 +30,8 @@ class UserAddressModel(models.Model):
     special_notes = models.TextField()
     phone_number = models.BigIntegerField()
     land_line_number = models.BigIntegerField()
+    location_longitude = models.DecimalField(max_digits=9, decimal_places=6)
+    location_latitude = models.DecimalField(max_digits=9, decimal_places=6)
 
     def __str__(self):
         return self.title

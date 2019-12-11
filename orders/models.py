@@ -25,8 +25,9 @@ class OrderModel(models.Model):
 class OrderItemModel(models.Model):
     order = models.ForeignKey(to=OrderModel, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(to=ProductModel, on_delete=models.SET_NULL, null=True)
-    quantity = models.PositiveIntegerField()
+    quantity = models.PositiveIntegerField(default=1)
     add_ons = models.ManyToManyField(to=AddOn)
+    special_request = models.TextField()
 
     def __str__(self):
         return self.product.title
@@ -38,7 +39,7 @@ class OrderItemModel(models.Model):
         return total
 
     def get_item_price(self):
-        product_price = 0
+        product_price = self.product.base_price
         for choice in self.choices.all():
             if choice.option_group.changes_price:
                 product_price = choice.choosed_option.price
