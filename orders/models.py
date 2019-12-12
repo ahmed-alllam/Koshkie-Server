@@ -14,11 +14,26 @@ class OrderModel(models.Model):
     shipping_address = models.ForeignKey(to=UserAddressModel, on_delete=models.SET_NULL, null=True)
     arrived = models.BooleanField(default=False)
     final_price = models.FloatField()
+    delivery_fee = models.FloatField()
+    vat = models.FloatField(default=0)
 
-    def get_total_price(self):
+    def get_vat(self):
         total = 0
         for item in self.items.all():
-            total += item.get_item_price()
+            total += item.calculate_vat()
+        return total
+
+    def get_delivery_fee(self):
+        fees = 0
+        for shop in self.shops.all():
+            fees += shop.delivery_fee
+        return fees
+
+    def get_final_price(self):
+        total = 0
+        for item in self.items.all():
+            total += item.get_final_price()
+        total += self.get_delivery_fee()
         return total
 
 
@@ -43,7 +58,16 @@ class OrderItemModel(models.Model):
         for choice in self.choices.all():
             if choice.option_group.changes_price:
                 product_price = choice.choosed_option.price
-        return (product_price * self.quantity) + self.get_add_ons_price()
+        return (product_price + self.get_add_ons_price()) * self.quantity
+
+    def get_shop(self):
+        return self.product.product_group.shop
+
+    def calculate_vat(self):
+        return self.get_item_price() * (self.get_shop().vat / 100)
+
+    def get_final_price(self):
+        return self.calculate_vat + self.get_item_price()
 
 
 class Choice(models.Model):

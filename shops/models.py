@@ -31,13 +31,15 @@ class ShopProfileModel(models.Model):
     is_active = models.BooleanField(default=False)
     is_open = models.BooleanField(default=True)
     currency = models.CharField(max_length=10, default='')
-    minimum_charge = models.PositiveIntegerField(default=0)
+    minimum_charge = models.FloatField(default=0)
+    delivery_fee = models.FloatField()
+    vat = models.FloatField(default=0)
 
     def __str__(self):
         return self.name
 
 
-class ProductCategoryModel(models.Model):
+class ProductGroupModel(models.Model):
     shop = models.ForeignKey(to=ShopProfileModel, related_name="products", on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     sort = models.PositiveIntegerField()
@@ -54,7 +56,7 @@ class ProductModel(models.Model):
     photo = models.ImageField(upload_to=photo_upload)
     title = models.CharField(max_length=255)
     description = models.TextField()
-    category = models.ForeignKey(to=ProductCategoryModel, related_name="products", on_delete=models.CASCADE)
+    product_group = models.ForeignKey(to=ProductGroupModel, related_name="products", on_delete=models.CASCADE)
     base_price = models.FloatField()
     is_available = models.BooleanField(default=True)
 
