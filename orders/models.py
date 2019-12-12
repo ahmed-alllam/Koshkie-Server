@@ -63,11 +63,14 @@ class OrderItemModel(models.Model):
     def get_shop(self):
         return self.product.product_group.shop
 
-    def calculate_vat(self):
-        return self.get_item_price() * (self.get_shop().vat / 100)
+    def calculate_vat(self, cost=None):
+        if cost is None:
+            cost = self.get_item_price()
+        return cost * (self.get_shop().vat / 100)
 
     def get_final_price(self):
-        return self.calculate_vat + self.get_item_price()
+        cost = self.get_item_price()
+        return self.calculate_vat(cost=cost) + cost
 
 
 class Choice(models.Model):
