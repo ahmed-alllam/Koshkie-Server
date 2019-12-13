@@ -12,8 +12,8 @@ def photo_upload(instance, filename):
 
 class UserProfileModel(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
-    name = models.CharField(max_length=255)
     profile_photo = models.ImageField(upload_to=photo_upload, null=True)
+    phone_number = models.BigIntegerField()
 
     def __str__(self):
         return self.user.username
@@ -29,8 +29,6 @@ class UserAddressModel(models.Model):
     floor = models.PositiveIntegerField(default=1)
     apartment_no = models.PositiveIntegerField(default=1)
     special_notes = models.TextField()
-    phone_number = models.BigIntegerField()
-    land_line_number = models.BigIntegerField()
     location_longitude = models.DecimalField(max_digits=9, decimal_places=6)
     location_latitude = models.DecimalField(max_digits=9, decimal_places=6)
 

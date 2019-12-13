@@ -26,6 +26,7 @@ class ShopProfileModel(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="Profile")
     favourite_user = models.ManyToManyField(to=UserProfileModel)
     profile_photo = models.ImageField(upload_to=photo_upload)
+    phone_number = models.BigIntegerField()
     shop_type = models.PositiveIntegerField()
     name = models.CharField(max_length=255)
     is_active = models.BooleanField(default=False)
@@ -105,8 +106,6 @@ class ShopAddressModel(models.Model):
     street = models.CharField(max_length=255)
     building = models.CharField(max_length=255)
     special_notes = models.TextField()
-    phone_number = models.BigIntegerField()
-    land_line_number = models.BigIntegerField()
     location_longitude = models.DecimalField(max_digits=9, decimal_places=6)
     location_latitude = models.DecimalField(max_digits=9, decimal_places=6)
 

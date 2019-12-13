@@ -7,7 +7,7 @@ from accounts.models import UserProfileModel, UserAddressModel
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('email', 'password')
+        fields = ('first_name', 'last_name', 'email', 'password')
         extra_kwargs = {
             'password': {'write_only': True}
         }
@@ -16,9 +16,10 @@ class UserSerializer(serializers.ModelSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfileModel
-        fields = ('name', 'profile_photo')
+        fields = ('profile_photo', 'phone_number')
         extra_kwargs = {
-            'profile_photo': {'required': False}
+            'profile_photo': {'required': False},
+            'phone_number': {'required': False}
         }
 
 

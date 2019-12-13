@@ -6,7 +6,7 @@ from drivers.models import DriverProfileModel, DriverReviewModel
 class DriverProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = DriverProfileModel
-        fields = ('name', 'profile_photo', 'vehicle_type', 'rating')
+        fields = ('profile_photo', 'phone_number', 'vehicle_type', 'rating')
         extra_kwargs = {
             'rating': {'read_only': True}
         }
