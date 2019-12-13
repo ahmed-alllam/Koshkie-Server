@@ -27,6 +27,8 @@ class DriverProfileModel(models.Model):
     live_location_longitude = models.DecimalField(max_digits=9, decimal_places=6)
     live_location_latitude = models.DecimalField(max_digits=9, decimal_places=6)
     vehicle_type = models.PositiveIntegerField()
+    is_busy = models.BooleanField(default=False)
+    vehicle_info = models.TextField()
 
     def __str__(self):
         return self.user.username
@@ -36,9 +38,8 @@ class DriverReviewModel(models.Model):
     user = models.ForeignKey(to=UserProfileModel, on_delete=models.SET_NULL, null=True)
     driver = models.ForeignKey(to=DriverProfileModel, on_delete=models.CASCADE, related_name='reviews')
     stars = models.PositiveIntegerField()
-    title = models.CharField(max_length=255)
     text = models.TextField()
     time_stamp = models.DateTimeField()
 
     def __str__(self):
-        return self.title
+        return self.text
