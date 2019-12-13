@@ -28,7 +28,7 @@ class UserAddressModel(models.Model):
     building = models.CharField(max_length=255)
     floor = models.PositiveIntegerField(default=1)
     apartment_no = models.PositiveIntegerField(default=1)
-    special_notes = models.TextField()
+    special_notes = models.TextField(blank=True)
     location_longitude = models.DecimalField(max_digits=9, decimal_places=6)
     location_latitude = models.DecimalField(max_digits=9, decimal_places=6)
 

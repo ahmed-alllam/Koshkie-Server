@@ -26,4 +26,4 @@ class UserProfileSerializer(serializers.ModelSerializer):
 class UserAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserAddressModel
-        exclude = ('user',)
+        exclude = 'user'
