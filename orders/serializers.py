@@ -3,10 +3,13 @@ from rest_framework import serializers
 from accounts.serializers import UserProfileSerializer, UserAddressSerializer
 from drivers.serializers import DriverProfileSerializer
 from orders.models import OrderModel, OrderItemModel, Choice
-from shops.serializers import ShopProfileDetailSerializer, ProductSerializer
+from shops.serializers import ShopProfileDetailSerializer, ProductSerializer, OptionGroupSerializer, OptionSerializer
 
 
 class ChoiceSerializer(serializers.ModelSerializer):
+    option_group = OptionGroupSerializer(many=False)
+    choosed_option = OptionSerializer(many=False)
+
     class Meta:
         model = Choice
         fields = ('option_group', 'choosed_option')
