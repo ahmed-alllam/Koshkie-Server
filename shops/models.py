@@ -24,11 +24,11 @@ def photo_upload(instance, filename):
 
 class ShopProfileModel(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="Profile")
-    favourite_user = models.ManyToManyField(to=UserProfileModel)
     profile_photo = models.ImageField(upload_to=photo_upload)
     phone_number = models.BigIntegerField()
     shop_type = models.PositiveIntegerField()
     name = models.CharField(max_length=255)
+    rating = models.FloatField()
     is_active = models.BooleanField(default=False)
     is_open = models.BooleanField(default=True)
     currency = models.CharField(max_length=10, default='')
@@ -56,6 +56,7 @@ class ProductGroupModel(models.Model):
 class ProductModel(models.Model):
     photo = models.ImageField(upload_to=photo_upload)
     title = models.CharField(max_length=255)
+    favourite = models.ManyToManyField(to=UserProfileModel, related_name="favourite_products")
     description = models.TextField()
     product_group = models.ForeignKey(to=ProductGroupModel, related_name="products", on_delete=models.CASCADE)
     base_price = models.FloatField()
@@ -105,7 +106,7 @@ class ShopAddressModel(models.Model):
     area = models.CharField(max_length=255)
     street = models.CharField(max_length=255)
     building = models.CharField(max_length=255)
-    special_notes = models.TextField()
+    special_notes = models.TextField(blank=True)
     location_longitude = models.DecimalField(max_digits=9, decimal_places=6)
     location_latitude = models.DecimalField(max_digits=9, decimal_places=6)
 
@@ -116,7 +117,7 @@ class ShopReviewModel(models.Model):
     stars = models.PositiveIntegerField()
     title = models.CharField(max_length=255)
     text = models.TextField()
-    time_stamp = models.DateTimeField()
+    time_stamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title
@@ -128,7 +129,7 @@ class ProductReviewModel(models.Model):
     stars = models.PositiveIntegerField()
     title = models.CharField(max_length=255)
     text = models.TextField()
-    time_stamp = models.DateTimeField()
+    time_stamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title

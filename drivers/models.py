@@ -40,7 +40,7 @@ class DriverReviewModel(models.Model):
     driver = models.ForeignKey(to=DriverProfileModel, on_delete=models.CASCADE, related_name='reviews')
     stars = models.PositiveIntegerField()
     text = models.TextField()
-    time_stamp = models.DateTimeField()
+    time_stamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.text

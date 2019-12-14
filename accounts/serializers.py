@@ -27,3 +27,6 @@ class UserAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserAddressModel
         exclude = 'user'
+        extra_kwargs = {
+            'special_notes': {'required': False}
+        }

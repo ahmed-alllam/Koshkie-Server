@@ -10,7 +10,7 @@ class OrderModel(models.Model):
     driver = models.ForeignKey(to=DriverProfileModel, on_delete=models.SET_NULL, related_name='served_orders',
                                null=True)
     shops = models.ManyToManyField(to=ShopProfileModel, related_name='served_orders')
-    ordered_at = models.DateTimeField()
+    ordered_at = models.DateTimeField(auto_now_add=True)
     shipping_address = models.ForeignKey(to=UserAddressModel, on_delete=models.SET_NULL, null=True)
     arrived = models.BooleanField(default=False)
     final_price = models.FloatField()
@@ -42,7 +42,7 @@ class OrderItemModel(models.Model):
     product = models.ForeignKey(to=ProductModel, on_delete=models.SET_NULL, null=True)
     quantity = models.PositiveIntegerField(default=1, max_length=9)
     add_ons = models.ManyToManyField(to=AddOn)
-    special_request = models.TextField()
+    special_request = models.TextField(blank=True)
 
     def __str__(self):
         return self.product.title
