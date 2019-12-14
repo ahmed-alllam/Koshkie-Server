@@ -1,31 +1,64 @@
 from rest_framework import serializers
 
+from accounts.serializers import UserProfileSerializer
 from shops.models import (ShopProfileModel, ProductGroupModel, ProductModel,
                           OptionGroupModel, OptionModel, AddOn, RelyOn,
                           ShopAddressModel, ShopReviewModel, ProductReviewModel)
 
 
-# done
-
-
-class ShopProfileSerializer(serializers.ModelSerializer):
+class RelyOnSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ShopProfileModel
-        fields = ('profile_photo', 'phone_number', 'shop_type', 'name', 'rating', 'is_open', 'currency',
-                  'minimum_charge', 'delivery_fee', 'vat')
+        model = RelyOn
+        fields = ('choosed_option_group', 'option')
+
+
+class AddOnSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AddOn
+        fields = ('title', 'added_price')
+
+
+class OptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OptionModel
+        fields = ('title', 'price')
+
+
+class OptionGroupSerializer(serializers.ModelSerializer):
+    options = OptionSerializer(many=True)
+
+    class Meta:
+        model = OptionGroupModel
+        fields = ('options', 'title', 'changes_price')
+
+
+class ProductReviewSerializer(serializers.ModelSerializer):
+    user = UserProfileSerializer(many=False, read_only=True)
+
+    class Meta:
+        model = ProductReviewModel
+        fields = ('user', 'stars', 'title', 'text', 'time_stamp')
+        depth = 1
         extra_kwargs = {
-            'rating': {'read_only': True},
-            'is_open': {'write_only': True}
+            'time_stamp': {'read_only': True},
+            'user': {'read_only': True}
         }
 
 
-class ProductSerializer(serializers.ModelSerializer):
+class ProductDetailsSerializer(serializers.ModelSerializer):
+    # add-ons, options not done
     class Meta:
         model = ProductModel
         fields = ('photo', 'title', 'description', 'base_price', 'is_available')
         extra_kwargs = {
             'is_available': {'write_only': True}
         }
+
+
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductModel
+        fields = ('photo', 'title', 'base_price')
 
 
 class ProductGroupSerializer(serializers.ModelSerializer):
@@ -37,53 +70,6 @@ class ProductGroupSerializer(serializers.ModelSerializer):
         fields = ('title', 'sort', 'products')
 
 
-class OptionGroupSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = OptionGroupModel
-        fields = ('user', 'stars', 'text', 'time_stamp')
-        depth = 1
-        extra_kwargs = {
-            'time_stamp': {'read_only': True},
-            'user': {'read_only': True}
-        }
-
-
-class OptionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = OptionModel
-        fields = ('user', 'stars', 'text', 'time_stamp')
-        depth = 1
-        extra_kwargs = {
-            'time_stamp': {'read_only': True},
-            'user': {'read_only': True}
-        }
-
-
-class AddOnSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AddOn
-        fields = ('user', 'stars', 'text', 'time_stamp')
-        depth = 1
-        extra_kwargs = {
-            'time_stamp': {'read_only': True},
-            'user': {'read_only': True}
-        }
-
-
-class RelyOnSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = RelyOn
-        fields = ('user', 'stars', 'text', 'time_stamp')
-        depth = 1
-        extra_kwargs = {
-            'time_stamp': {'read_only': True},
-            'user': {'read_only': True}
-        }
-
-
-# done
-
-
 class ShopAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopAddressModel
@@ -93,10 +79,9 @@ class ShopAddressSerializer(serializers.ModelSerializer):
         }
 
 
-# done
-
-
 class ShopReviewSerializer(serializers.ModelSerializer):
+    user = UserProfileSerializer(many=False, read_only=True)
+
     class Meta:
         model = ShopReviewModel
         fields = ('user', 'stars', 'title', 'text', 'time_stamp')
@@ -107,15 +92,22 @@ class ShopReviewSerializer(serializers.ModelSerializer):
         }
 
 
-# done
-
-
-class ProductReviewSerializer(serializers.ModelSerializer):
+class ShopProfileDetailSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ProductReviewModel
-        fields = ('user', 'stars', 'title', 'text', 'time_stamp')
-        depth = 1
+        model = ShopProfileModel
+        fields = ('id', 'profile_photo', 'phone_number', 'shop_type', 'name', 'rating', 'is_open', 'currency',
+                  'minimum_charge', 'delivery_fee', 'vat')
         extra_kwargs = {
-            'time_stamp': {'read_only': True},
-            'user': {'read_only': True}
+            'id': {'read_only': True},
+            'rating': {'read_only': True},
+            'is_open': {'write_only': True}
+        }
+
+
+class ShopProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShopProfileModel
+        fields = ('profile_photo', 'shop_type', 'name', 'rating')
+        extra_kwargs = {
+            'rating': {'read_only': True},
         }

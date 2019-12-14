@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from accounts.serializers import UserProfileSerializer
 from drivers.models import DriverProfileModel, DriverReviewModel
 
 
@@ -13,11 +14,12 @@ class DriverProfileSerializer(serializers.ModelSerializer):
 
 
 class DriverReviewSerializer(serializers.ModelSerializer):
+    user = UserProfileSerializer(many=False, read_only=True)
+
     class Meta:
         model = DriverReviewModel
         fields = ('user', 'stars', 'text', 'time_stamp')
         depth = 1
         extra_kwargs = {
             'time_stamp': {'read_only': True},
-            'user': {'read_only': True}
         }
