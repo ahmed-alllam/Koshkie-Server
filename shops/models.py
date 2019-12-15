@@ -56,7 +56,6 @@ class ProductGroupModel(models.Model):
 class ProductModel(models.Model):
     photo = models.ImageField(upload_to=photo_upload)
     title = models.CharField(max_length=255)
-    favourite = models.ManyToManyField(to=UserProfileModel, related_name="favourite_products")
     description = models.TextField()
     product_group = models.ForeignKey(to=ProductGroupModel, related_name="products", on_delete=models.CASCADE)
     base_price = models.FloatField()

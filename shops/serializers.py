@@ -93,21 +93,29 @@ class ShopReviewSerializer(serializers.ModelSerializer):
 
 
 class ShopProfileDetailSerializer(serializers.ModelSerializer):
+    address = ShopAddressSerializer(many=False)
+    in_favourites_list = serializers.BooleanField(read_only=True, required=False)
+
     class Meta:
         model = ShopProfileModel
-        fields = ('id', 'profile_photo', 'phone_number', 'shop_type', 'name', 'rating', 'is_open', 'currency',
+        fields = ('id', 'profile_photo', 'phone_number', 'shop_type', 'name',
+                  'address', 'rating', 'is_open', 'currency',
                   'minimum_charge', 'delivery_fee', 'vat')
         extra_kwargs = {
             'id': {'read_only': True},
             'rating': {'read_only': True},
             'is_open': {'write_only': True}
         }
+        depth = 1
 
 
 class ShopProfileSerializer(serializers.ModelSerializer):
+    address = ShopAddressSerializer(many=False)
+
     class Meta:
         model = ShopProfileModel
-        fields = ('profile_photo', 'shop_type', 'name', 'rating')
+        fields = ('profile_photo', 'shop_type', 'name', 'address', 'rating')
         extra_kwargs = {
             'rating': {'read_only': True},
         }
+        depth = 1
