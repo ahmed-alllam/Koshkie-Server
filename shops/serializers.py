@@ -19,9 +19,14 @@ class AddOnSerializer(serializers.ModelSerializer):
 
 
 class OptionSerializer(serializers.ModelSerializer):
+    rely_on = RelyOnSerializer(many=False, required=False)
+
     class Meta:
         model = OptionModel
-        fields = ('title', 'price')
+        fields = ('title', 'sort', 'price', 'rely_on')
+        extra_kwargs = {
+            'sort': {'read_only': True}
+        }
 
 
 class OptionGroupSerializer(serializers.ModelSerializer):
@@ -29,7 +34,10 @@ class OptionGroupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OptionGroupModel
-        fields = ('options', 'title', 'changes_price')
+        fields = ('options', 'title', 'sort', 'changes_price')
+        extra_kwargs = {
+            'sort': {'read_only': True}
+        }
 
 
 class ProductReviewSerializer(serializers.ModelSerializer):
@@ -38,7 +46,6 @@ class ProductReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductReviewModel
         fields = ('user', 'stars', 'title', 'text', 'time_stamp')
-        depth = 1
         extra_kwargs = {
             'time_stamp': {'read_only': True},
             'user': {'read_only': True}
@@ -46,12 +53,18 @@ class ProductReviewSerializer(serializers.ModelSerializer):
 
 
 class ProductDetailsSerializer(serializers.ModelSerializer):
-    # add-ons, options not done
+    reviews = ProductReviewSerializer(many=True, read_only=True)
+    option_groups = OptionGroupSerializer(many=True, required=False)
+    add_ons = AddOnSerializer(many=True, required=False)
+
     class Meta:
         model = ProductModel
-        fields = ('photo', 'title', 'description', 'base_price', 'is_available')
+        fields = ('id', 'photo', 'title', 'description', 'base_price', 'is_available'
+                  , 'option_groups', 'add_ons', 'reviews')
         extra_kwargs = {
-            'is_available': {'write_only': True}
+            'id': {'read_only': True},
+            'is_available': {'write_only': True},
+            'reviews': {'read_only': True}
         }
 
 
@@ -66,7 +79,6 @@ class ProductGroupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductGroupModel
-        depth = 1
         fields = ('title', 'sort', 'products')
 
 
@@ -85,7 +97,6 @@ class ShopReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopReviewModel
         fields = ('user', 'stars', 'title', 'text', 'time_stamp')
-        depth = 1
         extra_kwargs = {
             'time_stamp': {'read_only': True},
             'user': {'read_only': True}
@@ -106,7 +117,6 @@ class ShopProfileDetailSerializer(serializers.ModelSerializer):
             'rating': {'read_only': True},
             'is_open': {'write_only': True}
         }
-        depth = 1
 
 
 class ShopProfileSerializer(serializers.ModelSerializer):
@@ -115,4 +125,3 @@ class ShopProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopProfileModel
         fields = ('profile_photo', 'shop_type', 'name', 'address', 'rating')
-        depth = 1

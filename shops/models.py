@@ -68,7 +68,12 @@ class ProductModel(models.Model):
 class OptionGroupModel(models.Model):
     product = models.ForeignKey(to=ProductModel, related_name="option_groups", on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
+    sort = models.PositiveIntegerField()
     changes_price = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ("product", "sort")
+        ordering = ['sort']
 
     def __str__(self):
         return self.title
@@ -77,7 +82,12 @@ class OptionGroupModel(models.Model):
 class OptionModel(models.Model):
     option_group = models.ForeignKey(to=OptionGroupModel, on_delete=models.CASCADE, related_name="options")
     title = models.CharField(max_length=255)
+    sort = models.PositiveIntegerField()
     price = models.FloatField()
+
+    class Meta:
+        unique_together = ("option_group", "sort")
+        ordering = ['sort']
 
     def __str__(self):
         return self.title
@@ -93,11 +103,10 @@ class AddOn(models.Model):
 
 
 class RelyOn(models.Model):
-    add_on = models.ForeignKey(AddOn, on_delete=models.CASCADE, related_name="rely_ons", null=True, default=None)
-    option_group = models.ForeignKey(OptionGroupModel, on_delete=models.CASCADE,
-                                     related_name="rely_ons", null=True, default=None)
-    choosed_option_group = models.ForeignKey(OptionGroupModel, on_delete=models.CASCADE)
-    option = models.ForeignKey(to=OptionModel, on_delete=models.CASCADE)
+    option_group = models.OneToOneField(to=OptionGroupModel, on_delete=models.CASCADE, null=True, default=None,
+                                        related_name='rely_on')
+    choosed_option_group = models.OneToOneField(to=OptionGroupModel, on_delete=models.CASCADE)
+    option = models.OneToOneField(to=OptionModel, on_delete=models.CASCADE)
 
 
 class ShopAddressModel(models.Model):

@@ -19,7 +19,6 @@ class DriverReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = DriverReviewModel
         fields = ('user', 'stars', 'text', 'time_stamp')
-        depth = 1
         extra_kwargs = {
             'time_stamp': {'read_only': True},
         }
