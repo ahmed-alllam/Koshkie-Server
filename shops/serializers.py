@@ -59,8 +59,8 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductModel
-        fields = ('id', 'photo', 'title', 'description', 'base_price', 'is_available'
-                  , 'option_groups', 'add_ons', 'reviews')
+        fields = ('id', 'photo', 'title', 'description', 'base_price', 'is_available',
+                  'option_groups', 'add_ons', 'reviews')
         extra_kwargs = {
             'id': {'read_only': True},
             'is_available': {'write_only': True},
