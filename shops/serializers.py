@@ -115,7 +115,4 @@ class ShopProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopProfileModel
         fields = ('profile_photo', 'shop_type', 'name', 'address', 'rating')
-        extra_kwargs = {
-            'rating': {'read_only': True},
-        }
         depth = 1
