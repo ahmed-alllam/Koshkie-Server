@@ -15,7 +15,10 @@ class RelyOnSerializer(serializers.ModelSerializer):
 class AddOnSerializer(serializers.ModelSerializer):
     class Meta:
         model = AddOn
-        fields = ('title', 'added_price')
+        fields = ('title', 'sort', 'added_price')
+        extra_kwargs = {
+            'sort': {'read_only': True}
+        }
 
 
 class OptionSerializer(serializers.ModelSerializer):
@@ -69,9 +72,12 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
+    option_groups = OptionGroupSerializer(many=True, required=False)
+    add_ons = AddOnSerializer(many=True, required=False)
+
     class Meta:
         model = ProductModel
-        fields = ('photo', 'title', 'base_price')
+        fields = ('photo', 'title', 'base_price', 'option_groups', 'add_ons')
 
 
 class ProductGroupSerializer(serializers.ModelSerializer):

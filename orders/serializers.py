@@ -3,7 +3,7 @@ from rest_framework import serializers
 from accounts.serializers import UserProfileSerializer, UserAddressSerializer
 from drivers.serializers import DriverProfileSerializer
 from orders.models import OrderModel, OrderItemModel, Choice
-from shops.serializers import ShopProfileSerializer
+from shops.serializers import ShopProfileSerializer, ProductSerializer
 
 
 class ChoiceSerializer(serializers.ModelSerializer):
@@ -13,7 +13,8 @@ class ChoiceSerializer(serializers.ModelSerializer):
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
-    choices = ChoiceSerializer(many=True)
+    choices = ChoiceSerializer(many=True, required=False)
+    product = ProductSerializer()
 
     class Meta:
         model = OrderItemModel

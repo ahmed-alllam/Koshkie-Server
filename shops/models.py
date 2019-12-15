@@ -97,6 +97,11 @@ class AddOn(models.Model):
     product = models.ForeignKey(to=ProductModel, related_name="add_ons", on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     added_price = models.FloatField()
+    sort = models.PositiveIntegerField()
+
+    class Meta:
+        unique_together = ("product", "sort")
+        ordering = ['sort']
 
     def __str__(self):
         return self.title
