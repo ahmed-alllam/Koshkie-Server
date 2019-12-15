@@ -14,7 +14,7 @@ class DriverProfileSerializer(serializers.ModelSerializer):
 
 
 class DriverReviewSerializer(serializers.ModelSerializer):
-    user = UserProfileSerializer(many=False, read_only=True)
+    user = UserProfileSerializer(read_only=True)
 
     class Meta:
         model = DriverReviewModel

@@ -22,7 +22,7 @@ class AddOnSerializer(serializers.ModelSerializer):
 
 
 class OptionSerializer(serializers.ModelSerializer):
-    rely_on = RelyOnSerializer(many=False, required=False)
+    rely_on = RelyOnSerializer(required=False)
 
     class Meta:
         model = OptionModel
@@ -101,7 +101,7 @@ class ShopAddressSerializer(serializers.ModelSerializer):
 
 
 class ShopReviewSerializer(serializers.ModelSerializer):
-    user = UserProfileSerializer(many=False, read_only=True)
+    user = UserProfileSerializer(read_only=True)
 
     class Meta:
         model = ShopReviewModel
@@ -113,7 +113,7 @@ class ShopReviewSerializer(serializers.ModelSerializer):
 
 
 class ShopProfileDetailSerializer(serializers.ModelSerializer):
-    address = ShopAddressSerializer(many=False)
+    address = ShopAddressSerializer()
     in_favourites_list = serializers.BooleanField(read_only=True, required=False)
 
     class Meta:
@@ -129,7 +129,7 @@ class ShopProfileDetailSerializer(serializers.ModelSerializer):
 
 
 class ShopProfileSerializer(serializers.ModelSerializer):
-    address = ShopAddressSerializer(many=False)
+    address = ShopAddressSerializer()
 
     class Meta:
         model = ShopProfileModel

@@ -16,6 +16,8 @@ class OrderItemSerializer(serializers.ModelSerializer):
     choices = ChoiceSerializer(many=True, required=False)
     product = ProductSerializer()
 
+    # don't add a field for add-ons , because it is flat
+
     class Meta:
         model = OrderItemModel
         fields = ('product', 'quantity', 'choices', 'add_ons', 'special_request')
@@ -25,11 +27,11 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    user = UserProfileSerializer(many=False, read_only=True)
-    driver = DriverProfileSerializer(many=False, read_only=True)
+    user = UserProfileSerializer(read_only=True)
+    driver = DriverProfileSerializer(read_only=True)
     shops = ShopProfileSerializer(many=True, read_only=True)
     items = OrderItemSerializer(many=True)
-    shipping_address = UserAddressSerializer(many=False)
+    shipping_address = UserAddressSerializer()
 
     class Meta:
         model = OrderModel
