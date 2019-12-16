@@ -9,7 +9,7 @@ from shops.models import ProductModel
 
 def photo_upload(instance, filename):
     res = instance.id.join(random.choices(string.ascii_letters, k=20))
-    return 'accounts/{0}'.format(res)
+    return 'users/{0}'.format(res)
 
 
 class UserProfileModel(models.Model):

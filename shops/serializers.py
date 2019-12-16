@@ -1,9 +1,9 @@
 from rest_framework import serializers
 
-from accounts.serializers import UserProfileSerializer
 from shops.models import (ShopProfileModel, ProductGroupModel, ProductModel,
                           OptionGroupModel, OptionModel, AddOn, RelyOn,
                           ShopAddressModel, ShopReviewModel, ProductReviewModel)
+from users.serializers import UserProfileSerializer
 
 
 class RelyOnSerializer(serializers.ModelSerializer):
@@ -114,7 +114,7 @@ class ShopReviewSerializer(serializers.ModelSerializer):
 
 class ShopProfileDetailSerializer(serializers.ModelSerializer):
     address = ShopAddressSerializer()
-    in_favourites_list = serializers.BooleanField(read_only=True, required=False)
+    in_favourites_list = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = ShopProfileModel

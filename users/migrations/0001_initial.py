@@ -4,7 +4,7 @@ import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models
 
-import accounts.models
+import users.models
 
 
 class Migration(migrations.Migration):
@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
             name='UserProfileModel',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('profile_photo', models.ImageField(upload_to=accounts.models.photo_upload)),
+                ('profile_photo', models.ImageField(upload_to=users.models.photo_upload)),
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='profile',
                                               to=settings.AUTH_USER_MODEL)),
             ],

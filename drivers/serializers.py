@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
-from accounts.serializers import UserProfileSerializer
 from drivers.models import DriverProfileModel, DriverReviewModel
+from users.serializers import UserProfileSerializer
 
 
 class DriverProfileSerializer(serializers.ModelSerializer):

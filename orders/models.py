@@ -1,8 +1,8 @@
 from django.db import models
 
-from accounts.models import UserProfileModel, UserAddressModel
 from drivers.models import DriverProfileModel
 from shops.models import ShopProfileModel, ProductModel, AddOn, OptionGroupModel, OptionModel
+from users.models import UserProfileModel, UserAddressModel
 
 
 class OrderModel(models.Model):

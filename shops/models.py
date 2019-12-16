@@ -5,7 +5,7 @@ import string
 from django.contrib.auth.models import User
 from django.db import models
 
-from accounts.models import UserProfileModel
+from users.models import UserProfileModel
 
 
 class ShopType(enum.Enum):

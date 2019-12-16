@@ -1,9 +1,9 @@
 from rest_framework import serializers
 
-from accounts.serializers import UserProfileSerializer, UserAddressSerializer
 from drivers.serializers import DriverProfileSerializer
 from orders.models import OrderModel, OrderItemModel, Choice
 from shops.serializers import ShopProfileSerializer, ProductSerializer
+from users.serializers import UserProfileSerializer, UserAddressSerializer
 
 
 class ChoiceSerializer(serializers.ModelSerializer):
