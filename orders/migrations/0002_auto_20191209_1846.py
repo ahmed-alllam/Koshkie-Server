@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
     dependencies = [
         ('shops', '0002_auto_20191209_1846'),
-        ('accounts', '0001_initial'),
+        ('users', '0001_initial'),
         ('orders', '0001_initial'),
     ]
 
@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             model_name='ordermodel',
             name='shipping_address',
             field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL,
-                                    to='accounts.UserAddressModel'),
+                                    to='users.UserAddressModel'),
         ),
         migrations.CreateModel(
             name='OrderItemModel',

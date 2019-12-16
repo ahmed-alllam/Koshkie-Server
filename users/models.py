@@ -4,8 +4,6 @@ import string
 from django.contrib.auth.models import User
 from django.db import models
 
-from shops.models import ProductModel
-
 
 def photo_upload(instance, filename):
     res = instance.id.join(random.choices(string.ascii_letters, k=20))
@@ -16,7 +14,7 @@ class UserProfileModel(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     profile_photo = models.ImageField(upload_to=photo_upload, null=True)
     phone_number = models.BigIntegerField()
-    favourite_products = models.ManyToManyField(to=ProductModel)
+    favourite_products = models.ManyToManyField(to='shops.ProductModel')
 
     def __str__(self):
         return self.user.username

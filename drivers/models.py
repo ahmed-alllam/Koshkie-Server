@@ -5,8 +5,6 @@ import string
 from django.contrib.auth.models import User
 from django.db import models
 
-from users.models import UserProfileModel
-
 
 class VehicleType(enum.Enum):
     Car = 1
@@ -36,7 +34,7 @@ class DriverProfileModel(models.Model):
 
 
 class DriverReviewModel(models.Model):
-    user = models.ForeignKey(to=UserProfileModel, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(to='users.UserProfileModel', on_delete=models.SET_NULL, null=True)
     driver = models.ForeignKey(to=DriverProfileModel, on_delete=models.CASCADE, related_name='reviews')
     stars = models.PositiveIntegerField()
     text = models.TextField()

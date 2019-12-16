@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('accounts', '__first__'),
+        ('users', '__first__'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
@@ -47,7 +47,7 @@ class Migration(migrations.Migration):
                 ('is_active', models.BooleanField(default=False)),
                 ('is_open', models.BooleanField(default=True)),
                 ('shop_type', models.PositiveIntegerField()),
-                ('favourite_user', models.ManyToManyField(to='accounts.UserProfileModel')),
+                ('favourite_user', models.ManyToManyField(to='users.UserProfileModel')),
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='Profile',
                                               to=settings.AUTH_USER_MODEL)),
             ],
@@ -63,7 +63,7 @@ class Migration(migrations.Migration):
                 ('shop', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reviews',
                                            to='shops.ShopProfileModel')),
                 ('user', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL,
-                                           to='accounts.UserProfileModel')),
+                                           to='users.UserProfileModel')),
             ],
         ),
         migrations.CreateModel(
@@ -93,7 +93,7 @@ class Migration(migrations.Migration):
                 ('product', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reviews',
                                               to='shops.ProductModel')),
                 ('user', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL,
-                                           to='accounts.UserProfileModel')),
+                                           to='users.UserProfileModel')),
             ],
         ),
         migrations.AddField(

@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('accounts', '0001_initial'),
+        ('users', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
@@ -42,7 +42,7 @@ class Migration(migrations.Migration):
                 ('driver', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reviews',
                                              to='drivers.DriverProfileModel')),
                 ('user', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL,
-                                           to='accounts.UserProfileModel')),
+                                           to='users.UserProfileModel')),
             ],
         ),
     ]

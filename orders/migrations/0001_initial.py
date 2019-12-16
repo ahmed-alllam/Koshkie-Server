@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('drivers', '__first__'),
-        ('accounts', '__first__'),
+        ('users', '__first__'),
         ('shops', '__first__'),
     ]
 
@@ -23,11 +23,11 @@ class Migration(migrations.Migration):
                 ('driver', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL,
                                              related_name='served_orders', to='drivers.DriverProfileModel')),
                 ('shipping_address', models.OneToOneField(null=True, on_delete=django.db.models.deletion.SET_NULL,
-                                                          to='accounts.UserAddressModel')),
+                                                          to='users.UserAddressModel')),
                 ('shops', models.ManyToManyField(related_name='served_orders', to='shops.ShopProfileModel')),
                 ('user',
                  models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='orders',
-                                   to='accounts.UserProfileModel')),
+                                   to='users.UserProfileModel')),
             ],
         ),
     ]

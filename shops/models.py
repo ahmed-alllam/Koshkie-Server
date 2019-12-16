@@ -5,8 +5,6 @@ import string
 from django.contrib.auth.models import User
 from django.db import models
 
-from users.models import UserProfileModel
-
 
 class ShopType(enum.Enum):
     Food = 1
@@ -125,7 +123,7 @@ class ShopAddressModel(models.Model):
 
 
 class ShopReviewModel(models.Model):
-    user = models.ForeignKey(to=UserProfileModel, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(to='users.UserProfileModel', on_delete=models.SET_NULL, null=True)
     shop = models.ForeignKey(to=ShopProfileModel, on_delete=models.CASCADE, related_name='reviews')
     stars = models.PositiveIntegerField()
     title = models.CharField(max_length=255)
@@ -137,7 +135,7 @@ class ShopReviewModel(models.Model):
 
 
 class ProductReviewModel(models.Model):
-    user = models.ForeignKey(to=UserProfileModel, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(to='users.UserProfileModel', on_delete=models.SET_NULL, null=True)
     product = models.ForeignKey(to=ProductModel, on_delete=models.CASCADE, related_name='reviews')
     stars = models.PositiveIntegerField()
     title = models.CharField(max_length=255)

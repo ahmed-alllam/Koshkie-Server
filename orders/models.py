@@ -40,7 +40,7 @@ class OrderModel(models.Model):
 class OrderItemModel(models.Model):
     order = models.ForeignKey(to=OrderModel, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(to=ProductModel, on_delete=models.SET_NULL, null=True)
-    quantity = models.PositiveIntegerField(default=1, max_length=9)
+    quantity = models.PositiveIntegerField(default=1)
     add_ons = models.ManyToManyField(to=AddOn)
     special_request = models.TextField(blank=True)
 

@@ -39,7 +39,7 @@ class Migration(migrations.Migration):
                 ('phone_number', models.BigIntegerField()),
                 ('land_line_number', models.BigIntegerField()),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='addresses',
-                                           to='accounts.UserProfileModel')),
+                                           to='users.UserProfileModel')),
             ],
         ),
     ]
