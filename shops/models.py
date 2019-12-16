@@ -57,6 +57,7 @@ class ProductModel(models.Model):
     description = models.TextField()
     product_group = models.ForeignKey(to=ProductGroupModel, related_name="products", on_delete=models.CASCADE)
     base_price = models.FloatField()
+    rating = models.FloatField()
     is_available = models.BooleanField(default=True)
 
     def __str__(self):

@@ -22,11 +22,9 @@ class AddOnSerializer(serializers.ModelSerializer):
 
 
 class OptionSerializer(serializers.ModelSerializer):
-    rely_on = RelyOnSerializer(required=False)
-
     class Meta:
         model = OptionModel
-        fields = ('title', 'sort', 'price', 'rely_on')
+        fields = ('title', 'sort', 'price')
         extra_kwargs = {
             'sort': {'read_only': True}
         }
@@ -34,10 +32,11 @@ class OptionSerializer(serializers.ModelSerializer):
 
 class OptionGroupSerializer(serializers.ModelSerializer):
     options = OptionSerializer(many=True)
+    rely_on = RelyOnSerializer(required=False)
 
     class Meta:
         model = OptionGroupModel
-        fields = ('options', 'title', 'sort', 'changes_price')
+        fields = ('options', 'title', 'sort', 'changes_price', 'rely_on')
         extra_kwargs = {
             'sort': {'read_only': True}
         }
@@ -62,12 +61,13 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductModel
-        fields = ('id', 'photo', 'title', 'description', 'base_price', 'is_available',
+        fields = ('id', 'photo', 'title', 'description', 'base_price', 'is_available', 'rating',
                   'option_groups', 'add_ons', 'reviews')
         extra_kwargs = {
             'id': {'read_only': True},
             'is_available': {'write_only': True},
-            'reviews': {'read_only': True}
+            'reviews': {'read_only': True},
+            'rating': {'read_only': True}
         }
 
 
@@ -77,9 +77,10 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductModel
-        fields = ('id', 'photo', 'title', 'base_price', 'option_groups', 'add_ons')
+        fields = ('id', 'photo', 'title', 'base_price', 'rating', 'option_groups', 'add_ons')
         extra_kwargs = {
-            'id': {'read_only': True}
+            'id': {'read_only': True},
+            'rating': {'read_only': True}
         }
 
 
