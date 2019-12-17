@@ -120,7 +120,7 @@ class ShopProfileDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopProfileModel
         fields = ('id', 'profile_photo', 'phone_number', 'shop_type', 'name',
-                  'address', 'rating', 'is_open', 'currency',
+                  'address', 'rating', 'is_open', 'opens_at', 'closes_at', 'currency',
                   'minimum_charge', 'delivery_fee', 'vat')
         extra_kwargs = {
             'id': {'read_only': True},
