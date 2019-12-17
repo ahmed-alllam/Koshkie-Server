@@ -14,9 +14,11 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+
     class Meta:
         model = UserProfileModel
-        fields = ('profile_photo', 'phone_number')
+        fields = ('user', 'profile_photo', 'phone_number')
         extra_kwargs = {
             'profile_photo': {'required': False},
             'phone_number': {'required': False}

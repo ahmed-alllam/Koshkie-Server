@@ -1,7 +1,7 @@
 from django.db import models
 
 from drivers.models import DriverProfileModel
-from shops.models import ShopProfileModel, ProductModel, AddOn, OptionGroupModel, OptionModel
+from shops.models import ShopProfileModel, ProductModel, AddOn
 from users.models import UserProfileModel, UserAddressModel
 
 
@@ -75,5 +75,5 @@ class OrderItemModel(models.Model):
 
 class Choice(models.Model):
     order_item = models.ForeignKey(to=OrderItemModel, related_name='choices', on_delete=models.CASCADE)
-    option_group = models.ForeignKey(to=OptionGroupModel, on_delete=models.CASCADE)
-    choosed_option = models.ForeignKey(to=OptionModel, on_delete=models.CASCADE)
+    option_group = models.SmallIntegerField(default=1)
+    choosed_option = models.SmallIntegerField(default=1)

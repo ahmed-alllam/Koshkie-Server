@@ -16,8 +16,6 @@ class OrderItemSerializer(serializers.ModelSerializer):
     choices = ChoiceSerializer(many=True, required=False)
     product = ProductSerializer()
 
-    # don't add a field for add-ons , because it is flat
-
     class Meta:
         model = OrderItemModel
         fields = ('product', 'quantity', 'choices', 'add_ons', 'special_request')

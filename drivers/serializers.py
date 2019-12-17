@@ -1,13 +1,15 @@
 from rest_framework import serializers
 
 from drivers.models import DriverProfileModel, DriverReviewModel
-from users.serializers import UserProfileSerializer
+from users.serializers import UserProfileSerializer, UserSerializer
 
 
 class DriverProfileSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+
     class Meta:
         model = DriverProfileModel
-        fields = ('profile_photo', 'phone_number', 'vehicle_type', 'rating')
+        fields = ('user', 'profile_photo', 'phone_number', 'vehicle_type', 'rating')
         extra_kwargs = {
             'rating': {'read_only': True}
         }
