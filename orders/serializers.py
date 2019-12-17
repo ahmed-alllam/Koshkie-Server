@@ -15,12 +15,13 @@ class ChoiceSerializer(serializers.ModelSerializer):
 class OrderItemSerializer(serializers.ModelSerializer):
     choices = ChoiceSerializer(many=True, required=False)
     product = ProductSerializer()
+    add_ons = serializers.ListField(child=serializers.IntegerField(), required=False)
 
     class Meta:
         model = OrderItemModel
         fields = ('product', 'quantity', 'choices', 'add_ons', 'special_request')
         extra_kwargs = {
-            'special_request': {'required': False}
+            'special_request': {'required': False},
         }
 
 
