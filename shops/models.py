@@ -33,8 +33,8 @@ class ShopProfileModel(models.Model):
     minimum_charge = models.FloatField(default=0)
     delivery_fee = models.FloatField()
     vat = models.FloatField(default=0)
-    opens_at = models.TimeField()
-    closes_at = models.TimeField()
+    opens_at = models.TimeField(auto_now=False, auto_now_add=False)
+    closes_at = models.TimeField(auto_now=False, auto_now_add=False)
 
     def __str__(self):
         return self.name
