@@ -111,8 +111,8 @@ class AddOn(models.Model):
 class RelyOn(models.Model):
     option_group = models.OneToOneField(to=OptionGroupModel, on_delete=models.CASCADE, null=True, default=None,
                                         related_name='rely_on')
-    choosed_option_group = models.OneToOneField(to=OptionGroupModel, on_delete=models.CASCADE)
-    option = models.OneToOneField(to=OptionModel, on_delete=models.CASCADE)
+    choosed_option_group = models.SmallIntegerField(default=1)
+    option = models.SmallIntegerField(default=1)
 
 
 class ShopAddressModel(models.Model):
