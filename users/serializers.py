@@ -24,6 +24,15 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'phone_number': {'required': False}
         }
 
+    def create(self, validated_data):
+        user_data = validated_data.pop('user')
+        user = User.objects.create(**user_data)
+        user_profile = UserProfileModel.objects.create(user=user, **validated_data)
+        return user_profile
+
+    def update(self, instance, validated_data):
+        pass
+
 
 class UserAddressSerializer(serializers.ModelSerializer):
     class Meta:
@@ -32,3 +41,9 @@ class UserAddressSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'special_notes': {'required': False}
         }
+
+    def create(self, validated_data):
+        pass
+
+    def update(self, instance, validated_data):
+        pass
