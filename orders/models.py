@@ -14,6 +14,7 @@ class OrderModel(models.Model):
     shipping_address = models.ForeignKey(to=UserAddressModel, on_delete=models.SET_NULL, null=True)
     arrived = models.BooleanField(default=False)
     final_price = models.FloatField()
+    subtotal = models.FloatField()
     delivery_fee = models.FloatField()
     vat = models.FloatField(default=0)
 

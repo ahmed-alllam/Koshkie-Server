@@ -52,5 +52,6 @@ class UserAddressSerializer(serializers.ModelSerializer):
         model = UserAddressModel
         exclude = 'user'
         extra_kwargs = {
+            'id': {'read_only': True},
             'special_notes': {'required': False}
         }
