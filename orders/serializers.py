@@ -3,15 +3,20 @@ from rest_framework import serializers
 from drivers.serializers import DriverProfileSerializer
 from orders.models import OrderModel, OrderItemModel, Choice
 from shops.models import ProductModel
-from shops.serializers import ShopProfileSerializer, ProductSerializer
+from shops.serializers import ShopProfileSerializer, ProductSerializer, AddOnSerializer, OptionGroupSerializer
 from users.models import UserAddressModel
 from users.serializers import UserProfileSerializer, UserAddressSerializer
 
 
 class ChoiceSerializer(serializers.ModelSerializer):
+    option_group = OptionGroupSerializer(read_only=True)
+    option_group_id = OptionGroupSerializer(write_only=True)
+    choosed_option = serializers.IntegerField(read_only=True)
+    choosed_option_id = serializers.IntegerField(write_only=True)
+
     class Meta:
         model = Choice
-        fields = ('option_group', 'choosed_option')
+        fields = ('option_group', 'option_group_id', 'choosed_option', 'choosed_option_id')
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -20,14 +25,40 @@ class OrderItemSerializer(serializers.ModelSerializer):
     product_id = serializers.PrimaryKeyRelatedField(write_only=True,
                                                     queryset=ProductModel.objects.all())
 
-    add_ons = serializers.ListField(child=serializers.IntegerField(), required=False)
+    add_ons_ids = serializers.ListField(child=serializers.IntegerField(), required=False,
+                                        write_only=True)
+    add_ons = AddOnSerializer(many=True, read_only=True)
 
     class Meta:
         model = OrderItemModel
-        fields = ('product', 'product_id', 'quantity', 'choices', 'add_ons', 'special_request')
+        fields = ('product', 'product_id', 'quantity', 'choices', 'add_ons', 'add_ons_ids',
+                  'special_request')
         extra_kwargs = {
             'special_request': {'required': False},
         }
+
+    def validate(self, data):
+        product = ProductModel.objects.get(id=data['product_id'])
+        add_ons = data['add_ons_ids']
+        choices = data['choices']
+
+        for add_on in add_ons:
+            match = False
+            for product_add_on in product.add_ons:
+                if product_add_on.sort == add_on: match = True
+            if not match: raise serializers.ValidationError("add-on Doesn't Exist")
+
+        for choice in choices:
+            match = False
+            for product_option_group in product.option_groups.all():
+                if product_option_group.sort == choice['option_group_id']:
+                    for option in product_option_group.options.all():
+                        if option.sort == choice['choosed_option_id']:
+                            match = True
+
+            if not match: raise serializers.ValidationError("Choice  Wrong")
+
+        return data
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -52,9 +83,17 @@ class OrderSerializer(serializers.ModelSerializer):
 
         for item in items_data:
             choices = item.pop('choices')
-            order_item = OrderItemModel.objects.create(**item)
+            add_ons_ids = items.pop('add_ons_ids')
+            order_item = OrderItemModel(**item)
             for choice in choices:
-                Choice.objects.create(order_item=order_item, **choice)
+                option_group = order_item.product.option_groups.get(sort=choice['option_group_id'])
+                choosed_option = option_group.options.get(sort=choice['choosed_option_id'])
+                Choice.objects.create(order_item=order_item, option_group=option_group,
+                                      choosed_option=choosed_option)
+            for add_on_id in add_ons_ids:
+                add_on = order_item.product.add_ons.get(sort=add_on_id)
+                order_item.add_ons.add(add_on)
+            order_item.save()
             items.append(order_item)
 
         shops = set()
@@ -80,3 +119,5 @@ class OrderSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         if not instance.arrived:
             instance.arrived = validated_data.get('arrived', False)
+            instance.save()
+        return instance

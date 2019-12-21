@@ -1,7 +1,7 @@
 from django.db import models
 
 from drivers.models import DriverProfileModel
-from shops.models import ShopProfileModel, ProductModel, AddOn
+from shops.models import ShopProfileModel, ProductModel, AddOn, OptionGroupModel, OptionModel
 from users.models import UserProfileModel, UserAddressModel
 
 
@@ -17,25 +17,6 @@ class OrderModel(models.Model):
     subtotal = models.FloatField()
     delivery_fee = models.FloatField()
     vat = models.FloatField(default=0)
-
-    def get_vat(self):
-        total = 0
-        for item in self.items.all():
-            total += item.calculate_vat()
-        return total
-
-    def get_delivery_fee(self):
-        fees = 0
-        for shop in self.shops.all():
-            fees += shop.delivery_fee
-        return fees
-
-    def get_final_price(self):
-        total = 0
-        for item in self.items.all():
-            total += item.get_final_price()
-        total += self.get_delivery_fee()
-        return total
 
 
 class OrderItemModel(models.Model):
@@ -64,17 +45,11 @@ class OrderItemModel(models.Model):
     def get_shop(self):
         return self.product.product_group.shop
 
-    def calculate_vat(self, cost=None):
-        if cost is None:
-            cost = self.get_item_price()
-        return cost * (self.get_shop().vat / 100)
-
-    def get_final_price(self):
-        cost = self.get_item_price()
-        return self.calculate_vat(cost=cost) + cost
+    def calculate_vat(self):
+        return self.get_item_price() * (self.get_shop().vat / 100)
 
 
 class Choice(models.Model):
     order_item = models.ForeignKey(to=OrderItemModel, related_name='choices', on_delete=models.CASCADE)
-    option_group = models.SmallIntegerField(default=1)
-    choosed_option = models.SmallIntegerField(default=1)
+    option_group = models.ForeignKey(to=OptionGroupModel, on_delete=models.CASCADE)
+    choosed_option = models.ForeignKey(to=OptionModel, on_delete=models.CASCADE)
