@@ -22,12 +22,12 @@ class DriverProfileModel(models.Model):
     profile_photo = models.ImageField(upload_to=photo_upload, null=True)
     phone_number = models.BigIntegerField()
     is_active = models.BooleanField(default=False)
-    last_time_online = models.TimeField()
-    live_location_longitude = models.DecimalField(max_digits=9, decimal_places=6)
-    live_location_latitude = models.DecimalField(max_digits=9, decimal_places=6)
+    last_time_online = models.TimeField(auto_now_add=True)
+    live_location_longitude = models.DecimalField(max_digits=9, decimal_places=6, default=0)
+    live_location_latitude = models.DecimalField(max_digits=9, decimal_places=6, default=0)
     vehicle_type = models.PositiveIntegerField()
     is_busy = models.BooleanField(default=False)
-    rating = models.FloatField()
+    rating = models.FloatField(default=0)
 
     def __str__(self):
         return self.user.username
