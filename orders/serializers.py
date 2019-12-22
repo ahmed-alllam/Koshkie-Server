@@ -43,20 +43,17 @@ class OrderItemSerializer(serializers.ModelSerializer):
         choices = data['choices']
 
         for add_on in add_ons:
-            match = False
-            for product_add_on in product.add_ons:
-                if product_add_on.sort == add_on: match = True
-            if not match: raise serializers.ValidationError("add-on Doesn't Exist")
+            if not product.add_ons.filter(sort=add_on).exists():
+                raise serializers.ValidationError("add-on Doesn't Exist")
 
         for choice in choices:
-            match = False
-            for product_option_group in product.option_groups.all():
-                if product_option_group.sort == choice['option_group_id']:
-                    for option in product_option_group.options.all():
-                        if option.sort == choice['choosed_option_id']:
-                            match = True
-
-            if not match: raise serializers.ValidationError("Choice  Wrong")
+            query = product.option_groups.filter(sort=choice['option_group_id'])
+            if query.exists():
+                option_group = query.get()
+                if not option_group.options.filter(sort=choice['choosed_option_id']).exists():
+                    raise serializers.ValidationError("option  Wrong")
+            else:
+                raise serializers.ValidationError("option group not found")
 
         return data
 
@@ -83,7 +80,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
         for item in items_data:
             choices = item.pop('choices')
-            add_ons_ids = items.pop('add_ons_ids')
+            add_ons_ids = item.pop('add_ons_ids')
             order_item = OrderItemModel(**item)
             for choice in choices:
                 option_group = order_item.product.option_groups.get(sort=choice['option_group_id'])
