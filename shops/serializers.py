@@ -7,7 +7,6 @@ from shops.models import (ShopProfileModel, ProductGroupModel, ProductModel,
 from users.serializers import UserProfileSerializer, UserSerializer
 
 
-# done
 class RelyOnSerializer(serializers.ModelSerializer):
     choosed_option_group = serializers.IntegerField()
     option = serializers.IntegerField()
@@ -23,7 +22,6 @@ class RelyOnSerializer(serializers.ModelSerializer):
         }
 
 
-# done
 class AddOnSerializer(serializers.ModelSerializer):
     class Meta:
         model = AddOn
@@ -33,7 +31,6 @@ class AddOnSerializer(serializers.ModelSerializer):
         }
 
 
-# done
 class OptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = OptionModel
@@ -51,7 +48,6 @@ class OptionSerializer(serializers.ModelSerializer):
         return data
 
 
-# done
 class OptionGroupSerializer(serializers.ModelSerializer):
     options = OptionSerializer(many=True, read_only=True)
     rely_on = RelyOnSerializer(required=False)
@@ -112,7 +108,6 @@ class OptionGroupSerializer(serializers.ModelSerializer):
         return instance
 
 
-# done
 class ProductReviewSerializer(serializers.ModelSerializer):
     user = UserProfileSerializer(many=False, read_only=True)
 
@@ -125,7 +120,6 @@ class ProductReviewSerializer(serializers.ModelSerializer):
         }
 
 
-# done
 class ProductDetailsSerializer(serializers.ModelSerializer):
     option_groups = OptionGroupSerializer(many=True, read_only=True)
     add_ons = AddOnSerializer(many=True, read_only=True)
@@ -140,7 +134,6 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
         }
 
 
-# done
 class ProductSerializer(serializers.ModelSerializer):
     option_groups = OptionGroupSerializer(many=True, required=False)
     add_ons = AddOnSerializer(many=True, required=False)
@@ -154,7 +147,6 @@ class ProductSerializer(serializers.ModelSerializer):
         }
 
 
-# done
 class ProductGroupSerializer(serializers.ModelSerializer):
     products = ProductSerializer(many=True, read_only=True)
 
@@ -166,7 +158,6 @@ class ProductGroupSerializer(serializers.ModelSerializer):
         }
 
 
-# done
 class ShopAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopAddressModel
@@ -176,7 +167,6 @@ class ShopAddressSerializer(serializers.ModelSerializer):
         }
 
 
-# done
 class ShopReviewSerializer(serializers.ModelSerializer):
     user = UserProfileSerializer(read_only=True)
 
@@ -189,7 +179,6 @@ class ShopReviewSerializer(serializers.ModelSerializer):
         }
 
 
-# done
 class ShopProfileDetailSerializer(serializers.ModelSerializer):
     user = UserSerializer()
     address = ShopAddressSerializer()
@@ -252,18 +241,10 @@ class ShopProfileDetailSerializer(serializers.ModelSerializer):
         return shop_profile
 
     def update(self, instance, validated_data):
-        instance.profile_photo = validated_data.get('profile_photo', instance.profile_photo)
-        instance.phone_number = validated_data.get('phone_number', instance.phone_number)
-        instance.description = validated_data.get('description', instance.description)
-        instance.shop_type = validated_data.get('shop_type', instance.shop_type)
-        instance.name = validated_data.get('name', instance.name)
-        instance.is_open = validated_data.get('is_open', instance.is_open)
-        instance.opens_at = validated_data.get('opens_at', instance.opens_at)
-        instance.closes_at = validated_data.get('closes_at', instance.closes_at)
-        instance.currency = validated_data.get('currency', instance.currency)
-        instance.minimum_charge = validated_data.get('minimum_charge', instance.minimum_charge)
-        instance.delivery_fee = validated_data.get('delivery_fee', instance.delivery_fee)
-        instance.vat = validated_data.get('vat', instance.vat)
+        attrs = self.fields - ('id', 'user', 'rating', 'address')
+        for attr in attrs:
+            setattr(instance, attr, validated_data.get(attr, getattr(instance, attr)))
+
         instance.save()
 
         address_data = validated_data.pop('address')
@@ -288,7 +269,6 @@ class ShopProfileDetailSerializer(serializers.ModelSerializer):
         return instance
 
 
-# done
 class ShopProfileSerializer(serializers.ModelSerializer):
     address = ShopAddressSerializer()
 
