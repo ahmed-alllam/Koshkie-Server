@@ -1,3 +1,5 @@
+#  Copyright (c) Code Written and Tested by Ahmed Emad on 2019
+
 from django.contrib.auth.models import User
 from rest_framework import serializers
 

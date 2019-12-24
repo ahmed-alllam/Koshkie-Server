@@ -1,3 +1,5 @@
+#  Copyright (c) Code Written and Tested by Ahmed Emad on 2019
+
 from rest_framework import serializers
 
 from drivers.serializers import DriverProfileSerializer
