@@ -1,15 +1,8 @@
-import enum
 import random
 import string
 
 from django.contrib.auth.models import User
 from django.db import models
-
-
-class ShopType(enum.Enum):
-    Food = 1
-    Groceries = 2
-    Pharmacies = 3
 
 
 def photo_upload(instance, filename):
@@ -21,9 +14,10 @@ def photo_upload(instance, filename):
 
 
 class ShopProfileModel(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="Profile")
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="shop_profile")
     profile_photo = models.ImageField(upload_to=photo_upload)
     phone_number = models.BigIntegerField()
+    description = models.TextField()
     shop_type = models.PositiveIntegerField()
     name = models.CharField(max_length=255)
     rating = models.FloatField()
@@ -41,12 +35,12 @@ class ShopProfileModel(models.Model):
 
 
 class ProductGroupModel(models.Model):
-    shop = models.ForeignKey(to=ShopProfileModel, related_name="products", on_delete=models.CASCADE)
+    shop = models.ForeignKey(to=ShopProfileModel, related_name="product_groups", on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     sort = models.PositiveIntegerField()
 
     class Meta:
-        unique_together = ("shop", "sort")
+        unique_together = (("shop", "sort"), ("shop", "title"))
         ordering = ['sort']
 
     def __str__(self):
@@ -58,7 +52,7 @@ class ProductModel(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
     product_group = models.ForeignKey(to=ProductGroupModel, related_name="products", on_delete=models.CASCADE)
-    base_price = models.FloatField()
+    price = models.FloatField()
     rating = models.FloatField()
     is_available = models.BooleanField(default=True)
 
@@ -111,8 +105,8 @@ class AddOn(models.Model):
 class RelyOn(models.Model):
     option_group = models.OneToOneField(to=OptionGroupModel, on_delete=models.CASCADE, null=True, default=None,
                                         related_name='rely_on')
-    choosed_option_group = models.SmallIntegerField(default=1)
-    option = models.SmallIntegerField(default=1)
+    choosed_option_group = models.ForeignKey(to=OptionGroupModel, on_delete=models.CASCADE)
+    option = models.ForeignKey(to=OptionModel, on_delete=models.CASCADE)
 
 
 class ShopAddressModel(models.Model):

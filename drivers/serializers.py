@@ -15,6 +15,18 @@ class DriverProfileSerializer(serializers.ModelSerializer):
             'rating': {'read_only': True}
         }
 
+    def validate_vehicle_type(self, data):
+        types = {"car", "bike", "motorcycle"}
+
+        matches = False
+        for vehicle_type in types:
+            if data.lower() == vehicle_type: matches = True
+
+        if not matches:
+            raise serializers.ValidationError('invalid shop type')
+
+        return data
+
     def create(self, validated_data):
         user_data = validated_data.pop('user')
         user = User.objects.create(**user_data, username=user_data['email'])

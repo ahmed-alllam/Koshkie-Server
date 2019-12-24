@@ -36,7 +36,7 @@ class OrderItemModel(models.Model):
         return total
 
     def get_item_price(self):
-        product_price = self.product.base_price
+        product_price = self.product.price
         for choice in self.choices.all():
             if choice.option_group.changes_price:
                 product_price = choice.choosed_option.price

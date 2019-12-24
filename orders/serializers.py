@@ -14,6 +14,8 @@ class ChoiceSerializer(serializers.ModelSerializer):
     choosed_option = serializers.IntegerField(read_only=True)
     choosed_option_id = serializers.IntegerField(write_only=True)
 
+    # not done make validation for rely on
+
     class Meta:
         model = Choice
         fields = ('option_group', 'option_group_id', 'choosed_option', 'choosed_option_id')
