@@ -12,8 +12,9 @@ class DriverProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DriverProfileModel
-        fields = ('user', 'profile_photo', 'phone_number', 'vehicle_type', 'rating')
+        fields = ('id', 'user', 'profile_photo', 'phone_number', 'vehicle_type', 'rating')
         extra_kwargs = {
+            'id': {'read_only': True},
             'rating': {'read_only': True}
         }
 
@@ -58,7 +59,8 @@ class DriverReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DriverReviewModel
-        fields = ('user', 'stars', 'text', 'time_stamp')
+        fields = ('id', 'user', 'stars', 'text', 'time_stamp')
         extra_kwargs = {
+            'id': {'read_only': True},
             'time_stamp': {'read_only': True},
         }

@@ -115,8 +115,9 @@ class ProductReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductReviewModel
-        fields = ('user', 'stars', 'title', 'text', 'time_stamp')
+        fields = ('id', 'user', 'stars', 'title', 'text', 'time_stamp')
         extra_kwargs = {
+            'id': {'read_only': True},
             'time_stamp': {'read_only': True},
             'user': {'read_only': True}
         }
@@ -174,8 +175,9 @@ class ShopReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShopReviewModel
-        fields = ('user', 'stars', 'title', 'text', 'time_stamp')
+        fields = ('id', 'user', 'stars', 'title', 'text', 'time_stamp')
         extra_kwargs = {
+            'id': {'read_only': True},
             'time_stamp': {'read_only': True},
             'user': {'read_only': True}
         }
@@ -276,4 +278,7 @@ class ShopProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShopProfileModel
-        fields = ('profile_photo', 'shop_type', 'name', 'address', 'rating')
+        fields = ('id', 'profile_photo', 'shop_type', 'name', 'address', 'rating')
+        extra_kwargs = {
+            'id': {'read_only': True}
+        }

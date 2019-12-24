@@ -33,9 +33,10 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderItemModel
-        fields = ('product', 'product_id', 'quantity', 'choices', 'add_ons', 'add_ons_ids',
+        fields = ('id', 'product', 'product_id', 'quantity', 'choices', 'add_ons', 'add_ons_ids',
                   'special_request')
         extra_kwargs = {
+            'id': {'read_only': True},
             'special_request': {'required': False},
         }
 
@@ -79,9 +80,9 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderModel
-        fields = ('user', 'driver', 'shops', 'items', 'ordered_at', 'shipping_address',
+        fields = ('id', 'user', 'driver', 'shops', 'items', 'ordered_at', 'shipping_address',
                   'shipping_address_id', 'arrived', 'final_price', 'delivery_fee', 'vat')
-        read_only_fields = ('user', 'driver', 'shops', 'ordered_at',
+        read_only_fields = ('id', 'user', 'driver', 'shops', 'ordered_at',
                             'arrived', 'final_price', 'delivery_fee', 'vat')
 
     def create(self, validated_data):
