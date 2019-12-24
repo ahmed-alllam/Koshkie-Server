@@ -49,12 +49,23 @@ class OrderItemSerializer(serializers.ModelSerializer):
             if not product.add_ons.filter(sort=add_on).exists():
                 raise serializers.ValidationError("add-on Doesn't Exist")
 
+        if choices.count() != product.option_groups.count():
+            raise serializers.ValidationError("missing choises for required options")
+
         for choice in choices:
+            # to check for duplicates
+            seen = set()
+            if choice['option_group_id'] in seen:
+                raise serializers.ValidationError("duplicate choises for the order item")
+
+            seen.add(choice['option_group_id'])
+
             query = product.option_groups.filter(sort=choice['option_group_id'])
             if query.exists():
                 option_group = query.get()
                 if not option_group.options.filter(sort=choice['choosed_option_id']).exists():
                     raise serializers.ValidationError("option  Wrong")
+
                 # rely on validation here
                 if option_group.rely_on:
                     key = option_group.rely_on.choosed_option_group.sort
