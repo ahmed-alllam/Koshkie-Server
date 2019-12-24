@@ -14,8 +14,6 @@ class ChoiceSerializer(serializers.ModelSerializer):
     choosed_option = serializers.IntegerField(read_only=True)
     choosed_option_id = serializers.IntegerField(write_only=True)
 
-    # not done make validation for rely on
-
     class Meta:
         model = Choice
         fields = ('option_group', 'option_group_id', 'choosed_option', 'choosed_option_id')
@@ -54,6 +52,14 @@ class OrderItemSerializer(serializers.ModelSerializer):
                 option_group = query.get()
                 if not option_group.options.filter(sort=choice['choosed_option_id']).exists():
                     raise serializers.ValidationError("option  Wrong")
+                # rely on validation here
+                if option_group.rely_on:
+                    key = option_group.rely_on.choosed_option_group.sort
+                    value = option_group.rely_on.option.sort
+                    required_choice = {'option_group_id': key, 'choosed_option_id': value}
+                    if not required_choice.items() <= choices.items():
+                        raise serializers.ValidationError("required choice not found")
+
             else:
                 raise serializers.ValidationError("option group not found")
 

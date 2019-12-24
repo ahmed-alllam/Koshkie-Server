@@ -103,8 +103,7 @@ class AddOn(models.Model):
 
 
 class RelyOn(models.Model):
-    option_group = models.OneToOneField(to=OptionGroupModel, on_delete=models.CASCADE, null=True, default=None,
-                                        related_name='rely_on')
+    option_group = models.OneToOneField(to=OptionGroupModel, on_delete=models.CASCADE, related_name='rely_on')
     choosed_option_group = models.ForeignKey(to=OptionGroupModel, on_delete=models.CASCADE)
     option = models.ForeignKey(to=OptionModel, on_delete=models.CASCADE)
 
