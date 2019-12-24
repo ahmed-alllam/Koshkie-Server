@@ -39,7 +39,7 @@ class ShopProfileModel(models.Model):
 class ProductGroupModel(models.Model):
     shop = models.ForeignKey(to=ShopProfileModel, related_name="product_groups", on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
-    sort = models.PositiveIntegerField()
+    sort = models.AutoField()
 
     class Meta:
         unique_together = (("shop", "sort"), ("shop", "title"))
@@ -65,7 +65,7 @@ class ProductModel(models.Model):
 class OptionGroupModel(models.Model):
     product = models.ForeignKey(to=ProductModel, related_name="option_groups", on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
-    sort = models.PositiveIntegerField()
+    sort = models.AutoField()
     changes_price = models.BooleanField(default=False)
 
     class Meta:
@@ -79,7 +79,7 @@ class OptionGroupModel(models.Model):
 class OptionModel(models.Model):
     option_group = models.ForeignKey(to=OptionGroupModel, on_delete=models.CASCADE, related_name="options")
     title = models.CharField(max_length=255)
-    sort = models.PositiveIntegerField()
+    sort = models.AutoField()
     price = models.FloatField()
 
     class Meta:
@@ -94,7 +94,7 @@ class AddOn(models.Model):
     product = models.ForeignKey(to=ProductModel, related_name="add_ons", on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     added_price = models.FloatField()
-    sort = models.PositiveIntegerField()
+    sort = models.AutoField()
 
     class Meta:
         unique_together = ("product", "sort")
