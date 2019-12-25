@@ -1,15 +1,13 @@
 #  Copyright (c) Code Written and Tested by Ahmed Emad on 2019
-
-import random
-import string
+import os
+import uuid
 
 from django.contrib.auth.models import User
 from django.db import models
 
 
 def photo_upload(instance, filename):
-    res = instance.id.join(random.choices(string.ascii_letters, k=20))
-    return 'users/{0}'.format(res)
+    return 'users/{0}.{1}'.format(uuid.uuid4().hex, os.path.splitext(filename))
 
 
 class UserProfileModel(models.Model):

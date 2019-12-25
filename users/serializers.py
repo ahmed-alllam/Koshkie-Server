@@ -1,5 +1,4 @@
 #  Copyright (c) Code Written and Tested by Ahmed Emad on 2019
-
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
@@ -13,6 +12,11 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'password': {'write_only': True}
         }
+
+    def validate_email(self, data):
+        if User.objects.filter(email=data).exists():
+            raise serializers.ValidationError("email already exists")
+        return data
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -42,9 +46,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
         user = instance.user
         user.first_name = user_data.get('first_name', user.first_name)
         user.last_name = user_data.get('last_name', user.last_name)
-        user.email = user_data.get('email', user.email)
-        user.username = user_data.get('email', user.username)
-        user.set_password(user_data.get('password', user.password))
         user.save()
 
         return instance
