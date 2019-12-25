@@ -43,6 +43,7 @@ class OptionSerializer(serializers.ModelSerializer):
 
     def validated_price(self, data):
         option_group = self.context['option_group']
+
         if data > 0 and not option_group.changes_price:
             raise serializers.ValidationError("option group does't change product's price")
         if data <= 0 and option_group.changes_price:
@@ -63,6 +64,7 @@ class OptionGroupSerializer(serializers.ModelSerializer):
 
     def validated_changes_price(self, data):
         product = self.context['product']
+
         if product.option_groups.filter(changes_price=True).exists():
             raise serializers.ValidationError("""A Product Can't have multiple price
                                                  changing option group""")
@@ -71,6 +73,7 @@ class OptionGroupSerializer(serializers.ModelSerializer):
     def validate_rely_on(self, data):
         product = self.context['product']
         option_group_qs = product.option_groups.filter(sort=data['choosed_option_group'])
+
         if option_group_qs.exists():
             if not option_group_qs.get().options.filter(sort=data['option']).exists():
                 raise serializers.ValidationError("option doesn't exist")
@@ -135,6 +138,17 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
             'id': {'read_only': True},
             'rating': {'read_only': True}
         }
+
+    def __init__(self, *args, **kwargs):
+        exclude = kwargs.pop('exclude', None)
+
+        super(ShopProfileDetailSerializer, self).__init__(*args, **kwargs)
+
+        # to exculde price field if there are option groups that change price
+        if exclude is not None:
+            not_allowed = set(exclude)
+            for exclude_name in not_allowed:
+                self.fields.pop(exclude_name)
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -203,6 +217,7 @@ class ShopProfileDetailSerializer(serializers.ModelSerializer):
 
         super(ShopProfileDetailSerializer, self).__init__(*args, **kwargs)
 
+        # to exculde user field
         if exclude is not None:
             not_allowed = set(exclude)
             for exclude_name in not_allowed:

@@ -5,7 +5,8 @@ from rest_framework import serializers
 from drivers.serializers import DriverProfileSerializer
 from orders.models import OrderModel, OrderItemModel, Choice
 from shops.models import ProductModel
-from shops.serializers import ShopProfileSerializer, ProductSerializer, AddOnSerializer, OptionGroupSerializer
+from shops.serializers import (ShopProfileSerializer, ProductSerializer,
+                               AddOnSerializer, OptionGroupSerializer)
 from users.models import UserAddressModel
 from users.serializers import UserProfileSerializer, UserAddressSerializer
 
