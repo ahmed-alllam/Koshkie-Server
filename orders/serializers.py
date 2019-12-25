@@ -51,13 +51,13 @@ class OrderItemSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("add-on Doesn't Exist")
 
         if choices.count() != product.option_groups.count():
-            raise serializers.ValidationError("missing choises for required options")
+            raise serializers.ValidationError("missing choices for required options")
 
         for choice in choices:
             # to check for duplicates
             seen = set()
             if choice['option_group_id'] in seen:
-                raise serializers.ValidationError("duplicate choises for the order item")
+                raise serializers.ValidationError("duplicate choices for the order item")
 
             seen.add(choice['option_group_id'])
 

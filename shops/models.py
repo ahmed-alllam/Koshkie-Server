@@ -39,7 +39,7 @@ class ShopProfileModel(models.Model):
 class ProductGroupModel(models.Model):
     shop = models.ForeignKey(to=ShopProfileModel, related_name="product_groups", on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
-    sort = models.AutoField()
+    sort = models.PositiveIntegerField()
 
     class Meta:
         unique_together = (("shop", "sort"), ("shop", "title"))
@@ -47,6 +47,13 @@ class ProductGroupModel(models.Model):
 
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        if self.pk is None:
+            latest_sort = ProductGroupModel.objects.order_by('-sort').first().sort
+            self.sort = latest_sort + 1
+
+        super(ProductGroupModel, self).save(*args, **kwargs)
 
 
 class ProductModel(models.Model):
@@ -65,7 +72,7 @@ class ProductModel(models.Model):
 class OptionGroupModel(models.Model):
     product = models.ForeignKey(to=ProductModel, related_name="option_groups", on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
-    sort = models.AutoField()
+    sort = models.PositiveIntegerField()
     changes_price = models.BooleanField(default=False)
 
     class Meta:
@@ -75,11 +82,18 @@ class OptionGroupModel(models.Model):
     def __str__(self):
         return self.title
 
+    def save(self, *args, **kwargs):
+        if self.pk is None:
+            latest_sort = OptionGroupModel.objects.order_by('-sort').first().sort
+            self.sort = latest_sort + 1
+
+        super(OptionGroupModel, self).save(*args, **kwargs)
+
 
 class OptionModel(models.Model):
     option_group = models.ForeignKey(to=OptionGroupModel, on_delete=models.CASCADE, related_name="options")
     title = models.CharField(max_length=255)
-    sort = models.AutoField()
+    sort = models.PositiveIntegerField()
     price = models.FloatField()
 
     class Meta:
@@ -89,12 +103,19 @@ class OptionModel(models.Model):
     def __str__(self):
         return self.title
 
+    def save(self, *args, **kwargs):
+        if self.pk is None:
+            latest_sort = OptionModel.objects.order_by('-sort').first().sort
+            self.sort = latest_sort + 1
+
+        super(OptionModel, self).save(*args, **kwargs)
+
 
 class AddOn(models.Model):
     product = models.ForeignKey(to=ProductModel, related_name="add_ons", on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     added_price = models.FloatField()
-    sort = models.AutoField()
+    sort = models.PositiveIntegerField()
 
     class Meta:
         unique_together = ("product", "sort")
@@ -102,6 +123,13 @@ class AddOn(models.Model):
 
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        if self.pk is None:
+            latest_sort = AddOn.objects.order_by('-sort').first().sort
+            self.sort = latest_sort + 1
+
+        super(AddOn, self).save(*args, **kwargs)
 
 
 class RelyOn(models.Model):
