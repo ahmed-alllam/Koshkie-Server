@@ -8,15 +8,10 @@ from users.models import UserProfileModel, UserAddressModel
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('first_name', 'last_name', 'email', 'password')
+        fields = ('first_name', 'last_name', 'username', 'password')
         extra_kwargs = {
-            'password': {'write_only': True}
+            'password': {'write_only': True},
         }
-
-    def validate_email(self, data):
-        if User.objects.filter(email=data).exists():
-            raise serializers.ValidationError("email already exists")
-        return data
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -33,7 +28,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user_data = validated_data.pop('user')
-        user = User.objects.create(**user_data, username=user_data['email'])
+        user = User.objects.create(**user_data)
+
         user_profile = UserProfileModel.objects.create(user=user, **validated_data)
         return user_profile
 

@@ -32,7 +32,7 @@ class DriverProfileSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user_data = validated_data.pop('user')
-        user = User.objects.create(**user_data, username=user_data['email'])
+        user = User.objects.create(**user_data)
         driver_profile = DriverProfileModel.objects.create(user=user, **validated_data)
         return driver_profile
 
@@ -46,9 +46,6 @@ class DriverProfileSerializer(serializers.ModelSerializer):
         user = instance.user
         user.first_name = user_data.get('first_name', user.first_name)
         user.last_name = user_data.get('last_name', user.last_name)
-        user.email = user_data.get('email', user.email)
-        user.username = user_data.get('email', user.username)
-        user.set_password(user_data.get('password', user.password))
         user.save()
 
         return instance

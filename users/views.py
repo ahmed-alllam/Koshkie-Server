@@ -1,11 +1,47 @@
 #  Copyright (c) Code Written and Tested by Ahmed Emad on 2019
 
-from rest_framework import viewsets
-
-from users.models import UserProfileModel
-from users.serializers import UserProfileSerializer
+from rest_framework import views
 
 
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = UserProfileModel.objects.all()
-    serializer_class = UserProfileSerializer
+class UserProfileView(views.APIView):
+    def get(self):
+        pass
+
+    def post(self):
+        pass
+
+
+class UserProfileDetailView(views.APIView):
+    def get(self):
+        pass
+
+    def put(self):
+        pass
+
+    def patch(self):
+        pass
+
+    def delete(self):
+        pass
+
+
+class UserAddressView(views.APIView):
+    def get(self):
+        pass
+
+    def post(self):
+        pass
+
+
+class UserAddressDetailView(views.APIView):
+    def get(self):
+        pass
+
+    def put(self):
+        pass
+
+    def patch(self):
+        pass
+
+    def delete(self):
+        pass

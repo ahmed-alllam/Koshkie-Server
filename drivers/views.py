@@ -1,3 +1,2 @@
-from django.shortcuts import render
+#  Copyright (c) Code Written and Tested by Ahmed Emad on 2019
 
-# Create your views here.

@@ -1,15 +1,13 @@
 #  Copyright (c) Code Written and Tested by Ahmed Emad on 2019
-
-import random
-import string
+import os
+import uuid
 
 from django.contrib.auth.models import User
 from django.db import models
 
 
 def photo_upload(instance, filename):
-    res = instance.id.join(random.choices(string.ascii_letters, k=20))
-    return 'drivers/{0}'.format(res)
+    return 'drivers/{0}.{1}'.format(uuid.uuid4().hex, os.path.splitext(filename))
 
 
 class DriverProfileModel(models.Model):
@@ -20,7 +18,7 @@ class DriverProfileModel(models.Model):
     last_time_online = models.TimeField(auto_now_add=True)
     live_location_longitude = models.DecimalField(max_digits=9, decimal_places=6, default=0)
     live_location_latitude = models.DecimalField(max_digits=9, decimal_places=6, default=0)
-    vehicle_type = models.PositiveIntegerField()
+    vehicle_type = models.CharField(max_length=20)
     is_busy = models.BooleanField(default=False)
     rating = models.FloatField(default=0)
 
