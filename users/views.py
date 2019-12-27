@@ -70,7 +70,7 @@ class UserProfileView(views.APIView):
 
 
 class UserAddressView(viewsets.ViewSet):
-    # permission_classes = (IsOwner,)
+    permission_classes = (IsOwner,)
 
     def list(self, request):
         query_set = request.user.profile.addresses
