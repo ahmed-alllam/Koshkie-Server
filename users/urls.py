@@ -4,13 +4,14 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from users.views import (UserProfileView,
-                         UserAddressView)
+                         UserAddressView, create_user_profile, get_user_profile)
 
 router = DefaultRouter()
 router.register('', UserAddressView, basename='UserAddress')
 
 urlpatterns = [
-    path('', UserProfileView.as_view()),  # post
-    path('<int:pk>/', UserProfileView.as_view()),  # get, put, patch, delete
-    path('addresses/', include(router.urls))
+    path('', create_user_profile),  # post    any permissions
+    path('<int:pk>/', get_user_profile),  # get     any permissions
+    path('me/', UserProfileView.as_view()),  # put patch get delete      owner
+    path('addresses/', include(router.urls))  # owner
 ]

@@ -50,7 +50,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 class UserAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserAddressModel
-        exclude = 'user'
+        exclude = ('user',)
         extra_kwargs = {
             'id': {'read_only': True},
             'special_notes': {'required': False}
