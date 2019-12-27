@@ -1,7 +1,8 @@
 #  Copyright (c) Code Written and Tested by Ahmed Emad on 2019
+from django.contrib.auth import login
 from rest_framework import viewsets, views, permissions, status
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from users.models import UserProfileModel, UserAddressModel
@@ -10,32 +11,48 @@ from users.serializers import UserProfileSerializer, UserAddressSerializer
 
 class IsOwner(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
+        if request.method == 'POST':
+            return True
         return obj.user.user == request.user
 
 
-def my_profile_view(request):
-    user_profile = request.user.profile
-    serializer = UserProfileSerializer(user_profile)
-    return Response(serializer.data)
+class UserViewPermission(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS or request.method == 'POST':
+            return True
+        return obj.user.user == request.user
 
 
 class UserProfileView(views.APIView):
-    permission_classes = IsAuthenticatedOrReadOnly
+    permission_class = UserViewPermission
 
     def get(self, request, pk=None):
-        user_profile = get_object_or_404(UserProfileModel, pk=pk)
+        user_profile = None
+        if pk:
+            user_profile = get_object_or_404(UserProfileModel, pk=pk)
+        else:
+            if request.user.is_authenticated:
+                user_profile = request.user.profile
+            else:
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
         serializer = UserProfileSerializer(user_profile)
         return Response(serializer.data)
 
     def post(self, request):
         serializer = UserProfileSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            user_profile = serializer.save()
+            login(request, user_profile.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, pk=None):
-        user_profile = get_object_or_404(UserProfileModel, pk=pk)
+        user_profile = None
+        if pk:
+            user_profile = get_object_or_404(UserProfileModel, pk=pk)
+        else:
+            user_profile = request.user.profile
+
         serializer = UserProfileSerializer(user_profile, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -43,7 +60,12 @@ class UserProfileView(views.APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def patch(self, request, pk=None):
-        user_profile = get_object_or_404(UserProfileModel, pk=pk)
+        user_profile = None
+        if pk:
+            user_profile = get_object_or_404(UserProfileModel, pk=pk)
+        else:
+            user_profile = request.user.profile
+
         serializer = UserProfileSerializer(user_profile, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -51,13 +73,19 @@ class UserProfileView(views.APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk=None):
-        user_profile = get_object_or_404(UserProfileModel, pk=pk)
-        UserProfileModel.objects.delete(user_profile)
+        user_profile = None
+        if pk:
+            user_profile = get_object_or_404(UserProfileModel, pk=pk)
+        else:
+            user_profile = request.user.profile
+
+        user_profile.user.delete()
+        user_profile.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class UserAddressView(viewsets.ViewSet):
-    permission_classes = IsOwner
+    permission_classes = (IsAuthenticated, IsOwner)
 
     def list(self, request):
         query_set = request.user.profile.addresses

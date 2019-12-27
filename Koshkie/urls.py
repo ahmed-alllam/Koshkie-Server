@@ -6,9 +6,9 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+                  path('admin/', admin.site.urls),
                   path('users/', include('users.urls')),
-                  path('drivers/', include('drivers.urls')),
+                  # path('drivers/', include('drivers.urls')),
                   # path('login', ),
                   # path('logout', )
               ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + \

@@ -38,7 +38,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         instance.phone_number = validated_data.get('phone_number', instance.phone_number)
         instance.save()
 
-        user_data = validated_data.pop('user')
+        user_data = validated_data.pop('user', {})
         user = instance.user
         user.first_name = user_data.get('first_name', user.first_name)
         user.last_name = user_data.get('last_name', user.last_name)
