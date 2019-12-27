@@ -1,47 +1,98 @@
 #  Copyright (c) Code Written and Tested by Ahmed Emad on 2019
+from rest_framework import viewsets, views, permissions, status
+from rest_framework.generics import get_object_or_404
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.response import Response
 
-from rest_framework import views
+from users.models import UserProfileModel, UserAddressModel
+from users.serializers import UserProfileSerializer, UserAddressSerializer
+
+
+class IsOwner(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return obj.user.user == request.user
+
+
+def my_profile_view(request):
+    user_profile = request.user.profile
+    serializer = UserProfileSerializer(user_profile)
+    return Response(serializer.data)
 
 
 class UserProfileView(views.APIView):
-    def get(self):
-        pass
+    permission_classes = IsAuthenticatedOrReadOnly
 
-    def post(self):
-        pass
+    def get(self, request, pk=None):
+        user_profile = get_object_or_404(UserProfileModel, pk=pk)
+        serializer = UserProfileSerializer(user_profile)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = UserProfileSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, pk=None):
+        user_profile = get_object_or_404(UserProfileModel, pk=pk)
+        serializer = UserProfileSerializer(user_profile, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, pk=None):
+        user_profile = get_object_or_404(UserProfileModel, pk=pk)
+        serializer = UserProfileSerializer(user_profile, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk=None):
+        user_profile = get_object_or_404(UserProfileModel, pk=pk)
+        UserProfileModel.objects.delete(user_profile)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class UserProfileDetailView(views.APIView):
-    def get(self):
-        pass
+class UserAddressView(viewsets.ViewSet):
+    permission_classes = IsOwner
 
-    def put(self):
-        pass
+    def list(self, request):
+        query_set = request.user.profile.addresses
+        serializer = UserAddressSerializer(query_set, many=True)
+        return Response(serializer.data)
 
-    def patch(self):
-        pass
+    def retrieve(self, request, pk=None):
+        address = get_object_or_404(UserAddressModel, pk=pk)
+        serializer = UserAddressSerializer(address, many=True)
+        return Response(serializer.data)
 
-    def delete(self):
-        pass
+    def create(self, request):
+        serializer = UserAddressSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user.profile)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def update(self, request, pk=None):
+        address = get_object_or_404(UserAddressModel, pk=pk)
+        serializer = UserAddressSerializer(address, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class UserAddressView(views.APIView):
-    def get(self):
-        pass
+    def partial_update(self, request, pk=None):
+        address = get_object_or_404(UserAddressModel, pk=pk)
+        serializer = UserAddressSerializer(address, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def post(self):
-        pass
-
-
-class UserAddressDetailView(views.APIView):
-    def get(self):
-        pass
-
-    def put(self):
-        pass
-
-    def patch(self):
-        pass
-
-    def delete(self):
-        pass
+    def destory(self, request, pk=None):
+        user_address = get_object_or_404(UserAddressModel, pk=pk)
+        UserAddressModel.objects.delete(user_address)
+        return Response(status=status.HTTP_204_NO_CONTENT)

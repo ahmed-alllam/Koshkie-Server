@@ -142,7 +142,7 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         exclude = kwargs.pop('exclude', None)
 
-        super(ShopProfileDetailSerializer, self).__init__(*args, **kwargs)
+        super(ProductDetailsSerializer, self).__init__(*args, **kwargs)
 
         # to exculde price field if there are option groups that change price
         if exclude is not None:
