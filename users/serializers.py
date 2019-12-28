@@ -27,7 +27,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        user_data = validated_data.pop('user')
+        user_data = validated_data.pop('account')
         user = User(**user_data)
         user.set_password(user.password)
         user.save()
@@ -40,7 +40,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         instance.phone_number = validated_data.get('phone_number', instance.phone_number)
         instance.save()
 
-        user_data = validated_data.pop('user', {})
+        user_data = validated_data.pop('account', {})
         user = instance.account
         user.first_name = user_data.get('first_name', user.first_name)
         user.last_name = user_data.get('last_name', user.last_name)
@@ -52,8 +52,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
 class UserAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserAddressModel
-        exclude = ('user',)
+        exclude = ('id', 'user')
         extra_kwargs = {
-            'id': {'read_only': True},
-            'special_notes': {'required': False}
+            'sort': {'read_only': True}
         }
+
+    def create(self, validated_data):
+        address = UserAddressModel(**validated_data)
+        latest_sort = UserAddressModel.objects.filter(user=validated_data['user']).count()
+        address.sort = latest_sort + 1
+        address.save()
+        return address

@@ -22,6 +22,7 @@ class UserProfileModel(models.Model):
 
 class UserAddressModel(models.Model):
     user = models.ForeignKey(to=UserProfileModel, related_name="addresses", on_delete=models.CASCADE)
+    sort = models.PositiveIntegerField()
     title = models.CharField(max_length=255)
     area = models.CharField(max_length=255)
     type = models.CharField(max_length=15)  # house , office or apartment
@@ -35,3 +36,7 @@ class UserAddressModel(models.Model):
 
     def __str__(self):
         return self.title
+
+    class Meta:
+        unique_together = ("user", "sort")
+        ordering = ['sort']

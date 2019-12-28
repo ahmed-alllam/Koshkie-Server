@@ -1,6 +1,5 @@
 #  Copyright (c) Code Written and Tested by Ahmed Emad on 2019
 from django.contrib.auth import login
-from django.http import HttpResponseRedirect
 from rest_framework import viewsets, views, status
 from rest_framework.decorators import api_view
 from rest_framework.generics import get_object_or_404
@@ -13,23 +12,19 @@ from users.serializers import UserProfileSerializer, UserAddressSerializer
 
 @api_view(['POST'])
 def create_user_profile(request):
-    if request.user.is_authenticated and hasattr(request.user, 'profile'):
-        return HttpResponseRedirect(redirect_to='/users/me')
+    if request.user.is_authenticated:
+        return Response('User already logged in', status=status.HTTP_406_NOT_ACCEPTABLE)
     serializer = UserProfileSerializer(data=request.data)
     if serializer.is_valid():
         user_profile = serializer.save()
-        login(request, user_profile.user)
+        login(request, user_profile.account)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
 def get_user_profile(request, pk=None):
-    if request.user.is_authenticated and hasattr(request.user, 'profile'):
-        if request.user.profile.pk == pk:
-            return HttpResponseRedirect('/users/me')
     user_profile = get_object_or_404(UserProfileModel, pk=pk)
-
     serializer = UserProfileSerializer(user_profile)
     return Response(serializer.data)
 
@@ -78,8 +73,7 @@ class UserAddressView(viewsets.ViewSet):
         return Response(serializer.data)
 
     def retrieve(self, request, pk=None):
-        address = get_object_or_404(UserAddressModel, pk=pk)
-        self.check_object_permissions(request, address)
+        address = get_object_or_404(UserAddressModel, sort=pk, user=request.user.profile)
         serializer = UserAddressSerializer(address)
         return Response(serializer.data)
 
@@ -91,8 +85,7 @@ class UserAddressView(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, pk=None):
-        address = get_object_or_404(UserAddressModel, pk=pk)
-        self.check_object_permissions(request, address)
+        address = get_object_or_404(UserAddressModel, sort=pk, user=request.user.profile)
         serializer = UserAddressSerializer(address, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -100,8 +93,7 @@ class UserAddressView(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def partial_update(self, request, pk=None):
-        address = get_object_or_404(UserAddressModel, pk=pk)
-        self.check_object_permissions(request, address)
+        address = get_object_or_404(UserAddressModel, sort=pk, user=request.user.profile)
         serializer = UserAddressSerializer(address, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -109,7 +101,6 @@ class UserAddressView(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, pk=None):
-        address = get_object_or_404(UserAddressModel, pk=pk)
-        self.check_object_permissions(request, address)
+        address = get_object_or_404(UserAddressModel, sort=pk, user=request.user.profile)
         address.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
