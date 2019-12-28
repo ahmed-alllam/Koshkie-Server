@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad on 2019
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 28/12/2019, 22:43
 import os
 import uuid
 
@@ -7,10 +7,23 @@ from django.db import models
 
 
 def photo_upload(instance, filename):
+    """Gives a unique name to the saved file in models.
+    Arguments:
+        instance: the file itself, it is not used in this
+                  function but it's required by django.
+        filename: the name of the file sent by user, it's
+                  used here to get the format of the file.
+
+    Returns:
+        a unique random name to be saved in the DB.
+    """
+
     return 'users/{0}.{1}'.format(uuid.uuid4().hex, os.path.splitext(filename))
 
 
 class UserProfileModel(models.Model):
+    """The Model of the User Profile."""
+
     account = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     profile_photo = models.ImageField(upload_to=photo_upload, null=True)
     phone_number = models.BigIntegerField(null=True)
@@ -21,6 +34,8 @@ class UserProfileModel(models.Model):
 
 
 class UserAddressModel(models.Model):
+    """The Model of the User's address."""
+
     user = models.ForeignKey(to=UserProfileModel, related_name="addresses", on_delete=models.CASCADE)
     sort = models.PositiveIntegerField()
     title = models.CharField(max_length=255)
