@@ -10,7 +10,7 @@ router = DefaultRouter()
 router.register('', UserAddressView, basename='UserAddress')
 
 urlpatterns = [
-    path('', create_user_profile),  # post    any permissions
+    path('register/', create_user_profile),  # post    any permissions
     path('<int:pk>/', get_user_profile),  # get     any permissions
     path('me/', UserProfileView.as_view()),  # put patch get delete      owner
     path('addresses/', include(router.urls))  # owner

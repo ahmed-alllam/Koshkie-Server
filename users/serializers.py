@@ -15,11 +15,11 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
+    account = UserSerializer()
 
     class Meta:
         model = UserProfileModel
-        fields = ('id', 'user', 'profile_photo', 'phone_number')
+        fields = ('id', 'account', 'profile_photo', 'phone_number')
         extra_kwargs = {
             'id': {'read_only': True},
             'profile_photo': {'required': False},
@@ -28,9 +28,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user_data = validated_data.pop('user')
-        user = User.objects.create(**user_data)
+        user = User(**user_data)
+        user.set_password(user.password)
+        user.save()
 
-        user_profile = UserProfileModel.objects.create(user=user, **validated_data)
+        user_profile = UserProfileModel.objects.create(account=user, **validated_data)
         return user_profile
 
     def update(self, instance, validated_data):
@@ -39,7 +41,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         instance.save()
 
         user_data = validated_data.pop('user', {})
-        user = instance.user
+        user = instance.account
         user.first_name = user_data.get('first_name', user.first_name)
         user.last_name = user_data.get('last_name', user.last_name)
         user.save()

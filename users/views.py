@@ -1,24 +1,20 @@
 #  Copyright (c) Code Written and Tested by Ahmed Emad on 2019
 from django.contrib.auth import login
-from rest_framework import viewsets, views, permissions, status
+from django.http import HttpResponseRedirect
+from rest_framework import viewsets, views, status
 from rest_framework.decorators import api_view
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
 from users.models import UserAddressModel, UserProfileModel
+from users.permissions import IsOwner
 from users.serializers import UserProfileSerializer, UserAddressSerializer
-
-
-class IsOwner(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
-        return True
-
-    def has_permission(self, request, view):
-        return True
 
 
 @api_view(['POST'])
 def create_user_profile(request):
+    if request.user.is_authenticated and hasattr(request.user, 'profile'):
+        return HttpResponseRedirect(redirect_to='/users/me')
     serializer = UserProfileSerializer(data=request.data)
     if serializer.is_valid():
         user_profile = serializer.save()
@@ -29,7 +25,11 @@ def create_user_profile(request):
 
 @api_view(['GET'])
 def get_user_profile(request, pk=None):
+    if request.user.is_authenticated and hasattr(request.user, 'profile'):
+        if request.user.profile.pk == pk:
+            return HttpResponseRedirect('/users/me')
     user_profile = get_object_or_404(UserProfileModel, pk=pk)
+
     serializer = UserProfileSerializer(user_profile)
     return Response(serializer.data)
 
@@ -110,5 +110,6 @@ class UserAddressView(viewsets.ViewSet):
 
     def destroy(self, request, pk=None):
         address = get_object_or_404(UserAddressModel, pk=pk)
+        self.check_object_permissions(request, address)
         address.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

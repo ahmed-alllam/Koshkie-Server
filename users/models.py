@@ -11,13 +11,13 @@ def photo_upload(instance, filename):
 
 
 class UserProfileModel(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+    account = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     profile_photo = models.ImageField(upload_to=photo_upload, null=True)
     phone_number = models.BigIntegerField(null=True)
     favourite_products = models.ManyToManyField(to='shops.ProductModel')
 
     def __str__(self):
-        return self.user.username
+        return self.account.username
 
 
 class UserAddressModel(models.Model):
