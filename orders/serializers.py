@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad on 2019
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 30/12/2019, 17:08
 
 from rest_framework import serializers
 
@@ -84,7 +84,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     user = UserProfileSerializer(read_only=True)
     driver = DriverProfileSerializer(read_only=True)
-    shops = ShopProfileSerializer(many=True, read_only=True)
+    shops = ShopProfileSerializer(many=True, read_only=True, exclude='account')
     items = OrderItemSerializer(many=True)
     shipping_address = UserAddressSerializer(read_only=True)
     shipping_address_id = serializers.PrimaryKeyRelatedField(write_only=True,

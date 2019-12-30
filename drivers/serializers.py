@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad on 2019
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 30/12/2019, 17:08
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -8,32 +8,20 @@ from users.serializers import UserProfileSerializer, UserSerializer
 
 
 class DriverProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
+    account = UserSerializer()
 
     class Meta:
         model = DriverProfileModel
-        fields = ('id', 'user', 'profile_photo', 'phone_number', 'vehicle_type', 'rating')
+        fields = ('id', 'account', 'profile_photo', 'phone_number', 'vehicle_type', 'rating')
         extra_kwargs = {
             'id': {'read_only': True},
             'rating': {'read_only': True}
         }
 
-    def validate_vehicle_type(self, data):
-        types = {"car", "bike", "motorcycle"}
-
-        matches = False
-        for vehicle_type in types:
-            if data.lower() == vehicle_type: matches = True
-
-        if not matches:
-            raise serializers.ValidationError('invalid shop type')
-
-        return data
-
     def create(self, validated_data):
-        user_data = validated_data.pop('user')
-        user = User.objects.create(**user_data)
-        driver_profile = DriverProfileModel.objects.create(user=user, **validated_data)
+        user_data = validated_data.pop('account')
+        account = User.objects.create(**user_data)
+        driver_profile = DriverProfileModel.objects.create(account=account, **validated_data)
         return driver_profile
 
     def update(self, instance, validated_data):
@@ -42,11 +30,11 @@ class DriverProfileSerializer(serializers.ModelSerializer):
         instance.vehicle_type = validated_data.get('vehicle_type', instance.vehicle_type)
         instance.save()
 
-        user_data = validated_data.pop('user')
-        user = instance.user
-        user.first_name = user_data.get('first_name', user.first_name)
-        user.last_name = user_data.get('last_name', user.last_name)
-        user.save()
+        user_data = validated_data.pop('account', {})
+        account = instance.account
+        account.first_name = user_data.get('first_name', account.first_name)
+        account.last_name = user_data.get('last_name', account.last_name)
+        account.save()
 
         return instance
 
@@ -56,8 +44,15 @@ class DriverReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DriverReviewModel
-        fields = ('id', 'user', 'stars', 'text', 'time_stamp')
+        fields = ('sort', 'user', 'stars', 'text', 'time_stamp')
         extra_kwargs = {
-            'id': {'read_only': True},
+            'sort': {'read_only': True},
             'time_stamp': {'read_only': True},
         }
+
+    def create(self, validated_data):
+        review = DriverReviewModel(**validated_data)
+        latest_sort = DriverReviewModel.objects.filter(driver=validated_data['driver']).count()
+        review.sort = latest_sort + 1
+        review.save()
+        return review

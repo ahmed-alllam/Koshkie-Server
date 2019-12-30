@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad on 2019
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 30/12/2019, 17:08
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
@@ -41,10 +41,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
         instance.save()
 
         user_data = validated_data.pop('account', {})
-        user = instance.account
-        user.first_name = user_data.get('first_name', user.first_name)
-        user.last_name = user_data.get('last_name', user.last_name)
-        user.save()
+        account = instance.account
+        account.first_name = user_data.get('first_name', account.first_name)
+        account.last_name = user_data.get('last_name', account.last_name)
+        account.save()
 
         return instance
 

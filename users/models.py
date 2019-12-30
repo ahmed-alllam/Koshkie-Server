@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 28/12/2019, 22:43
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 30/12/2019, 17:08
 import os
 import uuid
 
@@ -36,11 +36,17 @@ class UserProfileModel(models.Model):
 class UserAddressModel(models.Model):
     """The Model of the User's address."""
 
+    address_type_choices = [
+        ('h', 'house'),
+        ('o', 'office'),
+        ('a', 'apartment')
+    ]
+
     user = models.ForeignKey(to=UserProfileModel, related_name="addresses", on_delete=models.CASCADE)
     sort = models.PositiveIntegerField()
     title = models.CharField(max_length=255)
     area = models.CharField(max_length=255)
-    type = models.CharField(max_length=15)  # house , office or apartment
+    type = models.CharField(max_length=1, choices=address_type_choices)
     street = models.CharField(max_length=255)
     building = models.CharField(max_length=255)
     floor = models.PositiveIntegerField(default=1)
