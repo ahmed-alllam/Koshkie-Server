@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 30/12/2019, 17:08
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 31/12/2019, 20:06
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -51,8 +51,22 @@ class DriverReviewSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
+        driver = validated_data['driver']
         review = DriverReviewModel(**validated_data)
-        latest_sort = DriverReviewModel.objects.filter(driver=validated_data['driver']).count()
+        latest_sort = driver.reviews.count()
         review.sort = latest_sort + 1
         review.save()
+
+        driver.calculate_rating()
+        driver.save()
+
         return review
+
+    def update(self, instance, validated_data):
+        instance.stars = validated_data.get('stars', instance.stars)
+        instance.text = validated_data.get('text', instance.text)
+        instance.save()
+
+        instance.driver.calculate_rating()
+        instance.driver.save()
+        return instance

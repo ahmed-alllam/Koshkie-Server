@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 30/12/2019, 17:08
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 31/12/2019, 20:06
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from rest_framework import viewsets, status
@@ -14,14 +14,14 @@ from users.serializers import UserProfileSerializer, UserAddressSerializer
 @api_view(['POST'])
 def login_view(request):
     if request.user.is_authenticated:
-        return Response('User already logged in', status=status.HTTP_406_NOT_ACCEPTABLE)
+        return Response('User already logged in', status=status.HTTP_403_FORBIDDEN)
 
     username = request.data['username']
     password = request.data['password']
 
     user = authenticate(username=username, password=password)
 
-    if user:
+    if user and hasattr(user, 'profile'):
         login(request, user)
         return Response('Logged In Successfully')
     else:

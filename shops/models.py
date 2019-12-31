@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad on 2019
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 31/12/2019, 20:06
 
 import random
 import string
@@ -16,11 +16,17 @@ def photo_upload(instance, filename):
 
 
 class ShopProfileModel(models.Model):
+    shop_type_choices = [
+        ('F', 'Food'),
+        ('G', 'Groceries'),
+        ('P', 'Pharmacy')
+    ]
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="shop_profile")
     profile_photo = models.ImageField(upload_to=photo_upload)
     phone_number = models.BigIntegerField()
     description = models.TextField()
-    shop_type = models.PositiveIntegerField()
+    shop_type = models.CharField(max_length=1, choices=shop_type_choices)
     name = models.CharField(max_length=255)
     rating = models.FloatField()
     is_active = models.BooleanField(default=False)

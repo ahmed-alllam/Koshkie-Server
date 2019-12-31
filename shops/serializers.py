@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad on 2019
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 31/12/2019, 20:06
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -222,18 +222,6 @@ class ShopProfileDetailSerializer(serializers.ModelSerializer):
             not_allowed = set(exclude)
             for exclude_name in not_allowed:
                 self.fields.pop(exclude_name)
-
-    def validate_shop_type(self, data):
-        types = {"food", "pharmacy", "groceries"}
-
-        matches = False
-        for shop_type in types:
-            if data.lower() == shop_type: matches = True
-
-        if not matches:
-            raise serializers.ValidationError('invalid shop type')
-
-        return data
 
     def validate_currency(self, data):
         currencies = {"egp", "dollar", "euro"}
