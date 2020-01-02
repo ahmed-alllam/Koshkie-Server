@@ -1,6 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 31/12/2019, 20:06
-from math import cos, radians
-
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 02/01/2020, 20:19
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from rest_framework import viewsets, status
@@ -16,7 +14,7 @@ from drivers.serializers import DriverProfileSerializer, DriverReviewSerializer
 @api_view(['POST'])
 def login_view(request):
     if request.user.is_authenticated:
-        return Response('Driver already logged in', status=status.HTTP_403_FORBIDDEN)
+        return Response('Driver already logged in', status=status.HTTP_401_UNAUTHORIZED)
 
     username = request.data['username']
     password = request.data['password']
@@ -37,33 +35,34 @@ def logout_view(request):
     return Response('Logged Out Successfully')
 
 
-def calculate_longitude_delta(latitude):
-    return (0.00898311174 / cos(radians(latitude))) * 2.5
-
-
 class DriverProfileView(viewsets.ViewSet):
     permission_classes = (DriverProfilePermissions,)
 
     def list(self, request):
-        user_longitude = float(request.GET.get('longitude'))
-        user_latitude = float(request.GET.get('latitude'))
-
-        if user_longitude is None and user_latitude is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user_longitude = float(request.GET.get('longitude'))
+            user_latitude = float(request.GET.get('latitude'))
+        except ValueError:
+            return Response("invalid coordinates", status=status.HTTP_400_BAD_REQUEST)
 
         # min_active_time = timezone.now() - timezone.timedelta(seconds=10)
         # available_drivers = DriverProfileModel.objects.filter(is_active=True, is_busy=False,
         #                                                       last_time_online__gte=min_active_time)
-        longitude_delta = calculate_longitude_delta(user_latitude)
-        latitude_delta = 0.00904371732 * 2.5
-        available_drivers = DriverProfileModel.objects.filter(
-            live_location_longitude__gte=user_longitude - longitude_delta,
-            live_location_longitude__lte=user_longitude + longitude_delta,
-            live_location_latitude__gte=user_latitude - latitude_delta,
-            live_location_latitude__lte=user_latitude + latitude_delta,
-        ).all()
+        query = """SELECT id, (6367*acos(cos(radians(%2f))
+                      *cos(radians(live_location_longitude))*cos(radians(live_location_latitude)-radians(%2f))
+                      +sin(radians(%2f))*sin(radians(live_location_latitude))))
+                      AS distance FROM drivers_driverprofilemodel WHERE
+                      distance < %2f ORDER BY distance LIMIT 0, %d""" % (
+            float(user_latitude),
+            float(user_longitude),
+            float(user_latitude),
+            2.5,
+            10
+        )
 
-        serializer = DriverProfileSerializer(available_drivers[:10], many=True)
+        queryset = DriverProfileModel.objects.raw(query)
+
+        serializer = DriverProfileSerializer(queryset, many=True)
         return Response(serializer.data)
 
     def retrieve(self, request, username=None):
@@ -85,7 +84,7 @@ class DriverProfileView(viewsets.ViewSet):
                 login(request, driver_profile.account)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response(status=status.HTTP_403_FORBIDDEN)
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
 
     def update(self, request):
         driver_profile = request.user.driver_profile
@@ -152,5 +151,10 @@ class DriverReviewView(viewsets.ViewSet):
     def destroy(self, request, username=None, pk=None):
         review = get_object_or_404(DriverReviewModel, driver__account__username=username, sort=pk)
         self.check_object_permissions(request, review)
+        driver = review.driver
         review.delete()
+
+        driver.calculate_rating()
+        driver.resort_reviews()
+
         return Response(status=status.HTTP_204_NO_CONTENT)

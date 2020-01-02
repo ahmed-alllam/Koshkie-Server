@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 31/12/2019, 20:06
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 02/01/2020, 20:19
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from rest_framework import viewsets, status
@@ -14,7 +14,7 @@ from users.serializers import UserProfileSerializer, UserAddressSerializer
 @api_view(['POST'])
 def login_view(request):
     if request.user.is_authenticated:
-        return Response('User already logged in', status=status.HTTP_403_FORBIDDEN)
+        return Response('User already logged in', status=status.HTTP_401_UNAUTHORIZED)
 
     username = request.data['username']
     password = request.data['password']
@@ -96,7 +96,7 @@ class UserProfileView(viewsets.ViewSet):
                 login(request, user_profile.account)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response(status=status.HTTP_403_FORBIDDEN)
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
 
     def update(self, request):
         """Completely Updates the user profile.
@@ -264,5 +264,7 @@ class UserAddressView(viewsets.ViewSet):
             returns HTTP 204 Response with no content.
         """
         address = get_object_or_404(UserAddressModel, sort=pk, user=request.user.profile)
+        user = address.user
         address.delete()
+        user.resort_addresses()
         return Response(status=status.HTTP_204_NO_CONTENT)

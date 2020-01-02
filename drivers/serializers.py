@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 31/12/2019, 20:06
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 02/01/2020, 20:19
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -49,6 +49,13 @@ class DriverReviewSerializer(serializers.ModelSerializer):
             'sort': {'read_only': True},
             'time_stamp': {'read_only': True},
         }
+
+    def validate_stars(self, stars):
+        decimal_digits = str(stars - int(stars))[2:]
+        print(decimal_digits)
+        if len(decimal_digits) > 1 or int(decimal_digits) % 5 != 0:
+            raise serializers.ValidationError("invalid number of stars")
+        return stars
 
     def create(self, validated_data):
         driver = validated_data['driver']

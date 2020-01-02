@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 31/12/2019, 20:06
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 02/01/2020, 20:19
 import os
 import uuid
 
@@ -33,25 +33,33 @@ class DriverProfileModel(models.Model):
     ])
     vehicle_type = models.CharField(max_length=1, choices=vehicle_type_choices)
     is_busy = models.BooleanField(default=False)
-    rating = models.FloatField(default=0)
+    rating = models.DecimalField(default=0, decimal_places=1, max_digits=2)
 
     def __str__(self):
         return self.account.username
 
     def calculate_rating(self):
         sum_num = 0
+        count = 0
         for review in self.reviews.all():
-            sum_num = sum_num + review.stars
+            sum_num += review.stars
+            count += 1
 
-        avg = sum_num / self.reviews.count()
+        avg = sum_num / count
         self.rating = avg
+
+    def resort_reviews(self):
+        sort = 1
+        for review in self.reviews.all():
+            review.update(sort=sort)
+            sort += 1
 
 
 class DriverReviewModel(models.Model):
     user = models.ForeignKey(to='users.UserProfileModel', on_delete=models.SET_NULL, null=True)
     driver = models.ForeignKey(to=DriverProfileModel, on_delete=models.CASCADE, related_name='reviews')
     sort = models.PositiveIntegerField()
-    stars = models.PositiveIntegerField(validators=[
+    stars = models.FloatField(validators=[
         MaxValueValidator(5),
         MinValueValidator(0.5)
     ])

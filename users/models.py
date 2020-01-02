@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 31/12/2019, 20:06
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 02/01/2020, 20:19
 import os
 import uuid
 
@@ -29,10 +29,16 @@ class UserProfileModel(models.Model):
     profile_photo = models.ImageField(upload_to=photo_upload, null=True)
     phone_number = models.BigIntegerField(null=True)
 
-    # favourite_products = models.ManyToManyField(to='shops.ProductModel', null=True)
+    favourite_products = models.ManyToManyField(to='shops.ProductModel', null=True)
 
     def __str__(self):
         return self.account.username
+
+    def resort_addresses(self):
+        sort = 1
+        for review in self.addresses.all():
+            review.update(sort=sort)
+            sort += 1
 
 
 class UserAddressModel(models.Model):
@@ -63,9 +69,9 @@ class UserAddressModel(models.Model):
         MinValueValidator(-90)
     ])
 
-    def __str__(self):
-        return self.title
-
     class Meta:
         unique_together = ("user", "sort")
         ordering = ['sort']
+
+    def __str__(self):
+        return self.title
