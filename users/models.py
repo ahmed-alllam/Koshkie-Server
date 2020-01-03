@@ -1,10 +1,11 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 02/01/2020, 20:19
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 03/01/2020, 19:48
 import os
 import uuid
 
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models import F
 
 
 def photo_upload(instance, filename):
@@ -34,11 +35,8 @@ class UserProfileModel(models.Model):
     def __str__(self):
         return self.account.username
 
-    def resort_addresses(self):
-        sort = 1
-        for review in self.addresses.all():
-            review.update(sort=sort)
-            sort += 1
+    def resort_addresses(self, sort):
+        self.addresses.filter(sort__gt=sort).update(sort=F('sort') - 1)
 
 
 class UserAddressModel(models.Model):

@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 30/12/2019, 17:08
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 03/01/2020, 19:48
 from rest_framework import permissions
 
 
@@ -9,6 +9,11 @@ class DriverProfilePermissions(permissions.BasePermission):
         if request.method in self.safe_methods:
             return True
         if request.user.is_authenticated and hasattr(request.user, 'driver_profile'):
+            return True
+        return False
+
+    def has_object_permission(self, request, view, obj):
+        if obj == request.user.driver_profile:
             return True
         return False
 

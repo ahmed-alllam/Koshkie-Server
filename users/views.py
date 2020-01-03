@@ -1,38 +1,12 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 02/01/2020, 20:19
-from django.contrib.auth import login, authenticate, logout
-from django.contrib.auth.decorators import login_required
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 03/01/2020, 19:48
+from django.contrib.auth import login
 from rest_framework import viewsets, status
-from rest_framework.decorators import api_view
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
 from users.models import UserAddressModel, UserProfileModel
 from users.permissions import UserProfilePermissions, UserAddressPermissions
 from users.serializers import UserProfileSerializer, UserAddressSerializer
-
-
-@api_view(['POST'])
-def login_view(request):
-    if request.user.is_authenticated:
-        return Response('User already logged in', status=status.HTTP_401_UNAUTHORIZED)
-
-    username = request.data['username']
-    password = request.data['password']
-
-    user = authenticate(username=username, password=password)
-
-    if user and hasattr(user, 'profile'):
-        login(request, user)
-        return Response('Logged In Successfully')
-    else:
-        return Response('Wrong Username or Password', status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(['POST'])
-@login_required
-def logout_view(request):
-    logout(request)
-    return Response('Logged Out Successfully')
 
 
 class UserProfileView(viewsets.ViewSet):
@@ -62,15 +36,10 @@ class UserProfileView(viewsets.ViewSet):
             HTTP 401 if user isn't logged in and didn't pass a pk ,
             if not, returns HTTP 200 Response with the address's JSON data.
         """
-        if username:
-            user_profile = get_object_or_404(UserProfileModel, account__username=username)
-            serializer = UserProfileSerializer(user_profile)
-            return Response(serializer.data)
-        if request.user.is_authenticated and hasattr(request.user, 'profile'):
-            user_profile = request.user.profile
-            serializer = UserProfileSerializer(user_profile)
-            return Response(serializer.data)
-        return Response(status=status.HTTP_401_UNAUTHORIZED)
+        user_profile = get_object_or_404(UserProfileModel, account__username=username)
+        self.check_object_permissions(request, user_profile)
+        serializer = UserProfileSerializer(user_profile)
+        return Response(serializer.data)
 
     def create(self, request):
         """Creates A new user profile and Logs it In.
@@ -98,7 +67,7 @@ class UserProfileView(viewsets.ViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-    def update(self, request):
+    def update(self, request, username=None):
         """Completely Updates the user profile.
 
         Arguments:
@@ -110,14 +79,15 @@ class UserProfileView(viewsets.ViewSet):
              if not returns HTTP 200 Response with the update JSON data.
         """
 
-        user_profile = request.user.profile
+        user_profile = get_object_or_404(UserProfileModel, account__username=username)
+        self.check_object_permissions(request, user_profile)
         serializer = UserProfileSerializer(user_profile, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def partial_update(self, request):
+    def partial_update(self, request, username=None):
         """Partially Updates the user profile.
 
         Arguments:
@@ -129,14 +99,15 @@ class UserProfileView(viewsets.ViewSet):
              if not returns HTTP 200 Response with the update JSON data.
         """
 
-        user_profile = request.user.profile
+        user_profile = get_object_or_404(UserProfileModel, account__username=username)
+        self.check_object_permissions(request, user_profile)
         serializer = UserProfileSerializer(user_profile, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def destroy(self, request):
+    def destroy(self, request, username=None):
         """Deletes the user profile.
 
         Arguments:
@@ -147,7 +118,8 @@ class UserProfileView(viewsets.ViewSet):
             returns HTTP 204 Response with no content.
         """
 
-        user_profile = request.user.profile
+        user_profile = get_object_or_404(UserProfileModel, account__username=username)
+        self.check_object_permissions(request, user_profile)
         user_profile.account.delete()
         user_profile.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -266,5 +238,6 @@ class UserAddressView(viewsets.ViewSet):
         address = get_object_or_404(UserAddressModel, sort=pk, user=request.user.profile)
         user = address.user
         address.delete()
-        user.resort_addresses()
+        user.resort_addresses(address.sort)
+
         return Response(status=status.HTTP_204_NO_CONTENT)
