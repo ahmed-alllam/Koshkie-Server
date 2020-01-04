@@ -1,5 +1,7 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 03/01/2020, 19:48
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 04/01/2020, 12:48
 from rest_framework import permissions
+
+from users.models import UserProfileModel
 
 
 class UserProfilePermissions(permissions.BasePermission):
@@ -18,7 +20,7 @@ class UserProfilePermissions(permissions.BasePermission):
         return False
 
     def has_object_permission(self, request, view, obj):
-        if obj == request.user.profile:
+        if obj.account == request.user:
             return True
         return False
 
@@ -31,5 +33,14 @@ class UserAddressPermissions(permissions.BasePermission):
         because that account may be other type like a driver, shop or an admin.
         """
         if request.user.is_authenticated and hasattr(request.user, 'profile'):
+            return True
+        return False
+
+    def has_object_permission(self, request, view, obj):
+        if type(obj) == UserProfileModel:
+            if obj.account == request.user:
+                return True
+            return False
+        if obj.user.account == request.user:
             return True
         return False

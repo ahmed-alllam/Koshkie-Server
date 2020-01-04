@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 03/01/2020, 19:48
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 04/01/2020, 12:48
 import os
 import uuid
 
@@ -30,7 +30,7 @@ class UserProfileModel(models.Model):
     profile_photo = models.ImageField(upload_to=photo_upload, null=True)
     phone_number = models.BigIntegerField(null=True)
 
-    favourite_products = models.ManyToManyField(to='shops.ProductModel', null=True)
+    favourite_products = models.ManyToManyField(to='shops.ProductModel')
 
     def __str__(self):
         return self.account.username

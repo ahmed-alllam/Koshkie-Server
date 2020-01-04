@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 03/01/2020, 19:48
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 04/01/2020, 12:48
 from django.contrib.auth import login
 from rest_framework import viewsets, status
 from rest_framework.generics import get_object_or_404
@@ -37,7 +37,6 @@ class UserProfileView(viewsets.ViewSet):
             if not, returns HTTP 200 Response with the address's JSON data.
         """
         user_profile = get_object_or_404(UserProfileModel, account__username=username)
-        self.check_object_permissions(request, user_profile)
         serializer = UserProfileSerializer(user_profile)
         return Response(serializer.data)
 
@@ -133,7 +132,7 @@ class UserAddressView(viewsets.ViewSet):
 
     permission_classes = (UserAddressPermissions,)
 
-    def list(self, request):
+    def list(self, request, username=None):
         """Lists all addresses the user has.
 
         Arguments:
@@ -144,11 +143,13 @@ class UserAddressView(viewsets.ViewSet):
             HTTP 200 Response with all addresses in
             the user's profile in JSON.
         """
-        query_set = request.user.profile.addresses
+        user = get_object_or_404(UserProfileModel, account__username=username)
+        self.check_object_permissions(request, user)
+        query_set = user.addresses.all()
         serializer = UserAddressSerializer(query_set, many=True)
         return Response(serializer.data)
 
-    def retrieve(self, request, pk=None):
+    def retrieve(self, request, username=None, pk=None):
         """Retrieves a certain address from the user's list
 
         Arguments:
@@ -161,11 +162,12 @@ class UserAddressView(viewsets.ViewSet):
             HTTP 404 Response if address is not found, if not,
             returns HTTP 200 Response with the address's JSON data.
         """
-        address = get_object_or_404(UserAddressModel, sort=pk, user=request.user.profile)
+        address = get_object_or_404(UserAddressModel, sort=pk, user__account__username=username)
+        self.check_object_permissions(request, address)
         serializer = UserAddressSerializer(address)
         return Response(serializer.data)
 
-    def create(self, request):
+    def create(self, request, username=None):
         """Creates a new address and adds it to the user's list.
 
         Arguments:
@@ -176,13 +178,15 @@ class UserAddressView(viewsets.ViewSet):
             HTTP 400 Response if the data is not valid, if not,
             returns HTTP 201 Response with the address's JSON data.
         """
+        user = get_object_or_404(UserProfileModel, account__username=username)
+        self.check_object_permissions(request, user)
         serializer = UserAddressSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(user=request.user.profile)
+            serializer.save(username=username)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def update(self, request, pk=None):
+    def update(self, request, username=None, pk=None):
         """Completely Updates a certain address from the user's list.
 
         Arguments:
@@ -196,14 +200,15 @@ class UserAddressView(viewsets.ViewSet):
             HTTP 404 Response if the address is not found
             if not returns HTTP 200 Response with the update JSON data.
         """
-        address = get_object_or_404(UserAddressModel, sort=pk, user=request.user.profile)
+        address = get_object_or_404(UserAddressModel, sort=pk, user__account__username=username)
+        self.check_object_permissions(request, address)
         serializer = UserAddressSerializer(address, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def partial_update(self, request, pk=None):
+    def partial_update(self, request, username=None, pk=None):
         """Partially Updates a certain address from the user's list.
 
         Arguments:
@@ -217,14 +222,15 @@ class UserAddressView(viewsets.ViewSet):
             HTTP 404 Response if the address is not found
             if not returns HTTP 200 Response with the update JSON data.
         """
-        address = get_object_or_404(UserAddressModel, sort=pk, user=request.user.profile)
+        address = get_object_or_404(UserAddressModel, sort=pk, user__account__username=username)
+        self.check_object_permissions(request, address)
         serializer = UserAddressSerializer(address, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def destroy(self, request, pk=None):
+    def destroy(self, request, username=None, pk=None):
         """Deletes a certain address from the user's list.
 
         Arguments:
@@ -235,7 +241,8 @@ class UserAddressView(viewsets.ViewSet):
         Returns:
             returns HTTP 204 Response with no content.
         """
-        address = get_object_or_404(UserAddressModel, sort=pk, user=request.user.profile)
+        address = get_object_or_404(UserAddressModel, sort=pk, user__account__username=username)
+        self.check_object_permissions(request, address)
         user = address.user
         address.delete()
         user.resort_addresses(address.sort)

@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 03/01/2020, 19:48
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 04/01/2020, 12:48
 from rest_framework import permissions
 
 
@@ -13,7 +13,7 @@ class DriverProfilePermissions(permissions.BasePermission):
         return False
 
     def has_object_permission(self, request, view, obj):
-        if obj == request.user.driver_profile:
+        if obj.account == request.user:
             return True
         return False
 
@@ -29,6 +29,6 @@ class DriverReviewPermissions(permissions.BasePermission):
         return False
 
     def has_object_permission(self, request, view, obj):
-        if obj.user == request.user.profile:
+        if obj.user.account == request.user:
             return True
         return False

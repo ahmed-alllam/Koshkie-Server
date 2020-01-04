@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 03/01/2020, 19:48
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 04/01/2020, 12:48
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
@@ -16,5 +16,5 @@ urlpatterns = [
                                                  'put': 'update',
                                                  'patch': 'partial_update',
                                                  'delete': 'destroy'})),
-    path('addresses/', include(router.urls))
+    path('<username>/addresses/', include(router.urls))
 ]

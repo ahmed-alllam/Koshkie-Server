@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 30/12/2019, 17:08
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 04/01/2020, 12:48
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
@@ -58,8 +58,9 @@ class UserAddressSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        address = UserAddressModel(**validated_data)
-        latest_sort = UserAddressModel.objects.filter(user=validated_data['user']).count()
+        user = UserProfileModel.objects.get(account__username=validated_data.pop('username'))
+        address = UserAddressModel(**validated_data, user=user)
+        latest_sort = UserAddressModel.objects.filter(user=user).count()
         address.sort = latest_sort + 1
         address.save()
         return address

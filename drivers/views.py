@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 03/01/2020, 19:48
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 04/01/2020, 12:48
 from django.contrib.auth import login
 from rest_framework import viewsets, status
 from rest_framework.generics import get_object_or_404
@@ -16,7 +16,7 @@ class DriverProfileView(viewsets.ViewSet):
         try:
             user_longitude = float(request.GET.get('longitude'))
             user_latitude = float(request.GET.get('latitude'))
-        except ValueError:
+        except Exception:
             return Response("invalid coordinates", status=status.HTTP_400_BAD_REQUEST)
 
         # min_active_time = timezone.now() - timezone.timedelta(seconds=10)
@@ -127,5 +127,5 @@ class DriverReviewView(viewsets.ViewSet):
 
         driver.calculate_rating()
         driver.resort_reviews(review.sort)
-
+        driver.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
