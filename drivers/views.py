@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 16:28
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 22:09
 from abc import ABC
 
 from django.contrib.auth import login
@@ -101,7 +101,7 @@ class DriverReviewView(viewsets.ViewSet):
     permission_classes = (DriverReviewPermissions,)
 
     def list(self, request, username=None):
-        query_set = DriverProfileModel.objects.filter(account__username=username).get().reviews.all()
+        query_set = DriverReviewModel.objects.filter(driver__account__username=username).all()
         serializer = DriverReviewSerializer(query_set, many=True)
         return Response(serializer.data)
 

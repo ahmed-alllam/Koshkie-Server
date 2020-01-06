@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 16:28
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 22:09
 
 from abc import ABC
 
@@ -9,9 +9,9 @@ from rest_framework import viewsets, status
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
-from shops.models import ShopProfileModel
-from shops.permissions import ShopProfilePermissions
-from shops.serializers import ShopProfileSerializer, ShopProfileDetailSerializer
+from shops.models import ShopProfileModel, ShopReviewModel
+from shops.permissions import ShopProfilePermissions, ShopReviewPermissions
+from shops.serializers import ShopProfileSerializer, ShopProfileDetailSerializer, ShopReviewSerializer
 
 
 class Sin(Func, ABC):
@@ -102,6 +102,71 @@ class ShopProfileView(viewsets.ViewSet):
 
 
 class ShopReviewView(viewsets.ViewSet):
+    permission_classes = (ShopReviewPermissions,)
+
+    def list(self, request, shop_slug=None):
+        query_set = ShopReviewModel.objects.filter(shop__slug=shop_slug).all()
+        serializer = ShopReviewSerializer(query_set, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, shop_slug=None, pk=None):
+        review = get_object_or_404(ShopReviewModel, shop__slug=shop_slug, sort=pk)
+        serializer = ShopReviewSerializer(review)
+        return Response(serializer.data)
+
+    def create(self, request, shop_slug=None):
+        serializer = ShopReviewSerializer(data=request.data)
+        if serializer.is_valid():
+            shop = get_object_or_404(ShopProfileModel, slug=shop_slug)
+            serializer.save(user=request.user.profile, shop=shop)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, shop_slug=None, pk=None):
+        review = get_object_or_404(ShopReviewModel, shop__slug=shop_slug, sort=pk)
+        self.check_object_permissions(request, review)
+        serializer = ShopReviewSerializer(review, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def partial_update(self, request, shop_slug=None, pk=None):
+        review = get_object_or_404(ShopReviewModel, shop__slug=shop_slug, sort=pk)
+        self.check_object_permissions(request, review)
+        serializer = ShopReviewSerializer(review, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, shop_slug=None, pk=None):
+        review = get_object_or_404(ShopReviewModel, shop__slug=shop_slug, sort=pk)
+        self.check_object_permissions(request, review)
+        shop = review.shop
+        review.delete()
+
+        shop.calculate_rating()
+        shop.resort_reviews(review.sort)
+        shop.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ProductGroupView(viewsets.ViewSet):
+    def create(self):
+        pass
+
+    def update(self):
+        pass
+
+    def partially_update(self):
+        pass
+
+    def destroy(self):
+        pass
+
+
+class ProductView(viewsets.ViewSet):
     def list(self):
         pass
 
@@ -121,21 +186,7 @@ class ShopReviewView(viewsets.ViewSet):
         pass
 
 
-class ProductGroupView(viewsets.ViewSet):
-    def create(self):
-        pass
-
-    def update(self):
-        pass
-
-    def partially_update(self):
-        pass
-
-    def destroy(self):
-        pass
-
-
-class ProductView(viewsets.ViewSet):
+class ProductReviewView(viewsets.ViewSet):
     def list(self):
         pass
 
@@ -185,26 +236,6 @@ class OptionView(viewsets.ViewSet):
 
 class AddonView(viewsets.ViewSet):
     def create(self):
-        pass
-
-    def update(self):
-        pass
-
-    def partially_update(self):
-        pass
-
-    def destroy(self):
-        pass
-
-
-class ProductReviewView(viewsets.ViewSet):
-    def list(self):
-        pass
-
-    def create(self):
-        pass
-
-    def retrieve(self):
         pass
 
     def update(self):

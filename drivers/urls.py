@@ -1,11 +1,11 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 03/01/2020, 19:48
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 22:09
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from drivers.views import DriverProfileView, DriverReviewView
 
-router = DefaultRouter()
-router.register('', DriverReviewView, 'reviews')
+driver_reviews_router = DefaultRouter()
+driver_reviews_router.register('', DriverReviewView, 'reviews')
 
 app_name = 'drivers'
 
@@ -16,5 +16,5 @@ urlpatterns = [
                                                    'put': 'update',
                                                    'patch': 'partial_update',
                                                    'delete': 'destroy'})),
-    path('<username>/reviews/', include(router.urls))
+    path('<username>/reviews/', include(driver_reviews_router.urls))
 ]

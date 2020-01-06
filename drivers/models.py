@@ -1,11 +1,11 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 16:28
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 22:09
 import os
 import uuid
 
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.db.models import F
+from django.db.models import F, Avg
 
 
 def photo_upload(instance, filename):
@@ -40,14 +40,7 @@ class DriverProfileModel(models.Model):
         return self.account.username
 
     def calculate_rating(self):
-        sum_num = 0
-        count = 0
-        for review in self.reviews.all():
-            sum_num += review.stars
-            count += 1
-
-        avg = sum_num / count
-        self.rating = avg
+        self.rating = self.reviews.aggregate(Avg('stars'))
 
     def resort_reviews(self, sort):
         self.reviews.filter(sort__gt=sort).update(sort=F('sort') - 1)

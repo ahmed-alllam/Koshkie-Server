@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 04/01/2020, 12:48
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 22:09
 
 from django.conf import settings
 from django.conf.urls.static import static
@@ -13,5 +13,6 @@ urlpatterns = [
                   path('logout/', logout_view),
                   path('users/', include('users.urls')),
                   path('drivers/', include('drivers.urls')),
+                  path('shops/', include('shops.urls'))
               ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + \
               static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

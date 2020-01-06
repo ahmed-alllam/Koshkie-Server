@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 16:28
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 22:09
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -188,6 +188,31 @@ class ShopReviewSerializer(serializers.ModelSerializer):
             'time_stamp': {'read_only': True},
             'user': {'read_only': True}
         }
+
+    def validate_stars(self, stars):
+        decimal_digits = str(stars - int(stars))[2:]
+        print(decimal_digits)
+        if len(decimal_digits) > 1 or int(decimal_digits) % 5 != 0:
+            raise serializers.ValidationError("invalid number of stars")
+        return stars
+
+    def create(self, validated_data):
+        shop = validated_data['shop']
+        review = ShopReviewModel.objects.create(**validated_data)
+
+        shop.calculate_rating()
+        shop.save()
+
+        return review
+
+    def update(self, instance, validated_data):
+        instance.stars = validated_data.get('stars', instance.stars)
+        instance.text = validated_data.get('text', instance.text)
+        instance.save()
+
+        instance.shop.calculate_rating()
+        instance.shop.save()
+        return instance
 
 
 class ShopProfileDetailSerializer(serializers.ModelSerializer):

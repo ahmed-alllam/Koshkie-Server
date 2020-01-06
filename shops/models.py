@@ -1,10 +1,11 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 16:28
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 22:09
 import os
 import uuid
 
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models import F, Avg
 
 from koshkie import unique_slugify
 
@@ -55,6 +56,12 @@ class ShopProfileModel(models.Model):
         unique_slugify(self, self.name)
 
         super(ShopProfileModel, self).save(*args, **kwargs)
+
+    def calculate_rating(self):
+        self.rating = self.reviews.aggregate(Avg('stars'))['stars__avg']
+
+    def resort_reviews(self, sort):
+        self.reviews.filter(sort__gt=sort).update(sort=F('sort') - 1)
 
 
 class ProductGroupModel(models.Model):
@@ -176,8 +183,14 @@ class ShopAddressModel(models.Model):
     street = models.CharField(max_length=255)
     building = models.CharField(max_length=255)
     special_notes = models.TextField(blank=True)
-    location_longitude = models.DecimalField(max_digits=9, decimal_places=6)
-    location_latitude = models.DecimalField(max_digits=9, decimal_places=6)
+    location_longitude = models.DecimalField(max_digits=9, decimal_places=6, default=0, validators=[
+        MaxValueValidator(180),
+        MinValueValidator(-180)
+    ])
+    location_latitude = models.DecimalField(max_digits=9, decimal_places=6, default=0, validators=[
+        MaxValueValidator(90),
+        MinValueValidator(-90)
+    ])
 
 
 class ShopReviewModel(models.Model):

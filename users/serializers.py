@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 16:28
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 22:09
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
@@ -19,9 +19,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfileModel
-        fields = ('id', 'account', 'profile_photo', 'phone_number')
+        fields = ('account', 'profile_photo', 'phone_number')
         extra_kwargs = {
-            'id': {'read_only': True},
             'profile_photo': {'required': False},
             'phone_number': {'required': False}
         }
