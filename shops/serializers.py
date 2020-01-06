@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 31/12/2019, 20:06
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 16:28
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -10,18 +10,12 @@ from users.serializers import UserProfileSerializer, UserSerializer
 
 
 class RelyOnSerializer(serializers.ModelSerializer):
-    choosed_option_group = serializers.IntegerField()
-    option = serializers.IntegerField()
+    choosed_option_group = serializers.IntegerField(source='choosed_option_group.sort')
+    option = serializers.IntegerField(source='option.sort')
 
     class Meta:
         model = RelyOn
         fields = ('choosed_option_group', 'option')
-
-    def to_representation(self, instance):
-        return {
-            'choosed_option_group': instance.choosed_option_group.sort,
-            'option': instance.option.sort
-        }
 
 
 class AddOnSerializer(serializers.ModelSerializer):
@@ -91,8 +85,8 @@ class OptionGroupSerializer(serializers.ModelSerializer):
 
         choosed_option_group = product.option_groups.get(sort=rely_on_data['choosed_option_group'])
         option = choosed_option_group.options.get(sort=rely_on_data['option'])
-        rely_on = RelyOn.objects.create(option_group=option_group,
-                                        choosed_option_group=choosed_option_group, option=option)
+        RelyOn.objects.create(option_group=option_group,
+                              choosed_option_group=choosed_option_group, option=option)
 
         return option_group
 
@@ -118,9 +112,9 @@ class ProductReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductReviewModel
-        fields = ('id', 'user', 'stars', 'title', 'text', 'time_stamp')
+        fields = ('sort', 'user', 'stars', 'text', 'time_stamp')
         extra_kwargs = {
-            'id': {'read_only': True},
+            'sort': {'read_only': True},
             'time_stamp': {'read_only': True},
             'user': {'read_only': True}
         }
@@ -129,39 +123,38 @@ class ProductReviewSerializer(serializers.ModelSerializer):
 class ProductDetailsSerializer(serializers.ModelSerializer):
     option_groups = OptionGroupSerializer(many=True, read_only=True)
     add_ons = AddOnSerializer(many=True, read_only=True)
+    reviews_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = ProductModel
-        fields = ('id', 'photo', 'title', 'description', 'price', 'is_available', 'rating',
-                  'option_groups', 'add_ons')
+        fields = ('slug', 'photo', 'title', 'description', 'price', 'is_available',
+                  'rating', 'option_groups', 'add_ons')
         extra_kwargs = {
-            'id': {'read_only': True},
+            'slug': {'read_only': True},
             'rating': {'read_only': True}
         }
+
+    def to_representation(self, instance):
+        data = super(ProductDetailsSerializer, self).to_representation(instance)
+        data.update(reviews_count=instance.reviews.count())
+        return data
+
+
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductModel
+        fields = ('slug', 'photo', 'title', 'price', 'rating')
 
     def __init__(self, *args, **kwargs):
         exclude = kwargs.pop('exclude', None)
 
-        super(ProductDetailsSerializer, self).__init__(*args, **kwargs)
+        super(ProductSerializer, self).__init__(*args, **kwargs)
 
-        # to exculde price field if there are option groups that change price
+        # to exclude price field if there are option groups that change price
         if exclude is not None:
             not_allowed = set(exclude)
             for exclude_name in not_allowed:
                 self.fields.pop(exclude_name)
-
-
-class ProductSerializer(serializers.ModelSerializer):
-    option_groups = OptionGroupSerializer(many=True, required=False)
-    add_ons = AddOnSerializer(many=True, required=False)
-
-    class Meta:
-        model = ProductModel
-        fields = ('id', 'photo', 'title', 'price', 'rating', 'option_groups', 'add_ons')
-        extra_kwargs = {
-            'id': {'read_only': True},
-            'rating': {'read_only': True}
-        }
 
 
 class ProductGroupSerializer(serializers.ModelSerializer):
@@ -178,9 +171,9 @@ class ProductGroupSerializer(serializers.ModelSerializer):
 class ShopAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopAddressModel
-        exclude = 'shop'
+        exclude = ('shop', 'id')
         extra_kwargs = {
-            'special_notes': {'required': False}
+            'special_notes': {'required': False},
         }
 
 
@@ -189,27 +182,28 @@ class ShopReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShopReviewModel
-        fields = ('id', 'user', 'stars', 'title', 'text', 'time_stamp')
+        fields = ('sort', 'user', 'stars', 'text', 'time_stamp')
         extra_kwargs = {
-            'id': {'read_only': True},
+            'sort': {'read_only': True},
             'time_stamp': {'read_only': True},
             'user': {'read_only': True}
         }
 
 
 class ShopProfileDetailSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
+    account = UserSerializer()
     address = ShopAddressSerializer()
-    in_favourites_list = serializers.BooleanField(read_only=True)
+    reviews_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = ShopProfileModel
-        fields = ('id', 'user', 'profile_photo', 'phone_number', 'description', 'shop_type',
-                  'name', 'address', 'rating', 'is_open', 'opens_at', 'closes_at', 'currency',
-                  'minimum_charge', 'delivery_fee', 'vat')
+        fields = ('slug', 'account', 'profile_photo', 'phone_number', 'description', 'shop_type',
+                  'name', 'address', 'rating', 'reviews_count', 'is_open', 'opens_at', 'closes_at',
+                  'currency', 'minimum_charge', 'delivery_fee', 'vat')
         extra_kwargs = {
-            'id': {'read_only': True},
+            'slug': {'read_only': True},
             'rating': {'read_only': True},
+            'reviews_count': {'read_only': True}
         }
 
     def __init__(self, *args, **kwargs):
@@ -217,44 +211,36 @@ class ShopProfileDetailSerializer(serializers.ModelSerializer):
 
         super(ShopProfileDetailSerializer, self).__init__(*args, **kwargs)
 
-        # to exculde user field
+        # to exclude account field
         if exclude is not None:
-            not_allowed = set(exclude)
-            for exclude_name in not_allowed:
-                self.fields.pop(exclude_name)
+            self.fields.pop(exclude)
 
-    def validate_currency(self, data):
-        currencies = {"egp", "dollar", "euro"}
-
-        matches = False
-        for currency in currencies:
-            if data.lower() == currency: matches = True
-
-        if not matches:
-            raise serializers.ValidationError('invalid currency')
-
+    def to_representation(self, instance):
+        data = super(ShopProfileDetailSerializer, self).to_representation(instance)
+        data.update(reviews_count=instance.reviews.count())
         return data
 
     def create(self, validated_data):
         address_data = validated_data.pop('address')
-        shop_address = ShopAddressModel.objects.create(**address_data)
 
-        user_data = validated_data.pop('user')
-        user = User.objects.create(**user_data)
+        account_data = validated_data.pop('account')
+        account = User.objects.create(**account_data)
 
-        shop_profile = ShopProfileModel.objects.create(user=user, address=shop_address,
-                                                       **validated_data)
+        shop_profile = ShopProfileModel.objects.create(account=account, **validated_data)
+
+        ShopAddressModel.objects.create(shop=shop_profile, **address_data)
 
         return shop_profile
 
     def update(self, instance, validated_data):
-        attrs = self.fields - ('id', 'user', 'rating', 'address')
+        excluded = {'slug', 'account', 'rating', 'address', 'reviews_count'}
+        attrs = [x for x in self.fields if x not in excluded]
         for attr in attrs:
             setattr(instance, attr, validated_data.get(attr, getattr(instance, attr)))
 
         instance.save()
 
-        address_data = validated_data.pop('address')
+        address_data = validated_data.pop('address', {})
         address = instance.address
         address.area = address_data.get('area', address.area)
         address.street = address_data.get('street', address.street)
@@ -264,14 +250,14 @@ class ShopProfileDetailSerializer(serializers.ModelSerializer):
         address.location_latitude = address_data.get('location_latitude', address.location_latitude)
         address.save()
 
-        user_data = validated_data.pop('user')
-        user = instance.user
-        user.first_name = user_data.get('first_name', user.first_name)
-        user.last_name = user_data.get('last_name', user.last_name)
-        user.email = user_data.get('email', user.email)
-        user.username = user_data.get('email', user.username)
-        user.set_password(user_data.get('password', user.password))
-        user.save()
+        account_data = validated_data.pop('account', {})
+        account = instance.account
+        account.first_name = account_data.get('first_name', account.first_name)
+        account.last_name = account_data.get('last_name', account.last_name)
+        account.username = account_data.get('username', account.username)
+        account.set_password(account_data.get('password', account.password))
+
+        account.save()
 
         return instance
 
@@ -281,7 +267,4 @@ class ShopProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShopProfileModel
-        fields = ('id', 'profile_photo', 'shop_type', 'name', 'address', 'rating')
-        extra_kwargs = {
-            'id': {'read_only': True}
-        }
+        fields = ('slug', 'profile_photo', 'shop_type', 'name', 'address', 'rating')

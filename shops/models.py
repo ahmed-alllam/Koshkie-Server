@@ -1,18 +1,20 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 31/12/2019, 20:06
-
-import random
-import string
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 16:28
+import os
+import uuid
 
 from django.contrib.auth.models import User
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
+from koshkie import unique_slugify
 
-def photo_upload(instance, filename):
-    res = instance.id.join(random.choices(string.ascii_letters, k=20))
-    extra = ''
-    if type(instance) is ProductModel:
-        extra = 'products/'
-    return 'shops/{0}{1}'.format(res, extra)
+
+def shop_photo_upload(instance, filename):
+    return 'shops/{0}.{1}'.format(uuid.uuid4().hex, os.path.splitext(filename))
+
+
+def product_photo_upload(instance, filename):
+    return 'shops/products/{0}.{1}'.format(uuid.uuid4().hex, os.path.splitext(filename))
 
 
 class ShopProfileModel(models.Model):
@@ -22,24 +24,37 @@ class ShopProfileModel(models.Model):
         ('P', 'Pharmacy')
     ]
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="shop_profile")
-    profile_photo = models.ImageField(upload_to=photo_upload)
+    currencies = [
+        ('$', 'Dollar'),
+        ('€', 'Euro'),
+        ('egp', 'Egyptian Pound')
+    ]
+
+    account = models.OneToOneField(User, on_delete=models.CASCADE, related_name="shop_profile")
+    profile_photo = models.ImageField(upload_to=shop_photo_upload,
+                                      null=True)  # null attr to be removed added just for testing
     phone_number = models.BigIntegerField()
     description = models.TextField()
     shop_type = models.CharField(max_length=1, choices=shop_type_choices)
     name = models.CharField(max_length=255)
-    rating = models.FloatField()
+    slug = models.SlugField(max_length=255, unique=True)
+    rating = models.DecimalField(default=0, decimal_places=1, max_digits=2)
     is_active = models.BooleanField(default=False)
     is_open = models.BooleanField(default=True)
-    currency = models.CharField(max_length=10, default='')
+    currency = models.CharField(max_length=3, choices=currencies)
     minimum_charge = models.FloatField(default=0)
     delivery_fee = models.FloatField()
     vat = models.FloatField(default=0)
-    opens_at = models.TimeField(auto_now=False, auto_now_add=False)
-    closes_at = models.TimeField(auto_now=False, auto_now_add=False)
+    opens_at = models.TimeField()
+    closes_at = models.TimeField()
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        unique_slugify(self, self.name)
+
+        super(ShopProfileModel, self).save(*args, **kwargs)
 
 
 class ProductGroupModel(models.Model):
@@ -56,23 +71,34 @@ class ProductGroupModel(models.Model):
 
     def save(self, *args, **kwargs):
         if self.pk is None:
-            latest_sort = ProductGroupModel.objects.order_by('-sort').first().sort
+            latest_sort = ProductGroupModel.objects.filter(shop=self.shop).count()
             self.sort = latest_sort + 1
 
         super(ProductGroupModel, self).save(*args, **kwargs)
 
 
 class ProductModel(models.Model):
-    photo = models.ImageField(upload_to=photo_upload)
-    title = models.CharField(max_length=255)
-    description = models.TextField()
+    shop = models.ForeignKey(to=ShopProfileModel, related_name="products", on_delete=models.CASCADE)
     product_group = models.ForeignKey(to=ProductGroupModel, related_name="products", on_delete=models.CASCADE)
+    photo = models.ImageField(upload_to=product_photo_upload)
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255)
+    description = models.TextField()
     price = models.FloatField()
-    rating = models.FloatField()
+    rating = models.DecimalField(default=0, decimal_places=1, max_digits=2)
     is_available = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = ("shop", "slug")
 
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            unique_slugify(self, self.title)
+
+        super(ProductModel, self).save(*args, **kwargs)
 
 
 class OptionGroupModel(models.Model):
@@ -90,7 +116,7 @@ class OptionGroupModel(models.Model):
 
     def save(self, *args, **kwargs):
         if self.pk is None:
-            latest_sort = OptionGroupModel.objects.order_by('-sort').first().sort
+            latest_sort = OptionGroupModel.objects.filter(product=self.product).count()
             self.sort = latest_sort + 1
 
         super(OptionGroupModel, self).save(*args, **kwargs)
@@ -111,7 +137,7 @@ class OptionModel(models.Model):
 
     def save(self, *args, **kwargs):
         if self.pk is None:
-            latest_sort = OptionModel.objects.order_by('-sort').first().sort
+            latest_sort = OptionModel.objects.filter(option_group=self.option_group).count()
             self.sort = latest_sort + 1
 
         super(OptionModel, self).save(*args, **kwargs)
@@ -132,7 +158,7 @@ class AddOn(models.Model):
 
     def save(self, *args, **kwargs):
         if self.pk is None:
-            latest_sort = AddOn.objects.order_by('-sort').first().sort
+            latest_sort = AddOn.objects.filter(product=self.product).count()
             self.sort = latest_sort + 1
 
         super(AddOn, self).save(*args, **kwargs)
@@ -157,22 +183,50 @@ class ShopAddressModel(models.Model):
 class ShopReviewModel(models.Model):
     user = models.ForeignKey(to='users.UserProfileModel', on_delete=models.SET_NULL, null=True)
     shop = models.ForeignKey(to=ShopProfileModel, on_delete=models.CASCADE, related_name='reviews')
-    stars = models.PositiveIntegerField()
-    title = models.CharField(max_length=255)
+    sort = models.PositiveIntegerField()
+    stars = models.FloatField(validators=[
+        MaxValueValidator(5),
+        MinValueValidator(0.5)
+    ])
     text = models.TextField()
     time_stamp = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        unique_together = ("shop", "sort")
+        ordering = ['sort']
+
     def __str__(self):
-        return self.title
+        return self.text
+
+    def save(self, *args, **kwargs):
+        if self.pk is None:
+            latest_sort = ShopReviewModel.objects.filter(shop=self.shop).count()
+            self.sort = latest_sort + 1
+
+        super(ShopReviewModel, self).save(*args, **kwargs)
 
 
 class ProductReviewModel(models.Model):
     user = models.ForeignKey(to='users.UserProfileModel', on_delete=models.SET_NULL, null=True)
+    sort = models.PositiveIntegerField()
     product = models.ForeignKey(to=ProductModel, on_delete=models.CASCADE, related_name='reviews')
-    stars = models.PositiveIntegerField()
-    title = models.CharField(max_length=255)
+    stars = models.FloatField(validators=[
+        MaxValueValidator(5),
+        MinValueValidator(0.5)
+    ])
     text = models.TextField()
     time_stamp = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        unique_together = ("product", "sort")
+        ordering = ['sort']
+
     def __str__(self):
-        return self.title
+        return self.text
+
+    def save(self, *args, **kwargs):
+        if self.pk is None:
+            latest_sort = ProductReviewModel.objects.filter(prodcut=self.product).count()
+            self.sort = latest_sort + 1
+
+        super(ProductReviewModel, self).save(*args, **kwargs)

@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 02/01/2020, 20:19
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 16:28
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -30,10 +30,12 @@ class DriverProfileSerializer(serializers.ModelSerializer):
         instance.vehicle_type = validated_data.get('vehicle_type', instance.vehicle_type)
         instance.save()
 
-        user_data = validated_data.pop('account', {})
+        account_data = validated_data.pop('account', {})
         account = instance.account
-        account.first_name = user_data.get('first_name', account.first_name)
-        account.last_name = user_data.get('last_name', account.last_name)
+        account.first_name = account_data.get('first_name', account.first_name)
+        account.last_name = account_data.get('last_name', account.last_name)
+        account.username = account_data.get('username', account.username)
+        account.set_password(account_data.get('password', account.password))
         account.save()
 
         return instance
@@ -59,10 +61,7 @@ class DriverReviewSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         driver = validated_data['driver']
-        review = DriverReviewModel(**validated_data)
-        latest_sort = driver.reviews.count()
-        review.sort = latest_sort + 1
-        review.save()
+        review = DriverReviewModel.objects.create(**validated_data)
 
         driver.calculate_rating()
         driver.save()

@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 04/01/2020, 12:48
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 16:28
 import os
 import uuid
 
@@ -29,8 +29,6 @@ class UserProfileModel(models.Model):
     account = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     profile_photo = models.ImageField(upload_to=photo_upload, null=True)
     phone_number = models.BigIntegerField(null=True)
-
-    favourite_products = models.ManyToManyField(to='shops.ProductModel')
 
     def __str__(self):
         return self.account.username
@@ -73,3 +71,10 @@ class UserAddressModel(models.Model):
 
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        if self.pk is None:
+            latest_sort = UserAddressModel.objects.filter(user=self.user).count()
+            self.sort = latest_sort + 1
+
+        super(UserAddressModel, self).save(*args, **kwargs)

@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 03/01/2020, 19:48
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 16:28
 import os
 import uuid
 
@@ -64,9 +64,16 @@ class DriverReviewModel(models.Model):
     text = models.TextField()
     time_stamp = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return self.text
-
     class Meta:
         unique_together = ("driver", "sort")
         ordering = ['sort']
+
+    def __str__(self):
+        return self.text
+
+    def save(self, *args, **kwargs):
+        if self.pk is None:
+            latest_sort = DriverReviewModel.objects.filter(driver=self.driver).count()
+            self.sort = latest_sort + 1
+
+        super(DriverReviewModel, self).save(*args, **kwargs)

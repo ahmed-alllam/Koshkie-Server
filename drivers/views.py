@@ -1,5 +1,9 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 04/01/2020, 12:48
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 16:28
+from abc import ABC
+
 from django.contrib.auth import login
+from django.db.models import Func, F
+from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
@@ -7,6 +11,22 @@ from rest_framework.response import Response
 from drivers.models import DriverProfileModel, DriverReviewModel
 from drivers.permissions import DriverProfilePermissions, DriverReviewPermissions
 from drivers.serializers import DriverProfileSerializer, DriverReviewSerializer
+
+
+class Sin(Func, ABC):
+    function = 'SIN'
+
+
+class Cos(Func, ABC):
+    function = 'COS'
+
+
+class Acos(Func, ABC):
+    function = 'ACOS'
+
+
+class Rad(Func, ABC):
+    function = 'RADIANS'
 
 
 class DriverProfileView(viewsets.ViewSet):
@@ -19,24 +39,21 @@ class DriverProfileView(viewsets.ViewSet):
         except Exception:
             return Response("invalid coordinates", status=status.HTTP_400_BAD_REQUEST)
 
-        # min_active_time = timezone.now() - timezone.timedelta(seconds=10)
-        # available_drivers = DriverProfileModel.objects.filter(is_active=True, is_busy=False,
-        #                                                       last_time_online__gte=min_active_time)
-        query = """SELECT id, (6367*acos(cos(radians(%2f))
-                      *cos(radians(live_location_longitude))*cos(radians(live_location_latitude)-radians(%2f))
-                      +sin(radians(%2f))*sin(radians(live_location_latitude))))
-                      AS distance FROM drivers_driverprofilemodel WHERE
-                      distance < %2f ORDER BY distance LIMIT 0, %d""" % (
-            float(user_latitude),
-            float(user_longitude),
-            float(user_latitude),
-            2.5,
-            10
-        )
+        min_active_time = timezone.now() - timezone.timedelta(seconds=10)
+        queryset = DriverProfileModel.objects.annotate(distance=
+                                                       6367 * Acos(Cos(Rad(float(user_latitude))) *
+                                                                   Cos(Rad(F('live_location_longitude'))) *
+                                                                   Cos(Rad(F('live_location_latitude')) -
+                                                                       Rad(float(user_longitude))
+                                                                       ) +
+                                                                   Sin(Rad(float(user_latitude))) *
+                                                                   Sin(Rad(F('live_location_latitude')))
+                                                                   )
+                                                       ).filter(distance__lte=2.5, is_busy=False,
+                                                                last_time_online__gte=min_active_time
+                                                                ).order_by('distance')
 
-        queryset = DriverProfileModel.objects.raw(query)
-
-        serializer = DriverProfileSerializer(queryset, many=True)
+        serializer = DriverProfileSerializer(queryset[:10], many=True)
         return Response(serializer.data)
 
     def retrieve(self, request, username=None):
