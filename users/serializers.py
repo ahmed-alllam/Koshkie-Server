@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 22:09
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/01/2020, 19:52
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
@@ -26,10 +26,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        user_data = validated_data.pop('account')
-        user = User(**user_data)
-        user.set_password(user.password)
-        user.save()
+        account_data = validated_data.pop('account')
+        account = User(**account_data)
+        account.set_password(account.password)
+        account.save()
 
         user_profile = UserProfileModel.objects.create(account=user, **validated_data)
         return user_profile
@@ -44,7 +44,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
         account.first_name = account_data.get('first_name', account.first_name)
         account.last_name = account_data.get('last_name', account.last_name)
         account.username = account_data.get('username', account.username)
-        account.set_password(account_data.get('password', account.password))
+        if account_data.get('password') is not None:
+            account.set_password(account_data.get('password'))
         account.save()
 
         return instance

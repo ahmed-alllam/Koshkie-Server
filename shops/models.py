@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 22:09
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/01/2020, 19:52
 import os
 import uuid
 
@@ -7,7 +7,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import F, Avg
 
-from koshkie import unique_slugify
+from . import unique_slugify
 
 
 def shop_photo_upload(instance, filename):
@@ -45,7 +45,10 @@ class ShopProfileModel(models.Model):
     currency = models.CharField(max_length=3, choices=currencies)
     minimum_charge = models.FloatField(default=0)
     delivery_fee = models.FloatField()
-    vat = models.FloatField(default=0)
+    vat = models.FloatField(default=0, max_length=2, validators=[
+        MaxValueValidator(100),
+        MinValueValidator(0)
+    ])
     opens_at = models.TimeField()
     closes_at = models.TimeField()
 
@@ -62,6 +65,15 @@ class ShopProfileModel(models.Model):
 
     def resort_reviews(self, sort):
         self.reviews.filter(sort__gt=sort).update(sort=F('sort') - 1)
+
+    def update_attrs(self, **kwargs):
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+            else:
+                raise KeyError("Failed to update non existing attribute {}.{}".format(
+                    self.__class__.__name__, key))
+        self.save()
 
 
 class ProductGroupModel(models.Model):
@@ -102,8 +114,7 @@ class ProductModel(models.Model):
         return self.title
 
     def save(self, *args, **kwargs):
-        if not self.slug:
-            unique_slugify(self, self.title)
+        unique_slugify(self, self.title)
 
         super(ProductModel, self).save(*args, **kwargs)
 
@@ -191,6 +202,15 @@ class ShopAddressModel(models.Model):
         MaxValueValidator(90),
         MinValueValidator(-90)
     ])
+
+    def update_attrs(self, **kwargs):
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+            else:
+                raise KeyError("Failed to update non existing attribute {}.{}".format(
+                    self.__class__.__name__, key))
+        self.save(force_update=True)
 
 
 class ShopReviewModel(models.Model):

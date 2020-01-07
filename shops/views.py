@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 22:09
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/01/2020, 19:52
 
 from abc import ABC
 
@@ -7,10 +7,11 @@ from django.db.models import F, Func
 from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.generics import get_object_or_404
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 
 from shops.models import ShopProfileModel, ShopReviewModel
-from shops.permissions import ShopProfilePermissions, ShopReviewPermissions
+from shops.permissions import ShopProfilePermissions, ShopReviewPermissions, ProductPermissions
 from shops.serializers import ShopProfileSerializer, ShopProfileDetailSerializer, ShopReviewSerializer
 
 
@@ -37,6 +38,7 @@ class ShopProfileView(viewsets.ViewSet):
         try:
             user_longitude = float(request.GET.get('longitude'))
             user_latitude = float(request.GET.get('latitude'))
+            shop_type = request.GET.get('type')
         except Exception:
             return Response("invalid coordinates", status=status.HTTP_400_BAD_REQUEST)
 
@@ -53,9 +55,17 @@ class ShopProfileView(viewsets.ViewSet):
                                                               opens_at__lte=timezone.now(),
                                                               closes_at__gte=timezone.now()
                                                               ).order_by('distance')
+        if shop_type:
+            queryset = queryset.filter(shop_type__iexact=shop_type)
 
-        serializer = ShopProfileSerializer(queryset[:30], many=True)
-        return Response(serializer.data)
+        paginator = LimitOffsetPagination()
+        paginator.default_limit = 25
+        paginator.max_limit = 100
+        paginated_queryset = paginator.paginate_queryset(queryset, request)
+        serializer = ShopProfileSerializer(paginated_queryset, many=True)
+
+        return Response(data={'limit': paginator.limit, 'offset': paginator.offset,
+                              'count': paginator.count, 'shops': serializer.data})
 
     def retrieve(self, request, shop_slug):
         shop_profile = get_object_or_404(ShopProfileModel, slug=shop_slug)
@@ -167,22 +177,24 @@ class ProductGroupView(viewsets.ViewSet):
 
 
 class ProductView(viewsets.ViewSet):
-    def list(self):
+    permission_classes = (ProductPermissions,)
+
+    def list(self, request, shop_slug):
         pass
 
-    def create(self):
+    def create(self, request, shop_slug):
         pass
 
-    def retrieve(self):
+    def retrieve(self, request, shop_slug, product_slug):
         pass
 
-    def update(self):
+    def update(self, request, shop_slug, product_slug):
         pass
 
-    def partially_update(self):
+    def partially_update(self, request, shop_slug, product_slug):
         pass
 
-    def destroy(self):
+    def destroy(self, request, shop_slug, product_slug):
         pass
 
 

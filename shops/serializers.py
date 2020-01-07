@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 22:09
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/01/2020, 19:52
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -128,11 +128,18 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductModel
         fields = ('slug', 'photo', 'title', 'description', 'price', 'is_available',
-                  'rating', 'option_groups', 'add_ons')
+                  'rating', 'reviews_count', 'option_groups', 'add_ons')
         extra_kwargs = {
             'slug': {'read_only': True},
             'rating': {'read_only': True}
         }
+
+    def __init__(self, *args, **kwargs):
+        exclude = kwargs.pop('exclude', None)
+        if exclude is not None:
+            self.fields.pop(exclude)
+
+        super(ProductDetailsSerializer, self).__init__(*args, **kwargs)
 
     def to_representation(self, instance):
         data = super(ProductDetailsSerializer, self).to_representation(instance)
@@ -147,14 +154,10 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         exclude = kwargs.pop('exclude', None)
+        if exclude is not None:
+            self.fields.pop(exclude)
 
         super(ProductSerializer, self).__init__(*args, **kwargs)
-
-        # to exclude price field if there are option groups that change price
-        if exclude is not None:
-            not_allowed = set(exclude)
-            for exclude_name in not_allowed:
-                self.fields.pop(exclude_name)
 
 
 class ProductGroupSerializer(serializers.ModelSerializer):
@@ -233,12 +236,10 @@ class ShopProfileDetailSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         exclude = kwargs.pop('exclude', None)
-
-        super(ShopProfileDetailSerializer, self).__init__(*args, **kwargs)
-
-        # to exclude account field
         if exclude is not None:
             self.fields.pop(exclude)
+
+        super(ShopProfileDetailSerializer, self).__init__(*args, **kwargs)
 
     def to_representation(self, instance):
         data = super(ShopProfileDetailSerializer, self).to_representation(instance)
@@ -249,7 +250,9 @@ class ShopProfileDetailSerializer(serializers.ModelSerializer):
         address_data = validated_data.pop('address')
 
         account_data = validated_data.pop('account')
-        account = User.objects.create(**account_data)
+        account = User(**account_data)
+        account.set_password(account.password)
+        account.save()
 
         shop_profile = ShopProfileModel.objects.create(account=account, **validated_data)
 
@@ -258,31 +261,21 @@ class ShopProfileDetailSerializer(serializers.ModelSerializer):
         return shop_profile
 
     def update(self, instance, validated_data):
-        excluded = {'slug', 'account', 'rating', 'address', 'reviews_count'}
-        attrs = [x for x in self.fields if x not in excluded]
-        for attr in attrs:
-            setattr(instance, attr, validated_data.get(attr, getattr(instance, attr)))
-
-        instance.save()
 
         address_data = validated_data.pop('address', {})
-        address = instance.address
-        address.area = address_data.get('area', address.area)
-        address.street = address_data.get('street', address.street)
-        address.building = address_data.get('building', address.building)
-        address.special_notes = address_data.get('special_notes', address.special_notes)
-        address.location_longitude = address_data.get('location_longitude', address.location_longitude)
-        address.location_latitude = address_data.get('location_latitude', address.location_latitude)
-        address.save()
+        # address = instance.address
+        # address.update_attrs(**address_data)
 
         account_data = validated_data.pop('account', {})
         account = instance.account
         account.first_name = account_data.get('first_name', account.first_name)
         account.last_name = account_data.get('last_name', account.last_name)
         account.username = account_data.get('username', account.username)
-        account.set_password(account_data.get('password', account.password))
-
+        if account_data.get('password') is not None:
+            account.set_password(account_data.get('password'))
         account.save()
+
+        instance.update_attrs(**validated_data)
 
         return instance
 
