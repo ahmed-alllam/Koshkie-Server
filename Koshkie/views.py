@@ -1,6 +1,5 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 04/01/2020, 12:48
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/01/2020, 22:18
 from django.contrib.auth import logout, authenticate, login
-from django.contrib.auth.decorators import login_required
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -24,7 +23,8 @@ def login_view(request):
 
 
 @api_view(['POST'])
-@login_required
 def logout_view(request):
-    logout(request)
-    return Response('Logged Out Successfully')
+    if request.user.is_authenticated:
+        logout(request)
+        return Response('Logged Out Successfully')
+    return Response('Your are not logged in', status=status.HTTP_401_UNAUTHORIZED)

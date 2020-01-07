@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/01/2020, 19:52
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/01/2020, 22:18
 import os
 import uuid
 
@@ -99,7 +99,8 @@ class ProductGroupModel(models.Model):
 class ProductModel(models.Model):
     shop = models.ForeignKey(to=ShopProfileModel, related_name="products", on_delete=models.CASCADE)
     product_group = models.ForeignKey(to=ProductGroupModel, related_name="products", on_delete=models.CASCADE)
-    photo = models.ImageField(upload_to=product_photo_upload)
+    photo = models.ImageField(upload_to=product_photo_upload,
+                              null=True)  # null attr to be removed added just for testing
     title = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255)
     description = models.TextField()

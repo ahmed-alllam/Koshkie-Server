@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/01/2020, 19:52
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/01/2020, 22:18
 
 from abc import ABC
 
@@ -10,9 +10,10 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 
-from shops.models import ShopProfileModel, ShopReviewModel
+from shops.models import ShopProfileModel, ShopReviewModel, ProductGroupModel, ProductModel
 from shops.permissions import ShopProfilePermissions, ShopReviewPermissions, ProductPermissions
-from shops.serializers import ShopProfileSerializer, ShopProfileDetailSerializer, ShopReviewSerializer
+from shops.serializers import (ShopProfileSerializer, ShopProfileDetailSerializer, ShopReviewSerializer,
+                               ProductGroupSerializer, ProductDetailsSerializer)
 
 
 class Sin(Func, ABC):
@@ -180,22 +181,56 @@ class ProductView(viewsets.ViewSet):
     permission_classes = (ProductPermissions,)
 
     def list(self, request, shop_slug):
-        pass
+        queryset = ProductGroupModel.objects.filter(shop__slug=shop_slug)
+        paginator = LimitOffsetPagination()
+        paginator.default_limit = 25
+        paginator.max_limit = 100
+        paginated_queryset = paginator.paginate_queryset(queryset, request)
+        serializer = ProductGroupSerializer(paginated_queryset, many=True)
 
-    def create(self, request, shop_slug):
-        pass
+        return Response(data={'limit': paginator.limit, 'offset': paginator.offset,
+                              'count': paginator.count, 'products': serializer.data})
 
     def retrieve(self, request, shop_slug, product_slug):
-        pass
+        product = get_object_or_404(ProductModel, shop__slug=shop_slug, slug=product_slug)
+        serializer = ProductDetailsSerializer(product)
+        return Response(serializer.data)
+
+    def create(self, request, shop_slug):
+        serializer = ProductDetailsSerializer(data=request.data)
+        if serializer.is_valid():
+            shop = get_object_or_404(ShopProfileModel, slug=shop_slug)
+            self.check_object_permissions(request, shop)
+            product_group = get_object_or_404(ProductGroupModel,
+                                              sort=serializer.validated_data.pop('product_group_sort'),
+                                              shop__slug=shop_slug)
+            serializer.save(shop=shop, product_group=product_group)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, shop_slug, product_slug):
-        pass
+        product = get_object_or_404(ProductModel, shop__slug=shop_slug, slug=product_slug)
+        self.check_object_permissions(request, product)
+        serializer = ProductDetailsSerializer(product, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def partially_update(self, request, shop_slug, product_slug):
-        pass
+    def partial_update(self, request, shop_slug, product_slug):
+        product = get_object_or_404(ProductModel, shop__slug=shop_slug, slug=product_slug)
+        self.check_object_permissions(request, product)
+        serializer = ProductDetailsSerializer(product, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, shop_slug, product_slug):
-        pass
+        product = get_object_or_404(ProductModel, slug=product_slug, shop__slug=shop_slug)
+        self.check_object_permissions(request, product)
+        product.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ProductReviewView(viewsets.ViewSet):

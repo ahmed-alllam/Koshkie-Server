@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/01/2020, 19:52
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/01/2020, 22:18
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -51,7 +51,7 @@ class OptionGroupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OptionGroupModel
-        fields = ('options', 'title', 'sort', 'changes_price', 'rely_on')
+        fields = ('title', 'sort', 'changes_price', 'rely_on', 'options')
         extra_kwargs = {
             'sort': {'read_only': True}
         }
@@ -121,43 +121,24 @@ class ProductReviewSerializer(serializers.ModelSerializer):
 
 
 class ProductDetailsSerializer(serializers.ModelSerializer):
+    product_group_sort = serializers.IntegerField(write_only=True)
     option_groups = OptionGroupSerializer(many=True, read_only=True)
     add_ons = AddOnSerializer(many=True, read_only=True)
-    reviews_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = ProductModel
-        fields = ('slug', 'photo', 'title', 'description', 'price', 'is_available',
-                  'rating', 'reviews_count', 'option_groups', 'add_ons')
+        fields = ('slug', 'product_group_sort', 'photo', 'title', 'rating', 'description', 'price',
+                  'is_available', 'option_groups', 'add_ons')
         extra_kwargs = {
             'slug': {'read_only': True},
             'rating': {'read_only': True}
         }
-
-    def __init__(self, *args, **kwargs):
-        exclude = kwargs.pop('exclude', None)
-        if exclude is not None:
-            self.fields.pop(exclude)
-
-        super(ProductDetailsSerializer, self).__init__(*args, **kwargs)
-
-    def to_representation(self, instance):
-        data = super(ProductDetailsSerializer, self).to_representation(instance)
-        data.update(reviews_count=instance.reviews.count())
-        return data
 
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductModel
         fields = ('slug', 'photo', 'title', 'price', 'rating')
-
-    def __init__(self, *args, **kwargs):
-        exclude = kwargs.pop('exclude', None)
-        if exclude is not None:
-            self.fields.pop(exclude)
-
-        super(ProductSerializer, self).__init__(*args, **kwargs)
 
 
 class ProductGroupSerializer(serializers.ModelSerializer):
@@ -221,17 +202,15 @@ class ShopReviewSerializer(serializers.ModelSerializer):
 class ShopProfileDetailSerializer(serializers.ModelSerializer):
     account = UserSerializer()
     address = ShopAddressSerializer()
-    reviews_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = ShopProfileModel
         fields = ('slug', 'account', 'profile_photo', 'phone_number', 'description', 'shop_type',
-                  'name', 'address', 'rating', 'reviews_count', 'is_open', 'opens_at', 'closes_at',
-                  'currency', 'minimum_charge', 'delivery_fee', 'vat')
+                  'name', 'rating', 'address', 'is_open', 'opens_at', 'closes_at', 'currency',
+                  'minimum_charge', 'delivery_fee', 'vat')
         extra_kwargs = {
             'slug': {'read_only': True},
             'rating': {'read_only': True},
-            'reviews_count': {'read_only': True}
         }
 
     def __init__(self, *args, **kwargs):
@@ -240,11 +219,6 @@ class ShopProfileDetailSerializer(serializers.ModelSerializer):
             self.fields.pop(exclude)
 
         super(ShopProfileDetailSerializer, self).__init__(*args, **kwargs)
-
-    def to_representation(self, instance):
-        data = super(ShopProfileDetailSerializer, self).to_representation(instance)
-        data.update(reviews_count=instance.reviews.count())
-        return data
 
     def create(self, validated_data):
         address_data = validated_data.pop('address')
@@ -263,8 +237,8 @@ class ShopProfileDetailSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
 
         address_data = validated_data.pop('address', {})
-        # address = instance.address
-        # address.update_attrs(**address_data)
+        address = instance.address
+        address.update_attrs(**address_data)
 
         account_data = validated_data.pop('account', {})
         account = instance.account
@@ -285,4 +259,4 @@ class ShopProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShopProfileModel
-        fields = ('slug', 'profile_photo', 'shop_type', 'name', 'address', 'rating')
+        fields = ('slug', 'profile_photo', 'shop_type', 'name', 'rating', 'address')

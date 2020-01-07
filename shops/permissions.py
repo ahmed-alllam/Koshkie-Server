@@ -1,5 +1,7 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/01/2020, 19:52
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/01/2020, 22:18
 from rest_framework import permissions
+
+from shops.models import ShopProfileModel, ProductModel
 
 
 class ShopProfilePermissions(permissions.BasePermission):
@@ -29,7 +31,7 @@ class ShopReviewPermissions(permissions.BasePermission):
         return False
 
     def has_object_permission(self, request, view, obj):
-        if obj.user.account == request.user:
+        if obj.user == request.user.profile:
             return True
         return False
 
@@ -45,6 +47,10 @@ class ProductPermissions(permissions.BasePermission):
         return False
 
     def has_object_permission(self, request, view, obj):
-        if obj.account == request.user:
-            return True
+        if type(obj) == ShopProfileModel:
+            if obj.account == request.user:
+                return True
+        elif type(obj) == ProductModel:
+            if obj.shop.account == request.user:
+                return True
         return False
