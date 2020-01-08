@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/01/2020, 22:18
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 08/01/2020, 12:38
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -119,26 +119,66 @@ class ProductReviewSerializer(serializers.ModelSerializer):
             'user': {'read_only': True}
         }
 
+    def validate_stars(self, stars):
+        decimal_digits = str(stars - int(stars))[2:]
+        print(decimal_digits)
+        if len(decimal_digits) > 1 or int(decimal_digits) % 5 != 0:
+            raise serializers.ValidationError("invalid number of stars")
+        return stars
+
+    def create(self, validated_data):
+        product = validated_data['product']
+        review = ProductReviewModel.objects.create(**validated_data)
+
+        product.calculate_rating()
+        product.save()
+
+        return review
+
+    def update(self, instance, validated_data):
+        instance.stars = validated_data.get('stars', instance.stars)
+        instance.text = validated_data.get('text', instance.text)
+        instance.save()
+
+        instance.product.calculate_rating()
+        instance.product.save()
+        return instance
+
 
 class ProductDetailsSerializer(serializers.ModelSerializer):
-    product_group_sort = serializers.IntegerField(write_only=True)
+    group_id = serializers.IntegerField(write_only=True)
     option_groups = OptionGroupSerializer(many=True, read_only=True)
     add_ons = AddOnSerializer(many=True, read_only=True)
 
     class Meta:
         model = ProductModel
-        fields = ('slug', 'product_group_sort', 'photo', 'title', 'rating', 'description', 'price',
+        fields = ('slug', 'group_id', 'photo', 'title', 'rating', 'description', 'price',
                   'is_available', 'option_groups', 'add_ons')
         extra_kwargs = {
             'slug': {'read_only': True},
             'rating': {'read_only': True}
         }
 
+    def to_representation(self, instance):
+        if instance.option_groups.filter(changes_price=True).exists():
+            value = super(ProductDetailsSerializer, self).to_representation(instance)
+            value.pop('price')
+            return value
+        return super(ProductDetailsSerializer, self).to_representation(instance)
+
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductModel
         fields = ('slug', 'photo', 'title', 'price', 'rating')
+
+    def to_representation(self, instance):
+        if instance.option_groups.filter(changes_price=True).exists():
+            value = super(ProductSerializer, self).to_representation(instance)
+            value.pop('price')
+            return value
+
+        return super(ProductSerializer, self).to_representation(instance)
 
 
 class ProductGroupSerializer(serializers.ModelSerializer):

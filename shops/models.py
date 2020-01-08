@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/01/2020, 22:18
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 08/01/2020, 12:38
 import os
 import uuid
 
@@ -61,7 +61,7 @@ class ShopProfileModel(models.Model):
         super(ShopProfileModel, self).save(*args, **kwargs)
 
     def calculate_rating(self):
-        self.rating = self.reviews.aggregate(Avg('stars'))['stars__avg']
+        self.rating = self.reviews.aggregate(Avg('stars'))['stars__avg'] or 0
 
     def resort_reviews(self, sort):
         self.reviews.filter(sort__gt=sort).update(sort=F('sort') - 1)
@@ -118,6 +118,12 @@ class ProductModel(models.Model):
         unique_slugify(self, self.title)
 
         super(ProductModel, self).save(*args, **kwargs)
+
+    def calculate_rating(self):
+        self.rating = self.reviews.aggregate(Avg('stars'))['stars__avg'] or 0
+
+    def resort_reviews(self, sort):
+        self.reviews.filter(sort__gt=sort).update(sort=F('sort') - 1)
 
 
 class OptionGroupModel(models.Model):
@@ -260,7 +266,7 @@ class ProductReviewModel(models.Model):
 
     def save(self, *args, **kwargs):
         if self.pk is None:
-            latest_sort = ProductReviewModel.objects.filter(prodcut=self.product).count()
+            latest_sort = ProductReviewModel.objects.filter(product=self.product).count()
             self.sort = latest_sort + 1
 
         super(ProductReviewModel, self).save(*args, **kwargs)

@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 22:09
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 08/01/2020, 12:38
 import os
 import uuid
 
@@ -40,7 +40,7 @@ class DriverProfileModel(models.Model):
         return self.account.username
 
     def calculate_rating(self):
-        self.rating = self.reviews.aggregate(Avg('stars'))
+        self.rating = self.reviews.aggregate(Avg('stars')) or 0
 
     def resort_reviews(self, sort):
         self.reviews.filter(sort__gt=sort).update(sort=F('sort') - 1)
