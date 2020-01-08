@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 08/01/2020, 12:38
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 08/01/2020, 21:55
 import os
 import uuid
 
@@ -66,6 +66,9 @@ class ShopProfileModel(models.Model):
     def resort_reviews(self, sort):
         self.reviews.filter(sort__gt=sort).update(sort=F('sort') - 1)
 
+    def resort_product_groups(self, sort):
+        self.product_groups.filter(sort__gt=sort).update(sort=F('sort') - 1)
+
     def update_attrs(self, **kwargs):
         for key, value in kwargs.items():
             if hasattr(self, key):
@@ -125,6 +128,9 @@ class ProductModel(models.Model):
     def resort_reviews(self, sort):
         self.reviews.filter(sort__gt=sort).update(sort=F('sort') - 1)
 
+    def resort_addons(self, sort):
+        self.add_ons.filter(sort__gt=sort).update(sort=F('sort') - 1)
+
 
 class OptionGroupModel(models.Model):
     product = models.ForeignKey(to=ProductModel, related_name="option_groups", on_delete=models.CASCADE)
@@ -168,7 +174,7 @@ class OptionModel(models.Model):
         super(OptionModel, self).save(*args, **kwargs)
 
 
-class AddOn(models.Model):
+class AddOnModel(models.Model):
     product = models.ForeignKey(to=ProductModel, related_name="add_ons", on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     added_price = models.FloatField()
@@ -183,10 +189,10 @@ class AddOn(models.Model):
 
     def save(self, *args, **kwargs):
         if self.pk is None:
-            latest_sort = AddOn.objects.filter(product=self.product).count()
+            latest_sort = AddOnModel.objects.filter(product=self.product).count()
             self.sort = latest_sort + 1
 
-        super(AddOn, self).save(*args, **kwargs)
+        super(AddOnModel, self).save(*args, **kwargs)
 
 
 class RelyOn(models.Model):

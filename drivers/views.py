@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 22:09
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 08/01/2020, 21:55
 from abc import ABC
 
 from django.contrib.auth import login
@@ -6,6 +6,7 @@ from django.db.models import Func, F
 from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.generics import get_object_or_404
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 
 from drivers.models import DriverProfileModel, DriverReviewModel
@@ -53,8 +54,14 @@ class DriverProfileView(viewsets.ViewSet):
                                                                 last_time_online__gte=min_active_time
                                                                 ).order_by('distance')
 
-        serializer = DriverProfileSerializer(queryset[:10], many=True)
-        return Response(serializer.data)
+        paginator = LimitOffsetPagination()
+        paginator.default_limit = 10
+        paginator.max_limit = 100
+        paginated_queryset = paginator.paginate_queryset(queryset, request)
+        serializer = DriverProfileSerializer(paginated_queryset, many=True)
+
+        return Response(data={'limit': paginator.limit, 'offset': paginator.offset,
+                              'count': paginator.count, 'drivers': serializer.data})
 
     def retrieve(self, request, username=None):
         driver_profile = get_object_or_404(DriverProfileModel, account__username=username)
@@ -101,9 +108,15 @@ class DriverReviewView(viewsets.ViewSet):
     permission_classes = (DriverReviewPermissions,)
 
     def list(self, request, username=None):
-        query_set = DriverReviewModel.objects.filter(driver__account__username=username).all()
-        serializer = DriverReviewSerializer(query_set, many=True)
-        return Response(serializer.data)
+        queryset = DriverReviewModel.objects.filter(driver__account__username=username).all()
+        paginator = LimitOffsetPagination()
+        paginator.default_limit = 25
+        paginator.max_limit = 100
+        paginated_queryset = paginator.paginate_queryset(queryset, request)
+        serializer = DriverReviewSerializer(paginated_queryset, many=True)
+
+        return Response(data={'limit': paginator.limit, 'offset': paginator.offset,
+                              'count': paginator.count, 'reviews': serializer.data})
 
     def retrieve(self, request, username=None, pk=None):
         review = get_object_or_404(DriverReviewModel, driver__account__username=username, sort=pk)
@@ -111,9 +124,9 @@ class DriverReviewView(viewsets.ViewSet):
         return Response(serializer.data)
 
     def create(self, request, username=None):
+        driver = get_object_or_404(DriverProfileModel, account__username=username)
         serializer = DriverReviewSerializer(data=request.data)
         if serializer.is_valid():
-            driver = get_object_or_404(DriverProfileModel, account__username=username)
             serializer.save(user=request.user.profile, driver=driver)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

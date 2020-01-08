@@ -1,7 +1,8 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 04/01/2020, 12:48
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 08/01/2020, 21:55
 from django.contrib.auth import login
 from rest_framework import viewsets, status
 from rest_framework.generics import get_object_or_404
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 
 from users.models import UserAddressModel, UserProfileModel
@@ -143,11 +144,19 @@ class UserAddressView(viewsets.ViewSet):
             HTTP 200 Response with all addresses in
             the user's profile in JSON.
         """
+
         user = get_object_or_404(UserProfileModel, account__username=username)
         self.check_object_permissions(request, user)
-        query_set = user.addresses.all()
-        serializer = UserAddressSerializer(query_set, many=True)
-        return Response(serializer.data)
+        queryset = user.addresses.all()
+
+        paginator = LimitOffsetPagination()
+        paginator.default_limit = 10
+        paginator.max_limit = 100
+        paginated_queryset = paginator.paginate_queryset(queryset, request)
+        serializer = UserAddressSerializer(paginated_queryset, many=True)
+
+        return Response(data={'limit': paginator.limit, 'offset': paginator.offset,
+                              'count': paginator.count, 'addresses': serializer.data})
 
     def retrieve(self, request, username=None, pk=None):
         """Retrieves a certain address from the user's list

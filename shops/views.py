@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 08/01/2020, 12:38
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 08/01/2020, 21:55
 
 from abc import ABC
 
@@ -10,11 +10,13 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 
-from shops.models import ShopProfileModel, ShopReviewModel, ProductGroupModel, ProductModel, ProductReviewModel
+from shops.models import ShopProfileModel, ShopReviewModel, ProductGroupModel, ProductModel, ProductReviewModel, \
+    AddOnModel
 from shops.permissions import ShopProfilePermissions, ShopReviewPermissions, ProductPermissions, \
-    ProductReviewPermissions
+    ProductReviewPermissions, ProductGroupPermissions, AddOnPermission
 from shops.serializers import (ShopProfileSerializer, ShopProfileDetailSerializer, ShopReviewSerializer,
-                               ProductGroupSerializer, ProductDetailsSerializer, ProductReviewSerializer)
+                               ProductGroupSerializer, ProductDetailsSerializer, ProductReviewSerializer,
+                               AddOnSerializer)
 
 
 class Sin(Func, ABC):
@@ -117,9 +119,16 @@ class ShopReviewView(viewsets.ViewSet):
     permission_classes = (ShopReviewPermissions,)
 
     def list(self, request, shop_slug=None):
-        query_set = ShopReviewModel.objects.filter(shop__slug=shop_slug).all()
-        serializer = ShopReviewSerializer(query_set, many=True)
-        return Response(serializer.data)
+        queryset = ShopReviewModel.objects.filter(shop__slug=shop_slug).all()
+
+        paginator = LimitOffsetPagination()
+        paginator.default_limit = 25
+        paginator.max_limit = 100
+        paginated_queryset = paginator.paginate_queryset(queryset, request)
+        serializer = ShopReviewSerializer(paginated_queryset, many=True)
+
+        return Response(data={'limit': paginator.limit, 'offset': paginator.offset,
+                              'count': paginator.count, 'reviews': serializer.data})
 
     def retrieve(self, request, shop_slug=None, pk=None):
         review = get_object_or_404(ShopReviewModel, shop__slug=shop_slug, sort=pk)
@@ -127,9 +136,9 @@ class ShopReviewView(viewsets.ViewSet):
         return Response(serializer.data)
 
     def create(self, request, shop_slug=None):
+        shop = get_object_or_404(ShopProfileModel, slug=shop_slug)
         serializer = ShopReviewSerializer(data=request.data)
         if serializer.is_valid():
-            shop = get_object_or_404(ShopProfileModel, slug=shop_slug)
             serializer.save(user=request.user.profile, shop=shop)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -165,17 +174,41 @@ class ShopReviewView(viewsets.ViewSet):
 
 
 class ProductGroupView(viewsets.ViewSet):
-    def create(self):
-        pass
+    permission_classes = (ProductGroupPermissions,)
 
-    def update(self):
-        pass
+    def create(self, request, shop_slug=None):
+        shop = get_object_or_404(ShopProfileModel, slug=shop_slug)
+        self.check_object_permissions(request, shop)
+        serializer = ProductGroupSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(shop=shop)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    def partially_update(self):
-        pass
+    def update(self, request, shop_slug=None, pk=None):
+        product_group = get_object_or_404(ProductGroupModel, shop__slug=shop_slug, sort=pk)
+        self.check_object_permissions(request, product_group)
+        serializer = ProductGroupSerializer(product_group, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def destroy(self):
-        pass
+    def partially_update(self, request, shop_slug=None, pk=None):
+        product_group = get_object_or_404(ProductGroupModel, shop__slug=shop_slug, sort=pk)
+        self.check_object_permissions(request, product_group)
+        serializer = ProductGroupSerializer(product_group, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, shop_slug=None, pk=None):
+        product_group = get_object_or_404(ProductGroupModel, shop__slug=shop_slug, sort=pk)
+        self.check_object_permissions(request, product_group)
+        product_group.delete()
+        product_group.shop.resort_product_groups()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ProductView(viewsets.ViewSet):
@@ -184,7 +217,7 @@ class ProductView(viewsets.ViewSet):
     def list(self, request, shop_slug=None):
         queryset = ProductGroupModel.objects.filter(shop__slug=shop_slug)
         paginator = LimitOffsetPagination()
-        paginator.default_limit = 25
+        paginator.default_limit = 10
         paginator.max_limit = 100
         paginated_queryset = paginator.paginate_queryset(queryset, request)
         serializer = ProductGroupSerializer(paginated_queryset, many=True)
@@ -198,9 +231,9 @@ class ProductView(viewsets.ViewSet):
         return Response(serializer.data)
 
     def create(self, request, shop_slug=None):
+        shop = get_object_or_404(ShopProfileModel, slug=shop_slug)
         serializer = ProductDetailsSerializer(data=request.data)
         if serializer.is_valid():
-            shop = get_object_or_404(ShopProfileModel, slug=shop_slug)
             self.check_object_permissions(request, shop)
             product_group = get_object_or_404(ProductGroupModel,
                                               sort=serializer.validated_data.pop('group_id'),
@@ -238,10 +271,16 @@ class ProductReviewView(viewsets.ViewSet):
     permission_classes = (ProductReviewPermissions,)
 
     def list(self, request, shop_slug=None, product_slug=None):
-        query_set = ProductReviewModel.objects.filter(product__shop__slug=shop_slug,
-                                                      product__slug=product_slug).all()
-        serializer = ProductReviewSerializer(query_set, many=True)
-        return Response(serializer.data)
+        queryset = ProductReviewModel.objects.filter(product__shop__slug=shop_slug,
+                                                     product__slug=product_slug).all()
+        paginator = LimitOffsetPagination()
+        paginator.default_limit = 25
+        paginator.max_limit = 100
+        paginated_queryset = paginator.paginate_queryset(queryset, request)
+        serializer = ProductReviewSerializer(paginated_queryset, many=True)
+
+        return Response(data={'limit': paginator.limit, 'offset': paginator.offset,
+                              'count': paginator.count, 'reviews': serializer.data})
 
     def retrieve(self, request, shop_slug=None, product_slug=None, pk=None):
         review = get_object_or_404(ProductReviewModel, product__shop__slug=shop_slug,
@@ -250,9 +289,9 @@ class ProductReviewView(viewsets.ViewSet):
         return Response(serializer.data)
 
     def create(self, request, shop_slug=None, product_slug=None):
+        product = get_object_or_404(ProductModel, shop__slug=shop_slug, slug=product_slug)
         serializer = ProductReviewSerializer(data=request.data)
         if serializer.is_valid():
-            product = get_object_or_404(ProductModel, shop__slug=shop_slug, slug=product_slug)
             serializer.save(user=request.user.profile, product=product)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -318,15 +357,41 @@ class OptionView(viewsets.ViewSet):
         pass
 
 
-class AddonView(viewsets.ViewSet):
-    def create(self):
-        pass
+class AddOnView(viewsets.ViewSet):
+    permission_classes = (AddOnPermission,)
 
-    def update(self):
-        pass
+    def create(self, request, shop_slug=None, product_slug=None):
+        product = get_object_or_404(ProductModel, shop__slug=shop_slug, slug=product_slug)
+        self.check_object_permissions(request, product)
+        serializer = AddOnSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(product=product)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def partially_update(self):
-        pass
+    def update(self, request, shop_slug=None, product_slug=None, pk=None):
+        addon = get_object_or_404(AddOnModel, product__slug=product_slug,
+                                  product__shop__slug=shop_slug, sort=pk)
+        self.check_object_permissions(request, addon)
+        serializer = AddOnSerializer(addon, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def destroy(self):
-        pass
+    def partially_update(self, request, shop_slug=None, product_slug=None, pk=None):
+        addon = get_object_or_404(AddOnModel, product__slug=product_slug,
+                                  product__shop__slug=shop_slug, sort=pk)
+        self.check_object_permissions(request, addon)
+        serializer = AddOnSerializer(addon, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, shop_slug=None, product_slug=None, pk=None):
+        addon = get_object_or_404(AddOnModel, product__slug=product_slug,
+                                  product__shop__slug=shop_slug, sort=pk)
+        self.check_object_permissions(request, addon)
+        addon.product.resort_addons()
+        return Response(status=status.HTTP_204_NO_CONTENT)

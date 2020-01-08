@@ -1,10 +1,10 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 08/01/2020, 12:38
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 08/01/2020, 21:55
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
 from shops.models import (ShopProfileModel, ProductGroupModel, ProductModel,
-                          OptionGroupModel, OptionModel, AddOn, RelyOn,
+                          OptionGroupModel, OptionModel, AddOnModel, RelyOn,
                           ShopAddressModel, ShopReviewModel, ProductReviewModel)
 from users.serializers import UserProfileSerializer, UserSerializer
 
@@ -20,7 +20,7 @@ class RelyOnSerializer(serializers.ModelSerializer):
 
 class AddOnSerializer(serializers.ModelSerializer):
     class Meta:
-        model = AddOn
+        model = AddOnModel
         fields = ('title', 'sort', 'added_price')
         extra_kwargs = {
             'sort': {'read_only': True}

@@ -1,9 +1,9 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad on 2019
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 08/01/2020, 21:55
 
 from django.db import models
 
 from drivers.models import DriverProfileModel
-from shops.models import ShopProfileModel, ProductModel, AddOn, OptionGroupModel, OptionModel
+from shops.models import ShopProfileModel, ProductModel, AddOnModel, OptionGroupModel, OptionModel
 from users.models import UserProfileModel, UserAddressModel
 
 
@@ -25,7 +25,7 @@ class OrderItemModel(models.Model):
     order = models.ForeignKey(to=OrderModel, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(to=ProductModel, on_delete=models.SET_NULL, null=True)
     quantity = models.PositiveIntegerField(default=1)
-    add_ons = models.ManyToManyField(to=AddOn)
+    add_ons = models.ManyToManyField(to=AddOnModel)
     special_request = models.TextField(blank=True)
 
     def __str__(self):
