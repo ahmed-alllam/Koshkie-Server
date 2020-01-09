@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 09/01/2020, 14:45
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 09/01/2020, 20:05
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -56,11 +56,33 @@ class OptionGroupSerializer(serializers.ModelSerializer):
             'sort': {'read_only': True}
         }
 
+    def validate(self, attrs):
+        changes_price = attrs.get('changes_price', None)
+        rely_on = attrs.get('rely_on', None)
+
+        if rely_on and rely_on != {}:
+            if not changes_price and changes_price is not None:
+                return attrs
+            elif self.instance and not self.instance.changes_price and changes_price is None:
+                return attrs
+            raise serializers.ValidationError("price changing option group can't have rely on")
+
+        elif rely_on == {}:
+            return attrs
+
+        elif rely_on is None:
+            if not changes_price:
+                return attrs
+            if self.instance and self.instance.rely_on:
+                raise serializers.ValidationError("price changing option group can't have rely on")
+
+        return attrs
+
     def validate_changes_price(self, data):
         product = self.context['product']
         if data:
             if product.option_groups.filter(changes_price=True).exists():
-                raise serializers.ValidationError("""A Product Can't have multiple price changing option group""")
+                raise serializers.ValidationError("A Product Can't have multiple price changing option group")
         return data
 
     def validate_rely_on(self, data):
@@ -79,7 +101,7 @@ class OptionGroupSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         product = self.context['product']
 
-        rely_on_data = validated_data.pop('rely_on')
+        rely_on_data = validated_data.pop('rely_on', {})
 
         option_group = OptionGroupModel.objects.create(**validated_data)
 
@@ -95,16 +117,22 @@ class OptionGroupSerializer(serializers.ModelSerializer):
         product = self.context['product']
 
         rely_on_data = validated_data.pop('rely_on', None)
+
         if rely_on_data is not None and rely_on_data != {}:
-            choosed_option_group = product.option_groups.get(sort=rely_on_data['choosed_option_group']['sort'])
-            defaults = {'choosed_option_group': choosed_option_group,
-                        'option': choosed_option_group.options.get(sort=rely_on_data['option']['sort'])
-                        }
+
+            choosed_option_group = product.option_groups.get(
+                sort=rely_on_data['choosed_option_group']['sort'])
+
+            option = choosed_option_group.options.get(
+                sort=rely_on_data['option']['sort'])
+
+            defaults = {'choosed_option_group': choosed_option_group, 'option': option}
             RelyOn.objects.update_or_create(option_group=instance, defaults=defaults)
 
         elif rely_on_data == {}:
             try:
                 instance.rely_on.delete()
+                instance.rely_on = None
             except Exception:
                 pass
 
