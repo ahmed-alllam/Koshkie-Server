@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 08/01/2020, 21:55
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 09/01/2020, 14:45
 import os
 import uuid
 
@@ -131,6 +131,9 @@ class ProductModel(models.Model):
     def resort_addons(self, sort):
         self.add_ons.filter(sort__gt=sort).update(sort=F('sort') - 1)
 
+    def resort_option_groups(self, sort):
+        self.option_groups.filter(sort__gt=sort).update(sort=F('sort') - 1)
+
 
 class OptionGroupModel(models.Model):
     product = models.ForeignKey(to=ProductModel, related_name="option_groups", on_delete=models.CASCADE)
@@ -151,6 +154,9 @@ class OptionGroupModel(models.Model):
             self.sort = latest_sort + 1
 
         super(OptionGroupModel, self).save(*args, **kwargs)
+
+    def resort_options(self, sort):
+        self.options.filter(sort__gt=sort).update(sort=F('sort') - 1)
 
 
 class OptionModel(models.Model):

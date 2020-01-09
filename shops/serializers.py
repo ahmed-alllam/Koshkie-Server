@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 08/01/2020, 21:55
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 09/01/2020, 14:45
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -21,7 +21,7 @@ class RelyOnSerializer(serializers.ModelSerializer):
 class AddOnSerializer(serializers.ModelSerializer):
     class Meta:
         model = AddOnModel
-        fields = ('title', 'sort', 'added_price')
+        fields = ('sort', 'title', 'added_price')
         extra_kwargs = {
             'sort': {'read_only': True}
         }
@@ -30,7 +30,7 @@ class AddOnSerializer(serializers.ModelSerializer):
 class OptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = OptionModel
-        fields = ('title', 'sort', 'price')
+        fields = ('sort', 'title', 'price')
         extra_kwargs = {
             'sort': {'read_only': True}
         }
@@ -51,28 +51,28 @@ class OptionGroupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OptionGroupModel
-        fields = ('title', 'sort', 'changes_price', 'rely_on', 'options')
+        fields = ('sort', 'title', 'changes_price', 'rely_on', 'options')
         extra_kwargs = {
             'sort': {'read_only': True}
         }
 
-    def validated_changes_price(self, data):
+    def validate_changes_price(self, data):
         product = self.context['product']
-
-        if product.option_groups.filter(changes_price=True).exists():
-            raise serializers.ValidationError("""A Product Can't have multiple price
-                                                 changing option group""")
+        if data:
+            if product.option_groups.filter(changes_price=True).exists():
+                raise serializers.ValidationError("""A Product Can't have multiple price changing option group""")
         return data
 
     def validate_rely_on(self, data):
-        product = self.context['product']
-        option_group_qs = product.option_groups.filter(sort=data['choosed_option_group'])
+        if data:
+            product = self.context['product']
+            option_group_qs = product.option_groups.filter(sort=data['choosed_option_group']['sort'])
 
-        if option_group_qs.exists():
-            if not option_group_qs.get().options.filter(sort=data['option']).exists():
-                raise serializers.ValidationError("option doesn't exist")
-        else:
-            raise serializers.ValidationError("option group doesn't exist")
+            if option_group_qs.exists():
+                if not option_group_qs.get().options.filter(sort=data['option']['sort']).exists():
+                    raise serializers.ValidationError("option doesn't exist")
+            else:
+                raise serializers.ValidationError("option group doesn't exist")
 
         return data
 
@@ -83,25 +83,33 @@ class OptionGroupSerializer(serializers.ModelSerializer):
 
         option_group = OptionGroupModel.objects.create(**validated_data)
 
-        choosed_option_group = product.option_groups.get(sort=rely_on_data['choosed_option_group'])
-        option = choosed_option_group.options.get(sort=rely_on_data['option'])
-        RelyOn.objects.create(option_group=option_group,
-                              choosed_option_group=choosed_option_group, option=option)
+        if rely_on_data:
+            choosed_option_group = product.option_groups.get(sort=rely_on_data['choosed_option_group']['sort'])
+            option = choosed_option_group.options.get(sort=rely_on_data['option']['sort'])
+            RelyOn.objects.create(option_group=option_group,
+                                  choosed_option_group=choosed_option_group, option=option)
 
         return option_group
 
     def update(self, instance, validated_data):
         product = self.context['product']
 
-        rely_on_data = validated_data.pop('rely_on')
-        rely_on = instance.rely_on
-        rely_on.choosed_option_group = product.option_groups.get(
-            sort=rely_on_data.get('choosed_option_group',
-                                  rely_on.choosed_option_group.sort))
-        rely_on.option = rely_on.options.get(sort=rely_on_data.get('option', rely_on.option.sort))
-        rely_on.save()
+        rely_on_data = validated_data.pop('rely_on', None)
+        if rely_on_data is not None and rely_on_data != {}:
+            choosed_option_group = product.option_groups.get(sort=rely_on_data['choosed_option_group']['sort'])
+            defaults = {'choosed_option_group': choosed_option_group,
+                        'option': choosed_option_group.options.get(sort=rely_on_data['option']['sort'])
+                        }
+            RelyOn.objects.update_or_create(option_group=instance, defaults=defaults)
+
+        elif rely_on_data == {}:
+            try:
+                instance.rely_on.delete()
+            except Exception:
+                pass
 
         instance.title = validated_data.get('title', instance.title)
+        instance.changes_price = validated_data.get('changes_price', instance.changes_price)
         instance.save()
 
         return instance
@@ -251,6 +259,7 @@ class ShopProfileDetailSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'slug': {'read_only': True},
             'rating': {'read_only': True},
+            'is_open': {'write_only': True}
         }
 
     def __init__(self, *args, **kwargs):
