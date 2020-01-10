@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/01/2020, 19:52
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 10/01/2020, 18:25
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -9,10 +9,12 @@ from users.serializers import UserProfileSerializer, UserSerializer
 
 class DriverProfileSerializer(serializers.ModelSerializer):
     account = UserSerializer()
+    reviews_count = serializers.IntegerField(read_only=True, source='get_reviews_count')
 
     class Meta:
         model = DriverProfileModel
-        fields = ('id', 'account', 'profile_photo', 'phone_number', 'vehicle_type', 'rating')
+        fields = ('id', 'account', 'profile_photo', 'phone_number', 'vehicle_type',
+                  'rating', 'reviews_count')
         extra_kwargs = {
             'id': {'read_only': True},
             'rating': {'read_only': True}
@@ -43,6 +45,9 @@ class DriverProfileSerializer(serializers.ModelSerializer):
         account.save()
 
         return instance
+
+    def get_reviews_count(self):
+        return self.instance.reviews.count()
 
 
 class DriverReviewSerializer(serializers.ModelSerializer):

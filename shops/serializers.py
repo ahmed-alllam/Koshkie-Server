@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 09/01/2020, 20:05
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 10/01/2020, 18:25
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -32,10 +32,11 @@ class OptionSerializer(serializers.ModelSerializer):
         model = OptionModel
         fields = ('sort', 'title', 'price')
         extra_kwargs = {
-            'sort': {'read_only': True}
+            'sort': {'read_only': True},
+            'price': {'required': False}
         }
 
-    def validated_price(self, data):
+    def validate_price(self, data):
         option_group = self.context['option_group']
 
         if data > 0 and not option_group.changes_price:
@@ -43,6 +44,13 @@ class OptionSerializer(serializers.ModelSerializer):
         if data <= 0 and option_group.changes_price:
             raise serializers.ValidationError("option must have price")
         return data
+
+    def to_representation(self, instance):
+        if not instance.price:
+            value = super(OptionSerializer, self).to_representation(instance)
+            value.pop('price')
+            return value
+        return super(OptionSerializer, self).to_representation(instance)
 
 
 class OptionGroupSerializer(serializers.ModelSerializer):
@@ -108,8 +116,9 @@ class OptionGroupSerializer(serializers.ModelSerializer):
         if rely_on_data:
             choosed_option_group = product.option_groups.get(sort=rely_on_data['choosed_option_group']['sort'])
             option = choosed_option_group.options.get(sort=rely_on_data['option']['sort'])
-            RelyOn.objects.create(option_group=option_group,
-                                  choosed_option_group=choosed_option_group, option=option)
+            rely_on = RelyOn.objects.create(option_group=option_group,
+                                            choosed_option_group=choosed_option_group, option=option)
+            option_group.rely_on = rely_on
 
         return option_group
 
@@ -130,11 +139,9 @@ class OptionGroupSerializer(serializers.ModelSerializer):
             RelyOn.objects.update_or_create(option_group=instance, defaults=defaults)
 
         elif rely_on_data == {}:
-            try:
+            if instance.rely_on:
                 instance.rely_on.delete()
                 instance.rely_on = None
-            except Exception:
-                pass
 
         instance.title = validated_data.get('title', instance.title)
         instance.changes_price = validated_data.get('changes_price', instance.changes_price)
@@ -185,11 +192,12 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
     group_id = serializers.IntegerField(write_only=True)
     option_groups = OptionGroupSerializer(many=True, read_only=True)
     add_ons = AddOnSerializer(many=True, read_only=True)
+    reviews_count = serializers.IntegerField(read_only=True, source='get_reviews_count')
 
     class Meta:
         model = ProductModel
-        fields = ('slug', 'group_id', 'photo', 'title', 'rating', 'description', 'price',
-                  'is_available', 'option_groups', 'add_ons')
+        fields = ('slug', 'group_id', 'photo', 'title', 'rating', 'reviews_count',
+                  'description', 'price', 'is_available', 'option_groups', 'add_ons')
         extra_kwargs = {
             'slug': {'read_only': True},
             'rating': {'read_only': True}
@@ -202,11 +210,16 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
             return value
         return super(ProductDetailsSerializer, self).to_representation(instance)
 
+    def get_reviews_count(self):
+        return self.instance.reviews.count()
+
 
 class ProductSerializer(serializers.ModelSerializer):
+    reviews_count = serializers.IntegerField(read_only=True, source='get_reviews_count')
+
     class Meta:
         model = ProductModel
-        fields = ('slug', 'photo', 'title', 'price', 'rating')
+        fields = ('slug', 'photo', 'title', 'price', 'rating', 'reviews_count')
 
     def to_representation(self, instance):
         if instance.option_groups.filter(changes_price=True).exists():
@@ -215,6 +228,9 @@ class ProductSerializer(serializers.ModelSerializer):
             return value
 
         return super(ProductSerializer, self).to_representation(instance)
+
+    def get_reviews_count(self):
+        return self.instance.reviews.count()
 
 
 class ProductGroupSerializer(serializers.ModelSerializer):
@@ -278,12 +294,13 @@ class ShopReviewSerializer(serializers.ModelSerializer):
 class ShopProfileDetailSerializer(serializers.ModelSerializer):
     account = UserSerializer()
     address = ShopAddressSerializer()
+    reviews_count = serializers.IntegerField(read_only=True, source='get_reviews_count')
 
     class Meta:
         model = ShopProfileModel
-        fields = ('slug', 'account', 'profile_photo', 'phone_number', 'description', 'shop_type',
-                  'name', 'rating', 'address', 'is_open', 'opens_at', 'closes_at', 'currency',
-                  'minimum_charge', 'delivery_fee', 'vat')
+        fields = ('slug', 'account', 'profile_photo', 'phone_number', 'description', 'shop_type', 'name',
+                  'rating', 'reviews_count', 'is_open', 'opens_at', 'closes_at', 'currency',
+                  'minimum_charge', 'delivery_fee', 'vat', 'address')
         extra_kwargs = {
             'slug': {'read_only': True},
             'rating': {'read_only': True},
@@ -330,10 +347,17 @@ class ShopProfileDetailSerializer(serializers.ModelSerializer):
 
         return instance
 
+    def get_reviews_count(self):
+        return self.instance.reviews.count()
+
 
 class ShopProfileSerializer(serializers.ModelSerializer):
     address = ShopAddressSerializer()
+    reviews_count = serializers.IntegerField(read_only=True, source='get_reviews_count')
 
     class Meta:
         model = ShopProfileModel
-        fields = ('slug', 'profile_photo', 'shop_type', 'name', 'rating', 'address')
+        fields = ('slug', 'profile_photo', 'shop_type', 'name', 'rating', 'reviews_count', 'address')
+
+    def get_reviews_count(self):
+        return self.instance.reviews.count()

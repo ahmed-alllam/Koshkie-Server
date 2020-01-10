@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 09/01/2020, 14:45
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 10/01/2020, 18:25
 import os
 import uuid
 
@@ -163,7 +163,7 @@ class OptionModel(models.Model):
     option_group = models.ForeignKey(to=OptionGroupModel, on_delete=models.CASCADE, related_name="options")
     title = models.CharField(max_length=255)
     sort = models.PositiveIntegerField()
-    price = models.FloatField()
+    price = models.FloatField(null=True)
 
     class Meta:
         unique_together = ("option_group", "sort")

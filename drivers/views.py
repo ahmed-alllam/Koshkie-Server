@@ -1,10 +1,11 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 08/01/2020, 21:55
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 10/01/2020, 18:25
 from abc import ABC
 
-from django.contrib.auth import login
+from django.contrib.auth import login, authenticate
 from django.db.models import Func, F
 from django.utils import timezone
 from rest_framework import viewsets, status
+from rest_framework.decorators import api_view
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
@@ -28,6 +29,23 @@ class Acos(Func, ABC):
 
 class Rad(Func, ABC):
     function = 'RADIANS'
+
+
+@api_view(['POST'])
+def driver_login(request):
+    if request.user.is_authenticated:
+        return Response('User already logged in', status=status.HTTP_401_UNAUTHORIZED)
+
+    username = request.data['username']
+    password = request.data['password']
+
+    user = authenticate(username=username, password=password)
+
+    if user and hasattr(user, 'driver_profile'):
+        login(request, user)
+        return Response('Logged In Successfully')
+    else:
+        return Response('Wrong Username or Password', status=status.HTTP_400_BAD_REQUEST)
 
 
 class DriverProfileView(viewsets.ViewSet):

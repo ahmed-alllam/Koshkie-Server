@@ -1,6 +1,7 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 08/01/2020, 21:55
-from django.contrib.auth import login
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 10/01/2020, 18:25
+from django.contrib.auth import login, authenticate
 from rest_framework import viewsets, status
+from rest_framework.decorators import api_view
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
@@ -8,6 +9,23 @@ from rest_framework.response import Response
 from users.models import UserAddressModel, UserProfileModel
 from users.permissions import UserProfilePermissions, UserAddressPermissions
 from users.serializers import UserProfileSerializer, UserAddressSerializer
+
+
+@api_view(['POST'])
+def user_login(request):
+    if request.user.is_authenticated:
+        return Response('User already logged in', status=status.HTTP_401_UNAUTHORIZED)
+
+    username = request.data['username']
+    password = request.data['password']
+
+    user = authenticate(username=username, password=password)
+
+    if user and hasattr(user, 'profile'):
+        login(request, user)
+        return Response('Logged In Successfully')
+    else:
+        return Response('Wrong Username or Password', status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserProfileView(viewsets.ViewSet):

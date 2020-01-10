@@ -1,9 +1,9 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 09/01/2020, 14:45
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 10/01/2020, 18:25
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from shops.views import (ShopProfileView, ShopReviewView, ProductView, ProductReviewView, ProductGroupView, AddOnView,
-                         OptionGroupView, OptionView)
+                         OptionGroupView, OptionView, shop_login)
 
 shop_reviews_router = DefaultRouter()
 shop_reviews_router.register('', ShopReviewView, 'shop reviews')
@@ -28,6 +28,7 @@ app_name = 'shops'
 
 urlpatterns = [
     path('', ShopProfileView.as_view({'get': 'list', 'post': 'create'})),
+    path('login/', shop_login),
     path('<slug:shop_slug>/', ShopProfileView.as_view({'get': 'retrieve',
                                                        'put': 'update',
                                                        'patch': 'partial_update',
