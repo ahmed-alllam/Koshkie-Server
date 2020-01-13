@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 10/01/2020, 18:25
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 13/01/2020, 12:58
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -10,8 +10,8 @@ from users.serializers import UserProfileSerializer, UserSerializer
 
 
 class RelyOnSerializer(serializers.ModelSerializer):
-    choosed_option_group = serializers.IntegerField(source='choosed_option_group.sort')
-    option = serializers.IntegerField(source='option.sort')
+    choosed_option_group = serializers.IntegerField(source='choosed_option_group.sort', required=False)
+    option = serializers.IntegerField(source='option.sort', required=False)
 
     class Meta:
         model = RelyOn
@@ -94,11 +94,19 @@ class OptionGroupSerializer(serializers.ModelSerializer):
         return data
 
     def validate_rely_on(self, data):
+        if ('choosed_option_group' in data) and not ('option' in data):
+            raise serializers.ValidationError("option required")
+        if not ('choosed_option_group' in data) and ('option' in data):
+            raise serializers.ValidationError("option group required")
+
         if data:
             product = self.context['product']
             option_group_qs = product.option_groups.filter(sort=data['choosed_option_group']['sort'])
 
             if option_group_qs.exists():
+                if self.instance and option_group_qs.get().sort == self.instance.sort:
+                    raise serializers.ValidationError("option group must be different than the current one")
+
                 if not option_group_qs.get().options.filter(sort=data['option']['sort']).exists():
                     raise serializers.ValidationError("option doesn't exist")
             else:
@@ -192,7 +200,7 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
     group_id = serializers.IntegerField(write_only=True)
     option_groups = OptionGroupSerializer(many=True, read_only=True)
     add_ons = AddOnSerializer(many=True, read_only=True)
-    reviews_count = serializers.IntegerField(read_only=True, source='get_reviews_count')
+    reviews_count = serializers.SerializerMethodField(read_only=True, source='get_reviews_count')
 
     class Meta:
         model = ProductModel
@@ -210,12 +218,12 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
             return value
         return super(ProductDetailsSerializer, self).to_representation(instance)
 
-    def get_reviews_count(self):
-        return self.instance.reviews.count()
+    def get_reviews_count(self, obj):
+        return obj.reviews.count()
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    reviews_count = serializers.IntegerField(read_only=True, source='get_reviews_count')
+    reviews_count = serializers.SerializerMethodField(read_only=True, source='get_reviews_count')
 
     class Meta:
         model = ProductModel
@@ -229,8 +237,8 @@ class ProductSerializer(serializers.ModelSerializer):
 
         return super(ProductSerializer, self).to_representation(instance)
 
-    def get_reviews_count(self):
-        return self.instance.reviews.count()
+    def get_reviews_count(self, obj):
+        return obj.reviews.count()
 
 
 class ProductGroupSerializer(serializers.ModelSerializer):
@@ -294,7 +302,7 @@ class ShopReviewSerializer(serializers.ModelSerializer):
 class ShopProfileDetailSerializer(serializers.ModelSerializer):
     account = UserSerializer()
     address = ShopAddressSerializer()
-    reviews_count = serializers.IntegerField(read_only=True, source='get_reviews_count')
+    reviews_count = serializers.SerializerMethodField(read_only=True, source='get_reviews_count')
 
     class Meta:
         model = ShopProfileModel
@@ -347,17 +355,17 @@ class ShopProfileDetailSerializer(serializers.ModelSerializer):
 
         return instance
 
-    def get_reviews_count(self):
-        return self.instance.reviews.count()
+    def get_reviews_count(self, obj):
+        return obj.reviews.count()
 
 
 class ShopProfileSerializer(serializers.ModelSerializer):
     address = ShopAddressSerializer()
-    reviews_count = serializers.IntegerField(read_only=True, source='get_reviews_count')
+    reviews_count = serializers.SerializerMethodField(read_only=True, source='get_reviews_count')
 
     class Meta:
         model = ShopProfileModel
         fields = ('slug', 'profile_photo', 'shop_type', 'name', 'rating', 'reviews_count', 'address')
 
-    def get_reviews_count(self):
-        return self.instance.reviews.count()
+    def get_reviews_count(self, obj):
+        return obj.reviews.count()

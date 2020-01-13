@@ -1,9 +1,8 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 10/01/2020, 18:25
-import debug_toolbar
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 13/01/2020, 12:58
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path, include, re_path
+from django.urls import path, include
 
 from koshkie.views import logout_view
 
@@ -16,6 +15,3 @@ urlpatterns = [
                   path('orders/', include('orders.urls'))
               ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + \
               static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-urlpatterns += [
-    re_path(r'^__debug__/', include(debug_toolbar.urls)),
-]

@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 10/01/2020, 18:25
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 13/01/2020, 12:58
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
@@ -10,7 +10,8 @@ driver_reviews_router.register('', DriverReviewView, 'reviews')
 app_name = 'drivers'
 
 urlpatterns = [
-    path('', DriverProfileView.as_view({'get': 'list', 'post': 'create'})),
+    path('', DriverProfileView.as_view({'get': 'list'})),
+    path('signup/', DriverProfileView.as_view({'post': 'create'})),
     path('login/', driver_login),
     path('<username>/', DriverProfileView.as_view({'get': 'retrieve',
                                                    'put': 'update',

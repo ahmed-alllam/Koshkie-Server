@@ -10,7 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 10/01/2020, 18:25
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 13/01/2020, 12:58
 
 import os
 
@@ -44,11 +44,9 @@ INSTALLED_APPS = [
     'users',
     'orders',
     'shops',
-    'debug_toolbar'
 ]
 
 MIDDLEWARE = [
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -56,9 +54,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
 ]
 
-INTERNAL_IPS = ('127.0.0.1',)
 
 ROOT_URLCONF = 'koshkie.urls'
 

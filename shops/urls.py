@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 10/01/2020, 18:25
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 13/01/2020, 12:58
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
@@ -27,7 +27,8 @@ addon_router.register('', AddOnView, 'add-ons')
 app_name = 'shops'
 
 urlpatterns = [
-    path('', ShopProfileView.as_view({'get': 'list', 'post': 'create'})),
+    path('', ShopProfileView.as_view({'get': 'list'})),
+    path('signup/', ShopProfileView.as_view({'post': 'create'})),
     path('login/', shop_login),
     path('<slug:shop_slug>/', ShopProfileView.as_view({'get': 'retrieve',
                                                        'put': 'update',

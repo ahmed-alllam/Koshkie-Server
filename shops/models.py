@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 10/01/2020, 18:25
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 13/01/2020, 12:58
 import os
 import uuid
 
@@ -110,6 +110,7 @@ class ProductModel(models.Model):
     price = models.FloatField()
     rating = models.DecimalField(default=0, decimal_places=1, max_digits=2)
     is_available = models.BooleanField(default=True)
+    num_sold = models.PositiveIntegerField(default=0)
 
     class Meta:
         unique_together = ("shop", "slug")

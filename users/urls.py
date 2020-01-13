@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 10/01/2020, 18:25
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 13/01/2020, 12:58
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
@@ -11,7 +11,7 @@ addresses_router.register('', UserAddressView, basename='addresses')
 app_name = 'users'
 
 urlpatterns = [
-    path('', UserProfileView.as_view({'post': 'create'})),
+    path('signup', UserProfileView.as_view({'post': 'create'})),
     path('login/', user_login),
     path('<username>/', UserProfileView.as_view({'get': 'retrieve',
                                                  'put': 'update',

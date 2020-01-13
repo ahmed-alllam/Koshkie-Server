@@ -1,10 +1,9 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 10/01/2020, 18:25
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 13/01/2020, 12:58
 
 from abc import ABC
 
 from django.contrib.auth import login, authenticate
 from django.db.models import F, Func
-from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view
 from rest_framework.generics import get_object_or_404
@@ -17,7 +16,7 @@ from shops.permissions import ShopProfilePermissions, ShopReviewPermissions, Pro
     ProductReviewPermissions, ProductGroupPermissions, AddOnPermission, OptionGroupPermissions, OptionPermissions
 from shops.serializers import (ShopProfileSerializer, ShopProfileDetailSerializer, ShopReviewSerializer,
                                ProductGroupSerializer, ProductDetailsSerializer, ProductReviewSerializer,
-                               AddOnSerializer, OptionGroupSerializer, OptionSerializer)
+                               AddOnSerializer, OptionGroupSerializer, OptionSerializer, ProductSerializer)
 
 
 class Sin(Func, ABC):
@@ -61,6 +60,7 @@ class ShopProfileView(viewsets.ViewSet):
             user_longitude = float(request.GET.get('longitude'))
             user_latitude = float(request.GET.get('latitude'))
             shop_type = request.GET.get('type')
+            search = request.GET.get('search')
         except Exception:
             return Response("invalid coordinates", status=status.HTTP_400_BAD_REQUEST)
 
@@ -74,11 +74,12 @@ class ShopProfileView(viewsets.ViewSet):
                                                                  Sin(Rad(F('address__location_latitude')))
                                                                  )
                                                      ).filter(distance__lte=2.5, is_open=True,
-                                                              opens_at__lte=timezone.now(),
-                                                              closes_at__gte=timezone.now()
+
                                                               ).order_by('distance')
         if shop_type:
             queryset = queryset.filter(shop_type__iexact=shop_type)
+        if search:
+            queryset = queryset.filter(name__icontains=search)
 
         paginator = LimitOffsetPagination()
         paginator.default_limit = 25
@@ -234,6 +235,10 @@ class ProductView(viewsets.ViewSet):
 
     def list(self, request, shop_slug=None):
         queryset = ProductGroupModel.objects.filter(shop__slug=shop_slug)
+        best_selling_queryset = ProductModel.objects.filter(shop__slug=shop_slug,
+                                                            num_sold__gt=0).order_by('num_sold')
+        best_selling_serializer = ProductSerializer(best_selling_queryset[:5], many=True)
+
         paginator = LimitOffsetPagination()
         paginator.default_limit = 10
         paginator.max_limit = 100
@@ -241,7 +246,8 @@ class ProductView(viewsets.ViewSet):
         serializer = ProductGroupSerializer(paginated_queryset, many=True)
 
         return Response(data={'limit': paginator.limit, 'offset': paginator.offset,
-                              'count': paginator.count, 'groups': serializer.data})
+                              'count': paginator.count, 'best_selling': best_selling_serializer.data,
+                              'groups': serializer.data})
 
     def retrieve(self, request, shop_slug=None, product_slug=None):
         product = get_object_or_404(ProductModel, shop__slug=shop_slug, slug=product_slug)
