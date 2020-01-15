@@ -1,10 +1,10 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 08/01/2020, 21:55
-
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 15/01/2020, 12:16
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
 from drivers.models import DriverProfileModel
 from shops.models import ShopProfileModel, ProductModel, AddOnModel, OptionGroupModel, OptionModel
-from users.models import UserProfileModel, UserAddressModel
+from users.models import UserProfileModel
 
 
 class OrderModel(models.Model):
@@ -12,21 +12,28 @@ class OrderModel(models.Model):
     driver = models.ForeignKey(to=DriverProfileModel, on_delete=models.SET_NULL, related_name='served_orders',
                                null=True)
     shops = models.ManyToManyField(to=ShopProfileModel, related_name='served_orders')
+    shipping_address = models.OneToOneField(to='orders.OrderAddressModel', on_delete=models.SET_NULL)
     ordered_at = models.DateTimeField(auto_now_add=True)
-    shipping_address = models.ForeignKey(to=UserAddressModel, on_delete=models.SET_NULL, null=True)
     arrived = models.BooleanField(default=False)
     final_price = models.FloatField()
     subtotal = models.FloatField()
     delivery_fee = models.FloatField()
-    vat = models.FloatField(default=0)
+    vat = models.FloatField()
+    time_stamp = models.DateTimeField(auto_now_add=True)
+
+
+class OrderItemsGroupModel(models.Model):
+    shop = models.ForeignKey(to=ShopProfileModel, on_delete=models.SET_NULL)
 
 
 class OrderItemModel(models.Model):
-    order = models.ForeignKey(to=OrderModel, on_delete=models.CASCADE, related_name='items')
+    item_group = models.ForeignKey(to=OrderItemsGroupModel, on_delete=models.CASCADE,
+                                   related_name='items')
     product = models.ForeignKey(to=ProductModel, on_delete=models.SET_NULL, null=True)
     quantity = models.PositiveIntegerField(default=1)
     add_ons = models.ManyToManyField(to=AddOnModel)
     special_request = models.TextField(blank=True)
+    price = models.FloatField()
 
     def __str__(self):
         return self.product.title
@@ -45,13 +52,37 @@ class OrderItemModel(models.Model):
         return (product_price + self.get_add_ons_price()) * self.quantity
 
     def get_shop(self):
-        return self.product.product_group.shop
+        return self.product.shop
 
     def calculate_vat(self):
         return self.get_item_price() * (self.get_shop().vat / 100)
 
 
+class OrderAddressModel(models.Model):
+    address_type_choices = [
+        ('H', 'House'),
+        ('O', 'Office'),
+        ('A', 'Apartment')
+    ]
+
+    area = models.CharField(max_length=255)
+    type = models.CharField(max_length=1, choices=address_type_choices)
+    street = models.CharField(max_length=255)
+    building = models.CharField(max_length=255)
+    floor = models.PositiveIntegerField(default=1)
+    apartment_no = models.PositiveIntegerField(default=1)
+    special_notes = models.TextField(blank=True)
+    location_longitude = models.DecimalField(max_digits=9, decimal_places=6, validators=[
+        MaxValueValidator(180),
+        MinValueValidator(-180)
+    ])
+    location_latitude = models.DecimalField(max_digits=9, decimal_places=6, validators=[
+        MaxValueValidator(90),
+        MinValueValidator(-90)
+    ])
+
+
 class Choice(models.Model):
     order_item = models.ForeignKey(to=OrderItemModel, related_name='choices', on_delete=models.CASCADE)
-    option_group = models.ForeignKey(to=OptionGroupModel, on_delete=models.CASCADE)
-    choosed_option = models.ForeignKey(to=OptionModel, on_delete=models.CASCADE)
+    option_group = models.ForeignKey(to=OptionGroupModel, on_delete=models.SET_NULL)
+    choosed_option = models.ForeignKey(to=OptionModel, on_delete=models.SET_NULL)

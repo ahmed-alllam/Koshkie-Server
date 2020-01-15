@@ -1,20 +1,19 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 30/12/2019, 17:08
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 15/01/2020, 12:16
 
 from rest_framework import serializers
 
 from drivers.serializers import DriverProfileSerializer
-from orders.models import OrderModel, OrderItemModel, Choice
+from orders.models import OrderModel, OrderItemModel, Choice, OrderAddressModel, OrderItemsGroupModel
 from shops.models import ProductModel
 from shops.serializers import (ShopProfileSerializer, ProductSerializer,
-                               AddOnSerializer, OptionGroupSerializer)
-from users.models import UserAddressModel
-from users.serializers import UserProfileSerializer, UserAddressSerializer
+                               AddOnSerializer, OptionGroupSerializer, OptionSerializer)
+from users.serializers import UserProfileSerializer
 
 
 class ChoiceSerializer(serializers.ModelSerializer):
-    option_group = OptionGroupSerializer(read_only=True)
-    option_group_id = OptionGroupSerializer(write_only=True)
-    choosed_option = serializers.IntegerField(read_only=True)
+    option_group = OptionGroupSerializer(read_only=True, keep_only=('sort', 'title'))
+    option_group_id = serializers.IntegerField(write_only=True)
+    choosed_option = OptionSerializer(read_only=True, keep_only=('sort', 'title'))
     choosed_option_id = serializers.IntegerField(write_only=True)
 
     class Meta:
@@ -22,22 +21,27 @@ class ChoiceSerializer(serializers.ModelSerializer):
         fields = ('option_group', 'option_group_id', 'choosed_option', 'choosed_option_id')
 
 
+class OrderAddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderAddressModel
+        exclude = ('id', 'order')
+
+
 class OrderItemSerializer(serializers.ModelSerializer):
-    choices = ChoiceSerializer(many=True, required=False)
-    product = ProductSerializer(read_only=True)
+    product = ProductSerializer(read_only=True, keep_only=('id', 'title'))
     product_id = serializers.PrimaryKeyRelatedField(write_only=True,
                                                     queryset=ProductModel.objects.all())
 
-    add_ons_ids = serializers.ListField(child=serializers.IntegerField(), required=False,
-                                        write_only=True)
-    add_ons = AddOnSerializer(many=True, read_only=True)
+    add_ons_sorts = serializers.ListField(child=serializers.IntegerField(), required=False,
+                                          write_only=True)
+    add_ons = AddOnSerializer(many=True, read_only=True, keep_only=('sort', 'title'))
+    choices = ChoiceSerializer(many=True, required=False)
 
     class Meta:
         model = OrderItemModel
-        fields = ('id', 'product', 'product_id', 'quantity', 'choices', 'add_ons', 'add_ons_ids',
+        fields = ('product', 'product_id', 'quantity', 'choices', 'add_ons', 'add_ons_sorts',
                   'special_request')
         extra_kwargs = {
-            'id': {'read_only': True},
             'special_request': {'required': False},
         }
 
@@ -81,25 +85,36 @@ class OrderItemSerializer(serializers.ModelSerializer):
         return data
 
 
+class OrderItemsGroupSerializer(serializers.ModelSerializer):
+    shop = ShopProfileSerializer(read_only=True, keep_only=('profile_photo', 'name', 'address'))
+    items = OrderItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = OrderItemsGroupModel
+        fields = ('shop', 'items')
+
+
 class OrderSerializer(serializers.ModelSerializer):
     user = UserProfileSerializer(read_only=True)
     driver = DriverProfileSerializer(read_only=True)
-    shops = ShopProfileSerializer(many=True, read_only=True, exclude='account')
-    items = OrderItemSerializer(many=True)
-    shipping_address = UserAddressSerializer(read_only=True)
-    shipping_address_id = serializers.PrimaryKeyRelatedField(write_only=True,
-                                                             queryset=UserAddressModel.objects.all())
+    items = OrderItemsGroupSerializer(many=True)
+    shipping_address = OrderAddressSerializer()
 
     class Meta:
         model = OrderModel
-        fields = ('id', 'user', 'driver', 'shops', 'items', 'ordered_at', 'shipping_address',
-                  'shipping_address_id', 'arrived', 'final_price', 'delivery_fee', 'vat')
-        read_only_fields = ('id', 'user', 'driver', 'shops', 'ordered_at',
+        fields = ('id', 'user', 'driver', 'items', 'ordered_at', 'shipping_address',
+                  'arrived', 'final_price', 'delivery_fee', 'vat')
+        read_only_fields = ('id', 'user', 'driver', 'ordered_at',
                             'arrived', 'final_price', 'delivery_fee', 'vat')
 
     def create(self, validated_data):
         items_data = validated_data.pop('items')
         items = list()
+
+        shops = set()
+        delivery_fee = 0
+        vat = 0
+        subtotal = 0
 
         for item in items_data:
             choices = item.pop('choices')
@@ -113,27 +128,29 @@ class OrderSerializer(serializers.ModelSerializer):
             for add_on_id in add_ons_ids:
                 add_on = order_item.product.add_ons.get(sort=add_on_id)
                 order_item.add_ons.add(add_on)
-            order_item.save()
+            order_item.price = order_item.get_item_price()
             items.append(order_item)
+            shop = order_item.get_shop()
+            if shop not in shops:
+                shops.add(shop)
+                delivery_fee += shop.delivery_fee
 
-        shops = set()
-        delivery_fee = 0
-        vat = 0
-        subtotal = 0
+                item_group = OrderItemsGroupModel(shop=shop).save()
+                order_item.item_group = item_group
 
-        for item in items:
-            shops.add(item.get_shop())
-            vat += item.calculate_vat()
-            subtotal += item.get_item_price()
-
-        for shop in shops:
-            delivery_fee += shop.delivery_fee
+            vat += order_item.calculate_vat()
+            subtotal += order_item.get_item_price()
+            order_item.save()
 
         final_price = subtotal + vat + delivery_fee
 
+        address_data = validated_data.pop('shipping_address')
+        shipping_address = OrderAddressModel(**address_data).save()
+
         order = OrderModel.objects.create(items=items, shops=list(shops), delivery_fee=delivery_fee,
-                                          vat=vat, subtotal=subtotal,
-                                          final_price=final_price, **validated_data)
+                                          vat=vat, subtotal=subtotal, shipping_address=shipping_address,
+                                          final_price=final_price, **validated_data)  # user and
+        # driver to added from views
         return order
 
     def update(self, instance, validated_data):

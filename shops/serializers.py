@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 13/01/2020, 12:58
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 15/01/2020, 12:16
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -26,6 +26,18 @@ class AddOnSerializer(serializers.ModelSerializer):
             'sort': {'read_only': True}
         }
 
+    def __init__(self, *args, **kwargs):
+        keep_only_fields = kwargs.get('keep_only', None)
+        if keep_only_fields is not None:
+            included_fields = {}
+            for keep_only in keep_only_fields:
+                field = self.fields.get(keep_only)
+                included_fields[keep_only] = field
+            self.fields.clear()
+            self.fields.update(included_fields)
+
+        super(AddOnSerializer, self).__init__(*args, **kwargs)
+
 
 class OptionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -35,6 +47,18 @@ class OptionSerializer(serializers.ModelSerializer):
             'sort': {'read_only': True},
             'price': {'required': False}
         }
+
+    def __init__(self, *args, **kwargs):
+        keep_only_fields = kwargs.get('keep_only', None)
+        if keep_only_fields is not None:
+            included_fields = {}
+            for keep_only in keep_only_fields:
+                field = self.fields.get(keep_only)
+                included_fields[keep_only] = field
+            self.fields.clear()
+            self.fields.update(included_fields)
+
+        super(OptionSerializer, self).__init__(*args, **kwargs)
 
     def validate_price(self, data):
         option_group = self.context['option_group']
@@ -63,6 +87,18 @@ class OptionGroupSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'sort': {'read_only': True}
         }
+
+    def __init__(self, *args, **kwargs):
+        keep_only_fields = kwargs.get('keep_only', None)
+        if keep_only_fields is not None:
+            included_fields = {}
+            for keep_only in keep_only_fields:
+                field = self.fields.get(keep_only)
+                included_fields[keep_only] = field
+            self.fields.clear()
+            self.fields.update(included_fields)
+
+        super(OptionGroupSerializer, self).__init__(*args, **kwargs)
 
     def validate(self, attrs):
         changes_price = attrs.get('changes_price', None)
@@ -124,9 +160,8 @@ class OptionGroupSerializer(serializers.ModelSerializer):
         if rely_on_data:
             choosed_option_group = product.option_groups.get(sort=rely_on_data['choosed_option_group']['sort'])
             option = choosed_option_group.options.get(sort=rely_on_data['option']['sort'])
-            rely_on = RelyOn.objects.create(option_group=option_group,
-                                            choosed_option_group=choosed_option_group, option=option)
-            option_group.rely_on = rely_on
+            RelyOn.objects.create(option_group=option_group,
+                                  choosed_option_group=choosed_option_group, option=option)
 
         return option_group
 
@@ -204,9 +239,10 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductModel
-        fields = ('slug', 'group_id', 'photo', 'title', 'rating', 'reviews_count',
+        fields = ('id', 'slug', 'group_id', 'photo', 'title', 'rating', 'reviews_count',
                   'description', 'price', 'is_available', 'option_groups', 'add_ons')
         extra_kwargs = {
+            'id': {'read_only': True},
             'slug': {'read_only': True},
             'rating': {'read_only': True}
         }
@@ -227,7 +263,22 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductModel
-        fields = ('slug', 'photo', 'title', 'price', 'rating', 'reviews_count')
+        fields = ('id', 'slug', 'photo', 'title', 'price', 'rating', 'reviews_count')
+        extra_kwargs = {
+            'id': {'read_only': True}
+        }
+
+    def __init__(self, *args, **kwargs):
+        keep_only_fields = kwargs.get('keep_only', None)
+        if keep_only_fields is not None:
+            included_fields = {}
+            for keep_only in keep_only_fields:
+                field = self.fields.get(keep_only)
+                included_fields[keep_only] = field
+            self.fields.clear()
+            self.fields.update(included_fields)
+
+        super(ProductSerializer, self).__init__(*args, **kwargs)
 
     def to_representation(self, instance):
         if instance.option_groups.filter(changes_price=True).exists():
@@ -366,6 +417,18 @@ class ShopProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopProfileModel
         fields = ('slug', 'profile_photo', 'shop_type', 'name', 'rating', 'reviews_count', 'address')
+
+    def __init__(self, *args, **kwargs):
+        keep_only_fields = kwargs.get('keep_only', None)
+        if keep_only_fields is not None:
+            included_fields = {}
+            for keep_only in keep_only_fields:
+                field = self.fields.get(keep_only)
+                included_fields[keep_only] = field
+            self.fields.clear()
+            self.fields.update(included_fields)
+
+        super(ShopProfileSerializer, self).__init__(*args, **kwargs)
 
     def get_reviews_count(self, obj):
         return obj.reviews.count()
