@@ -1,10 +1,10 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 16/01/2020, 17:53
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 16/01/2020, 22:16
 
 from rest_framework import serializers
 
 from drivers.serializers import DriverProfileSerializer
 from orders.models import OrderModel, OrderItemModel, Choice, OrderAddressModel, OrderItemsGroupModel
-from shops.models import ProductModel
+from shops.models import ProductModel, OptionModel
 from shops.serializers import (ShopProfileSerializer, ProductSerializer,
                                AddOnSerializer, OptionGroupSerializer, OptionSerializer)
 from users.serializers import UserProfileSerializer
@@ -46,42 +46,39 @@ class OrderItemSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, data):
+        # Validate that product's shop is near too
         product = ProductModel.objects.get(id=data['product_id'])
-        add_ons = data['add_ons_ids']
+        add_ons = data['add_ons_sorts']
         choices = data['choices']
 
         for add_on in add_ons:
             if not product.add_ons.filter(sort=add_on).exists():
                 raise serializers.ValidationError("add-on Doesn't Exist")
 
-        if choices.count() != product.option_groups.count():
-            raise serializers.ValidationError("missing choices for required options")
-
+        seen = set()
         for choice in choices:
-            # to check for duplicates
-            seen = set()
-            if choice['option_group_id'] in seen:
+            if choice in seen:
                 raise serializers.ValidationError("duplicate choices for the order item")
+            seen.add(choice)
 
-            seen.add(choice['option_group_id'])
+        def is_choosed(group, option):
+            for choice_dict in choices:
+                if choices.get('option_group_id') == group and choice_dict.get('choosed_option_id') == option:
+                    return True
+            return False
 
-            query = product.option_groups.filter(sort=choice['option_group_id'])
-            if query.exists():
-                option_group = query.get()
-                if not option_group.options.filter(sort=choice['choosed_option_id']).exists():
-                    raise serializers.ValidationError("option  Wrong")
+        def get_option(option_group_sort):
+            for choice_dict in choices:
+                if choice_dict.get('option_group_id') == option_group_sort:
+                    return choice_dict.get('choosed_option_id')
 
-                # rely on validation here
-                if option_group.rely_on:
-                    key = option_group.rely_on.choosed_option_group.sort
-                    value = option_group.rely_on.option.sort
-                    required_choice = {'option_group_id': key, 'choosed_option_id': value}
-                    if not required_choice.items() <= choices.items():
-                        raise serializers.ValidationError("required choice not found")
-
-            else:
-                raise serializers.ValidationError("option group not found")
-
+        for option_group in product.option_groups.all():
+            if option_group.sort not in [choice.get('option_group_id') for choice in choices]:
+                if not option_group.rely_on or is_choosed(option_group.rely_on.choosed_option_group.sort,
+                                                          option_group.rely_on.option.sort):
+                    raise serializers.ValidationError("not all required option groups are chosen")
+            if not OptionModel.objects.filter(sort=get_option(option_group.sort)).exists():
+                raise serializers.ValidationError("option doesn't exist")
         return data
 
 
@@ -98,12 +95,13 @@ class OrderItemsGroupSerializer(serializers.ModelSerializer):
 class OrderDetailSerializer(serializers.ModelSerializer):
     user = UserProfileSerializer(read_only=True)
     driver = DriverProfileSerializer(read_only=True)
-    item_groups = OrderItemsGroupSerializer(many=True)
+    item_groups = OrderItemsGroupSerializer(many=True, read_only=True)
+    items = OrderItemSerializer(many=True, write_only=True)
     shipping_address = OrderAddressSerializer()
 
     class Meta:
         model = OrderModel
-        fields = ('id', 'user', 'driver', 'item_groups', 'ordered_at', 'shipping_address',
+        fields = ('id', 'user', 'driver', 'items', 'item_groups', 'ordered_at', 'shipping_address',
                   'arrived', 'final_price', 'delivery_fee', 'vat')
         read_only_fields = ('id', 'user', 'driver', 'ordered_at',
                             'arrived', 'final_price', 'delivery_fee', 'vat')
@@ -155,6 +153,7 @@ class OrderDetailSerializer(serializers.ModelSerializer):
         return order
 
     def update(self, instance, validated_data):
+        # make edits to status too
         if not instance.arrived:
             instance.arrived = validated_data.get('arrived', False)
             instance.save()
