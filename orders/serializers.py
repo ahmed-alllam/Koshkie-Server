@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 15/01/2020, 12:16
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 16/01/2020, 17:53
 
 from rest_framework import serializers
 
@@ -24,7 +24,7 @@ class ChoiceSerializer(serializers.ModelSerializer):
 class OrderAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderAddressModel
-        exclude = ('id', 'order')
+        exclude = ('id',)
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -86,7 +86,8 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderItemsGroupSerializer(serializers.ModelSerializer):
-    shop = ShopProfileSerializer(read_only=True, keep_only=('profile_photo', 'name', 'address'))
+    shop = ShopProfileSerializer(read_only=True, keep_only=('profile_photo',
+                                                            'name', 'address'))
     items = OrderItemSerializer(many=True, read_only=True)
 
     class Meta:
@@ -94,15 +95,15 @@ class OrderItemsGroupSerializer(serializers.ModelSerializer):
         fields = ('shop', 'items')
 
 
-class OrderSerializer(serializers.ModelSerializer):
+class OrderDetailSerializer(serializers.ModelSerializer):
     user = UserProfileSerializer(read_only=True)
     driver = DriverProfileSerializer(read_only=True)
-    items = OrderItemsGroupSerializer(many=True)
+    item_groups = OrderItemsGroupSerializer(many=True)
     shipping_address = OrderAddressSerializer()
 
     class Meta:
         model = OrderModel
-        fields = ('id', 'user', 'driver', 'items', 'ordered_at', 'shipping_address',
+        fields = ('id', 'user', 'driver', 'item_groups', 'ordered_at', 'shipping_address',
                   'arrived', 'final_price', 'delivery_fee', 'vat')
         read_only_fields = ('id', 'user', 'driver', 'ordered_at',
                             'arrived', 'final_price', 'delivery_fee', 'vat')
@@ -158,3 +159,13 @@ class OrderSerializer(serializers.ModelSerializer):
             instance.arrived = validated_data.get('arrived', False)
             instance.save()
         return instance
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    user = UserProfileSerializer()
+    driver = DriverProfileSerializer()
+    shops = ShopProfileSerializer(many=True, keep_only=('profile_photo', 'name'))
+
+    class Meta:
+        model = OrderModel
+        fields = ('id', 'user', 'driver', 'shops', 'ordered_at', 'arrived', 'final_price')

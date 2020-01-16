@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 13/01/2020, 12:58
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 16/01/2020, 17:53
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin

@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 15/01/2020, 12:16
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 16/01/2020, 17:53
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
@@ -12,7 +12,8 @@ class OrderModel(models.Model):
     driver = models.ForeignKey(to=DriverProfileModel, on_delete=models.SET_NULL, related_name='served_orders',
                                null=True)
     shops = models.ManyToManyField(to=ShopProfileModel, related_name='served_orders')
-    shipping_address = models.OneToOneField(to='orders.OrderAddressModel', on_delete=models.SET_NULL)
+    shipping_address = models.OneToOneField(to='orders.OrderAddressModel', on_delete=models.SET_NULL,
+                                            null=True)
     ordered_at = models.DateTimeField(auto_now_add=True)
     arrived = models.BooleanField(default=False)
     final_price = models.FloatField()
@@ -23,7 +24,8 @@ class OrderModel(models.Model):
 
 
 class OrderItemsGroupModel(models.Model):
-    shop = models.ForeignKey(to=ShopProfileModel, on_delete=models.SET_NULL)
+    order = models.ForeignKey(OrderModel, on_delete=models.CASCADE, related_name='item_groups')
+    shop = models.ForeignKey(ShopProfileModel, on_delete=models.SET_NULL, null=True)
 
 
 class OrderItemModel(models.Model):
@@ -83,6 +85,7 @@ class OrderAddressModel(models.Model):
 
 
 class Choice(models.Model):
-    order_item = models.ForeignKey(to=OrderItemModel, related_name='choices', on_delete=models.CASCADE)
-    option_group = models.ForeignKey(to=OptionGroupModel, on_delete=models.SET_NULL)
-    choosed_option = models.ForeignKey(to=OptionModel, on_delete=models.SET_NULL)
+    order_item = models.ForeignKey(to=OrderItemModel, related_name='choices',
+                                   on_delete=models.CASCADE, null=True)
+    option_group = models.ForeignKey(to=OptionGroupModel, on_delete=models.SET_NULL, null=True)
+    choosed_option = models.ForeignKey(to=OptionModel, on_delete=models.SET_NULL, null=True)

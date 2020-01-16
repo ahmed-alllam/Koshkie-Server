@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 15/01/2020, 12:16
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 16/01/2020, 17:53
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -27,14 +27,12 @@ class AddOnSerializer(serializers.ModelSerializer):
         }
 
     def __init__(self, *args, **kwargs):
-        keep_only_fields = kwargs.get('keep_only', None)
+        keep_only_fields = kwargs.pop('keep_only', None)
         if keep_only_fields is not None:
-            included_fields = {}
-            for keep_only in keep_only_fields:
-                field = self.fields.get(keep_only)
-                included_fields[keep_only] = field
-            self.fields.clear()
-            self.fields.update(included_fields)
+            new_fields = self.fields
+            for field in list(new_fields):
+                if field not in keep_only_fields:
+                    self.fields.pop(field)
 
         super(AddOnSerializer, self).__init__(*args, **kwargs)
 
@@ -49,14 +47,12 @@ class OptionSerializer(serializers.ModelSerializer):
         }
 
     def __init__(self, *args, **kwargs):
-        keep_only_fields = kwargs.get('keep_only', None)
+        keep_only_fields = kwargs.pop('keep_only', None)
         if keep_only_fields is not None:
-            included_fields = {}
-            for keep_only in keep_only_fields:
-                field = self.fields.get(keep_only)
-                included_fields[keep_only] = field
-            self.fields.clear()
-            self.fields.update(included_fields)
+            new_fields = self.fields
+            for field in list(new_fields):
+                if field not in keep_only_fields:
+                    self.fields.pop(field)
 
         super(OptionSerializer, self).__init__(*args, **kwargs)
 
@@ -89,14 +85,12 @@ class OptionGroupSerializer(serializers.ModelSerializer):
         }
 
     def __init__(self, *args, **kwargs):
-        keep_only_fields = kwargs.get('keep_only', None)
+        keep_only_fields = kwargs.pop('keep_only', None)
         if keep_only_fields is not None:
-            included_fields = {}
-            for keep_only in keep_only_fields:
-                field = self.fields.get(keep_only)
-                included_fields[keep_only] = field
-            self.fields.clear()
-            self.fields.update(included_fields)
+            new_fields = self.fields
+            for field in list(new_fields):
+                if field not in keep_only_fields:
+                    self.fields.pop(field)
 
         super(OptionGroupSerializer, self).__init__(*args, **kwargs)
 
@@ -269,14 +263,12 @@ class ProductSerializer(serializers.ModelSerializer):
         }
 
     def __init__(self, *args, **kwargs):
-        keep_only_fields = kwargs.get('keep_only', None)
+        keep_only_fields = kwargs.pop('keep_only', None)
         if keep_only_fields is not None:
-            included_fields = {}
-            for keep_only in keep_only_fields:
-                field = self.fields.get(keep_only)
-                included_fields[keep_only] = field
-            self.fields.clear()
-            self.fields.update(included_fields)
+            new_fields = self.fields
+            for field in list(new_fields):
+                if field not in keep_only_fields:
+                    self.fields.pop(field)
 
         super(ProductSerializer, self).__init__(*args, **kwargs)
 
@@ -419,14 +411,12 @@ class ShopProfileSerializer(serializers.ModelSerializer):
         fields = ('slug', 'profile_photo', 'shop_type', 'name', 'rating', 'reviews_count', 'address')
 
     def __init__(self, *args, **kwargs):
-        keep_only_fields = kwargs.get('keep_only', None)
+        keep_only_fields = kwargs.pop('keep_only', None)
         if keep_only_fields is not None:
-            included_fields = {}
-            for keep_only in keep_only_fields:
-                field = self.fields.get(keep_only)
-                included_fields[keep_only] = field
-            self.fields.clear()
-            self.fields.update(included_fields)
+            new_fields = self.fields
+            for field in list(new_fields):
+                if field not in keep_only_fields:
+                    self.fields.pop(field)
 
         super(ShopProfileSerializer, self).__init__(*args, **kwargs)
 
