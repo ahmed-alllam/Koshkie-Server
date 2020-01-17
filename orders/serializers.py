@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 17/01/2020, 21:37
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 17/01/2020, 21:45
 
 from rest_framework import serializers
 
@@ -125,8 +125,8 @@ class OrderDetailSerializer(serializers.ModelSerializer):
         subtotal = 0
 
         for item in items_data:
-            choices = item.pop('choices')
-            add_ons_ids = item.pop('add_ons_sorts')
+            choices = item.pop('choices', [])
+            add_ons_ids = item.pop('add_ons_sorts', [])
             item['product_id'] = item['product_id'].id
             order_item = OrderItemModel.objects.create(**item)
             for choice in choices:
