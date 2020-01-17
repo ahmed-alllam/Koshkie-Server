@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 16/01/2020, 17:53
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 17/01/2020, 21:37
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
@@ -24,18 +24,18 @@ class OrderModel(models.Model):
 
 
 class OrderItemsGroupModel(models.Model):
-    order = models.ForeignKey(OrderModel, on_delete=models.CASCADE, related_name='item_groups')
+    order = models.ForeignKey(OrderModel, on_delete=models.CASCADE, related_name='item_groups', null=True)
     shop = models.ForeignKey(ShopProfileModel, on_delete=models.SET_NULL, null=True)
 
 
 class OrderItemModel(models.Model):
     item_group = models.ForeignKey(to=OrderItemsGroupModel, on_delete=models.CASCADE,
-                                   related_name='items')
+                                   related_name='items', null=True)
     product = models.ForeignKey(to=ProductModel, on_delete=models.SET_NULL, null=True)
     quantity = models.PositiveIntegerField(default=1)
     add_ons = models.ManyToManyField(to=AddOnModel)
     special_request = models.TextField(blank=True)
-    price = models.FloatField()
+    price = models.FloatField(default=0)
 
     def __str__(self):
         return self.product.title

@@ -1,10 +1,10 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 16/01/2020, 22:16
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 17/01/2020, 21:37
 
 from rest_framework import serializers
 
 from drivers.serializers import DriverProfileSerializer
 from orders.models import OrderModel, OrderItemModel, Choice, OrderAddressModel, OrderItemsGroupModel
-from shops.models import ProductModel, OptionModel
+from shops.models import ProductModel
 from shops.serializers import (ShopProfileSerializer, ProductSerializer,
                                AddOnSerializer, OptionGroupSerializer, OptionSerializer)
 from users.serializers import UserProfileSerializer
@@ -39,46 +39,54 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderItemModel
-        fields = ('product', 'product_id', 'quantity', 'choices', 'add_ons', 'add_ons_sorts',
+        fields = ('product', 'product_id', 'quantity', 'price', 'choices', 'add_ons', 'add_ons_sorts',
                   'special_request')
         extra_kwargs = {
             'special_request': {'required': False},
+            'price': {'read_only': True}
         }
 
     def validate(self, data):
         # Validate that product's shop is near too
-        product = ProductModel.objects.get(id=data['product_id'])
-        add_ons = data['add_ons_sorts']
-        choices = data['choices']
+        product = data['product_id']
+        add_ons = data.get('add_ons_sorts', [])
+        choices = data.get('choices', [])
 
-        for add_on in add_ons:
-            if not product.add_ons.filter(sort=add_on).exists():
-                raise serializers.ValidationError("add-on Doesn't Exist")
+        if add_ons:
+            for add_on in add_ons:
+                if not product.add_ons.filter(sort=add_on).exists():
+                    raise serializers.ValidationError("add-on Doesn't Exist")
 
-        seen = set()
-        for choice in choices:
-            if choice in seen:
-                raise serializers.ValidationError("duplicate choices for the order item")
-            seen.add(choice)
+        if choices:
+            seen = []
+            for choice in choices:
+                if choice in seen:
+                    raise serializers.ValidationError("duplicate choices for the order item")
+                seen.append(choice)
+
+                if product.option_groups.filter(sort=choice.get('option_group_id')).exists():
+                    if not product.option_groups.get(sort=choice.get('option_group_id')).options.filter(
+                            sort=choice.get('choosed_option_id')).exists():
+                        raise serializers.ValidationError("chosen option doesn't exist")
+                else:
+                    raise serializers.ValidationError("option group doesn't exist")
 
         def is_choosed(group, option):
             for choice_dict in choices:
-                if choices.get('option_group_id') == group and choice_dict.get('choosed_option_id') == option:
+                if choice_dict.get('option_group_id') == group and choice_dict.get('choosed_option_id') == option:
                     return True
             return False
 
-        def get_option(option_group_sort):
-            for choice_dict in choices:
-                if choice_dict.get('option_group_id') == option_group_sort:
-                    return choice_dict.get('choosed_option_id')
-
         for option_group in product.option_groups.all():
-            if option_group.sort not in [choice.get('option_group_id') for choice in choices]:
-                if not option_group.rely_on or is_choosed(option_group.rely_on.choosed_option_group.sort,
-                                                          option_group.rely_on.option.sort):
+            if option_group.sort in [choice.get('option_group_id') for choice in choices]:
+                if hasattr(option_group, 'rely_on') and not is_choosed(option_group.rely_on.choosed_option_group.sort,
+                                                                       option_group.rely_on.option.sort):
+                    raise serializers.ValidationError("the rely-on required for this option group is not chosen")
+            else:
+                if not hasattr(option_group, 'rely_on') or (hasattr(option_group, 'rely_on') and is_choosed(
+                        option_group.rely_on.choosed_option_group.sort,
+                        option_group.rely_on.option.sort)):
                     raise serializers.ValidationError("not all required option groups are chosen")
-            if not OptionModel.objects.filter(sort=get_option(option_group.sort)).exists():
-                raise serializers.ValidationError("option doesn't exist")
         return data
 
 
@@ -104,21 +112,23 @@ class OrderDetailSerializer(serializers.ModelSerializer):
         fields = ('id', 'user', 'driver', 'items', 'item_groups', 'ordered_at', 'shipping_address',
                   'arrived', 'final_price', 'delivery_fee', 'vat')
         read_only_fields = ('id', 'user', 'driver', 'ordered_at',
-                            'arrived', 'final_price', 'delivery_fee', 'vat')
+                            'final_price', 'delivery_fee', 'vat')
 
     def create(self, validated_data):
         items_data = validated_data.pop('items')
         items = list()
 
         shops = set()
+        item_groups = set()
         delivery_fee = 0
         vat = 0
         subtotal = 0
 
         for item in items_data:
             choices = item.pop('choices')
-            add_ons_ids = item.pop('add_ons_ids')
-            order_item = OrderItemModel(**item)
+            add_ons_ids = item.pop('add_ons_sorts')
+            item['product_id'] = item['product_id'].id
+            order_item = OrderItemModel.objects.create(**item)
             for choice in choices:
                 option_group = order_item.product.option_groups.get(sort=choice['option_group_id'])
                 choosed_option = option_group.options.get(sort=choice['choosed_option_id'])
@@ -134,8 +144,12 @@ class OrderDetailSerializer(serializers.ModelSerializer):
                 shops.add(shop)
                 delivery_fee += shop.delivery_fee
 
-                item_group = OrderItemsGroupModel(shop=shop).save()
-                order_item.item_group = item_group
+                item_group = OrderItemsGroupModel.objects.create(shop=shop)
+                item_groups.add(item_group)
+            else:
+                item_group = OrderItemsGroupModel.objects.filter(shop=shop).get()
+
+            order_item.item_group = item_group
 
             vat += order_item.calculate_vat()
             subtotal += order_item.get_item_price()
@@ -144,12 +158,14 @@ class OrderDetailSerializer(serializers.ModelSerializer):
         final_price = subtotal + vat + delivery_fee
 
         address_data = validated_data.pop('shipping_address')
-        shipping_address = OrderAddressModel(**address_data).save()
+        shipping_address = OrderAddressModel.objects.create(**address_data)
 
-        order = OrderModel.objects.create(items=items, shops=list(shops), delivery_fee=delivery_fee,
-                                          vat=vat, subtotal=subtotal, shipping_address=shipping_address,
-                                          final_price=final_price, **validated_data)  # user and
-        # driver to added from views
+        validated_data.pop('arrived', None)
+        order = OrderModel.objects.create(delivery_fee=delivery_fee, vat=vat, subtotal=subtotal,
+                                          shipping_address=shipping_address, final_price=final_price,
+                                          **validated_data)
+        order.shops.set(shops)
+        order.item_groups.set(item_groups)
         return order
 
     def update(self, instance, validated_data):

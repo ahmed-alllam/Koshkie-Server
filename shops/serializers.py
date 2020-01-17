@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 16/01/2020, 17:53
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 17/01/2020, 21:37
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -68,7 +68,7 @@ class OptionSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         if not instance.price:
             value = super(OptionSerializer, self).to_representation(instance)
-            value.pop('price')
+            value.pop('price', {})
             return value
         return super(OptionSerializer, self).to_representation(instance)
 
