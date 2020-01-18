@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 17/01/2020, 21:37
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 18/01/2020, 20:11
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -134,10 +134,11 @@ class OptionGroupSerializer(serializers.ModelSerializer):
             option_group_qs = product.option_groups.filter(sort=data['choosed_option_group']['sort'])
 
             if option_group_qs.exists():
-                if self.instance and option_group_qs.get().sort == self.instance.sort:
+                option_group = option_group_qs.get()
+                if self.instance and option_group.sort == self.instance.sort:
                     raise serializers.ValidationError("option group must be different than the current one")
 
-                if not option_group_qs.get().options.filter(sort=data['option']['sort']).exists():
+                if not option_group.options.filter(sort=data['option']['sort']).exists():
                     raise serializers.ValidationError("option doesn't exist")
             else:
                 raise serializers.ValidationError("option group doesn't exist")

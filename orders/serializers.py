@@ -1,5 +1,7 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 17/01/2020, 21:45
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 18/01/2020, 20:11
+from math import acos, cos, sin, radians
 
+from django.db.models import F
 from rest_framework import serializers
 
 from drivers.serializers import DriverProfileSerializer
@@ -28,9 +30,9 @@ class OrderAddressSerializer(serializers.ModelSerializer):
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
-    product = ProductSerializer(read_only=True, keep_only=('id', 'title'))
-    product_id = serializers.PrimaryKeyRelatedField(write_only=True,
-                                                    queryset=ProductModel.objects.all())
+    ordered_product = ProductSerializer(read_only=True, keep_only=('id', 'title'))
+    product = serializers.PrimaryKeyRelatedField(write_only=True,
+                                                 queryset=ProductModel.objects.all())
 
     add_ons_sorts = serializers.ListField(child=serializers.IntegerField(), required=False,
                                           write_only=True)
@@ -39,7 +41,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderItemModel
-        fields = ('product', 'product_id', 'quantity', 'price', 'choices', 'add_ons', 'add_ons_sorts',
+        fields = ('ordered_product', 'product', 'quantity', 'price', 'choices', 'add_ons', 'add_ons_sorts',
                   'special_request')
         extra_kwargs = {
             'special_request': {'required': False},
@@ -47,8 +49,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, data):
-        # Validate that product's shop is near too
-        product = data['product_id']
+        product = data['product']
         add_ons = data.get('add_ons_sorts', [])
         choices = data.get('choices', [])
 
@@ -71,7 +72,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
                 else:
                     raise serializers.ValidationError("option group doesn't exist")
 
-        def is_choosed(group, option):
+        def _is_choosed(group, option):
             for choice_dict in choices:
                 if choice_dict.get('option_group_id') == group and choice_dict.get('choosed_option_id') == option:
                     return True
@@ -79,11 +80,11 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
         for option_group in product.option_groups.all():
             if option_group.sort in [choice.get('option_group_id') for choice in choices]:
-                if hasattr(option_group, 'rely_on') and not is_choosed(option_group.rely_on.choosed_option_group.sort,
-                                                                       option_group.rely_on.option.sort):
+                if hasattr(option_group, 'rely_on') and not _is_choosed(option_group.rely_on.choosed_option_group.sort,
+                                                                        option_group.rely_on.option.sort):
                     raise serializers.ValidationError("the rely-on required for this option group is not chosen")
             else:
-                if not hasattr(option_group, 'rely_on') or (hasattr(option_group, 'rely_on') and is_choosed(
+                if not hasattr(option_group, 'rely_on') or (hasattr(option_group, 'rely_on') and _is_choosed(
                         option_group.rely_on.choosed_option_group.sort,
                         option_group.rely_on.option.sort)):
                     raise serializers.ValidationError("not all required option groups are chosen")
@@ -114,7 +115,32 @@ class OrderDetailSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'user', 'driver', 'ordered_at',
                             'final_price', 'delivery_fee', 'vat')
 
+    def validate(self, attrs):
+        for item in attrs['items']:
+            product = item['product']
+            shop = product.shop
+            shops = []
+            if shop not in shops:
+                shops.append(shop)
+                shop_longitude = shop.address.location_longitude
+                shop_latitude = shop.address.location_latitude
+                user_longitude = attrs['shipping_address']['location_longitude']
+                user_latitude = attrs['shipping_address']['location_latitude']
+                distance = 6367 * acos(cos(radians(float(user_latitude))) *
+                                       cos(radians(shop_longitude)) *
+                                       cos(radians(shop_latitude) -
+                                           radians(float(user_longitude))
+                                           ) +
+                                       sin(radians(float(user_latitude))) *
+                                       sin(radians(shop_latitude))
+                                       )
+                if distance > 2.5:
+                    raise serializers.ValidationError("these products are not available in you area")
+        return attrs
+
     def create(self, validated_data):
+        validated_data.pop('arrived', None)
+
         items_data = validated_data.pop('items')
         items = list()
 
@@ -127,8 +153,8 @@ class OrderDetailSerializer(serializers.ModelSerializer):
         for item in items_data:
             choices = item.pop('choices', [])
             add_ons_ids = item.pop('add_ons_sorts', [])
-            item['product_id'] = item['product_id'].id
             order_item = OrderItemModel.objects.create(**item)
+            order_item.product.num_sold.update(num_sold=F('num_sold') + 1)
             for choice in choices:
                 option_group = order_item.product.option_groups.get(sort=choice['option_group_id'])
                 choosed_option = option_group.options.get(sort=choice['choosed_option_id'])
@@ -147,7 +173,7 @@ class OrderDetailSerializer(serializers.ModelSerializer):
                 item_group = OrderItemsGroupModel.objects.create(shop=shop)
                 item_groups.add(item_group)
             else:
-                item_group = OrderItemsGroupModel.objects.filter(shop=shop).get()
+                item_group = [x for x in item_groups if x.shop == shop][0]
 
             order_item.item_group = item_group
 
@@ -160,7 +186,6 @@ class OrderDetailSerializer(serializers.ModelSerializer):
         address_data = validated_data.pop('shipping_address')
         shipping_address = OrderAddressModel.objects.create(**address_data)
 
-        validated_data.pop('arrived', None)
         order = OrderModel.objects.create(delivery_fee=delivery_fee, vat=vat, subtotal=subtotal,
                                           shipping_address=shipping_address, final_price=final_price,
                                           **validated_data)

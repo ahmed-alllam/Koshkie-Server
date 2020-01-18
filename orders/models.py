@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 17/01/2020, 21:37
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 18/01/2020, 20:11
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
@@ -31,14 +31,14 @@ class OrderItemsGroupModel(models.Model):
 class OrderItemModel(models.Model):
     item_group = models.ForeignKey(to=OrderItemsGroupModel, on_delete=models.CASCADE,
                                    related_name='items', null=True)
-    product = models.ForeignKey(to=ProductModel, on_delete=models.SET_NULL, null=True)
+    ordered_product = models.ForeignKey(to=ProductModel, on_delete=models.SET_NULL, null=True)
     quantity = models.PositiveIntegerField(default=1)
     add_ons = models.ManyToManyField(to=AddOnModel)
     special_request = models.TextField(blank=True)
     price = models.FloatField(default=0)
 
     def __str__(self):
-        return self.product.title
+        return self.ordered_product.title
 
     def get_add_ons_price(self):
         total = 0
@@ -47,14 +47,14 @@ class OrderItemModel(models.Model):
         return total
 
     def get_item_price(self):
-        product_price = self.product.price
+        product_price = self.ordered_product.price
         for choice in self.choices.all():
             if choice.option_group.changes_price:
                 product_price = choice.choosed_option.price
         return (product_price + self.get_add_ons_price()) * self.quantity
 
     def get_shop(self):
-        return self.product.shop
+        return self.ordered_product.shop
 
     def calculate_vat(self):
         return self.get_item_price() * (self.get_shop().vat / 100)
