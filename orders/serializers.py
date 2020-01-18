@@ -1,15 +1,34 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 18/01/2020, 20:11
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 18/01/2020, 21:51
+from abc import ABC
 from math import acos, cos, sin, radians
 
-from django.db.models import F
+from django.db.models import F, Func
+from django.utils import timezone
 from rest_framework import serializers
 
+from drivers.models import DriverProfileModel
 from drivers.serializers import DriverProfileSerializer
 from orders.models import OrderModel, OrderItemModel, Choice, OrderAddressModel, OrderItemsGroupModel
 from shops.models import ProductModel
 from shops.serializers import (ShopProfileSerializer, ProductSerializer,
                                AddOnSerializer, OptionGroupSerializer, OptionSerializer)
 from users.serializers import UserProfileSerializer
+
+
+class Sin(Func, ABC):
+    function = 'SIN'
+
+
+class Cos(Func, ABC):
+    function = 'COS'
+
+
+class Acos(Func, ABC):
+    function = 'ACOS'
+
+
+class Rad(Func, ABC):
+    function = 'RADIANS'
 
 
 class ChoiceSerializer(serializers.ModelSerializer):
@@ -186,9 +205,25 @@ class OrderDetailSerializer(serializers.ModelSerializer):
         address_data = validated_data.pop('shipping_address')
         shipping_address = OrderAddressModel.objects.create(**address_data)
 
-        order = OrderModel.objects.create(delivery_fee=delivery_fee, vat=vat, subtotal=subtotal,
-                                          shipping_address=shipping_address, final_price=final_price,
-                                          **validated_data)
+        user_longitude = shipping_address.location_longitude
+        user_latitude = shipping_address.location_latitude
+        min_active_time = timezone.now() - timezone.timedelta(seconds=10)
+        driver = DriverProfileModel.objects.annotate(distance=
+                                                     6367 * Acos(Cos(Rad(float(user_latitude))) *
+                                                                 Cos(Rad(F('live_location_longitude'))) *
+                                                                 Cos(Rad(F('live_location_latitude')) -
+                                                                     Rad(float(user_longitude))
+                                                                     ) +
+                                                                 Sin(Rad(float(user_latitude))) *
+                                                                 Sin(Rad(F('live_location_latitude')))
+                                                                 )
+                                                     ).filter(distance__lte=2.5, is_busy=False,
+                                                              last_time_online__gte=min_active_time
+                                                              ).order_by('distance')[0]
+        driver.update(is_busy=True)
+        order = OrderModel.objects.create(driver=driver, shipping_address=shipping_address,
+                                          final_price=final_price, delivery_fee=delivery_fee,
+                                          vat=vat, subtotal=subtotal, **validated_data)
         order.shops.set(shops)
         order.item_groups.set(item_groups)
         return order
@@ -197,6 +232,7 @@ class OrderDetailSerializer(serializers.ModelSerializer):
         # make edits to status too
         if not instance.arrived:
             instance.arrived = validated_data.get('arrived', False)
+            instance.driver.update(is_busy=False)
             instance.save()
         return instance
 

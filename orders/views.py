@@ -1,10 +1,10 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 17/01/2020, 21:37
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 18/01/2020, 21:51
+
 from rest_framework import viewsets, status
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 
-from drivers.models import DriverProfileModel
 from orders.models import OrderModel
 from orders.permissions import OrderPermissions
 from orders.serializers import OrderSerializer, OrderDetailSerializer
@@ -43,8 +43,7 @@ class OrderView(viewsets.ViewSet):
     def create(self, request):
         serializer = OrderDetailSerializer(data=request.data)
         if serializer.is_valid():
-            driver = DriverProfileModel.objects.get(pk=1)
-            serializer.save(user=request.user.profile, driver=driver)
+            serializer.save(user=request.user.profile)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
