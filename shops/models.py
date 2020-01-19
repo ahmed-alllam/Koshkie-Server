@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 15/01/2020, 12:16
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 19/01/2020, 19:44
 import os
 import uuid
 
@@ -101,7 +101,8 @@ class ProductGroupModel(models.Model):
 
 class ProductModel(models.Model):
     shop = models.ForeignKey(to=ShopProfileModel, related_name="products", on_delete=models.CASCADE)
-    product_group = models.ForeignKey(to=ProductGroupModel, related_name="products", on_delete=models.CASCADE)
+    product_group = models.ForeignKey(to=ProductGroupModel, related_name="products",
+                                      on_delete=models.CASCADE, null=True)
     photo = models.ImageField(upload_to=product_photo_upload,
                               null=True)  # null attr to be removed added just for testing
     title = models.CharField(max_length=255)
@@ -110,6 +111,7 @@ class ProductModel(models.Model):
     price = models.FloatField()
     rating = models.DecimalField(default=0, decimal_places=1, max_digits=2)
     is_available = models.BooleanField(default=True)
+    is_offer = models.BooleanField(default=False)
     num_sold = models.PositiveIntegerField(default=0)
 
     class Meta:

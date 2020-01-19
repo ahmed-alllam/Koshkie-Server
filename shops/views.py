@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 15/01/2020, 12:16
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 19/01/2020, 19:44
 
 from abc import ABC
 
@@ -239,6 +239,9 @@ class ProductView(viewsets.ViewSet):
                                                             num_sold__gt=0).order_by('num_sold')
         best_selling_serializer = ProductSerializer(best_selling_queryset[:5], many=True)
 
+        offers_queryset = ProductModel.objects.filter(shop__slug=shop_slug, is_offer=True)
+        offers_serializer = ProductSerializer(offers_queryset, many=True)
+
         paginator = LimitOffsetPagination()
         paginator.default_limit = 10
         paginator.max_limit = 100
@@ -246,8 +249,8 @@ class ProductView(viewsets.ViewSet):
         serializer = ProductGroupSerializer(paginated_queryset, many=True)
 
         return Response(data={'limit': paginator.limit, 'offset': paginator.offset,
-                              'count': paginator.count, 'best_selling': best_selling_serializer.data,
-                              'groups': serializer.data})
+                              'count': paginator.count, 'offers': offers_serializer.data,
+                              'best_selling': best_selling_serializer.data, 'groups': serializer.data})
 
     def retrieve(self, request, shop_slug=None, product_slug=None):
         product = get_object_or_404(ProductModel, shop__slug=shop_slug, slug=product_slug)
@@ -259,9 +262,11 @@ class ProductView(viewsets.ViewSet):
         serializer = ProductDetailsSerializer(data=request.data)
         if serializer.is_valid():
             self.check_object_permissions(request, shop)
-            product_group = get_object_or_404(ProductGroupModel,
-                                              sort=serializer.validated_data.pop('group_id'),
-                                              shop__slug=shop_slug)
+            product_group = None
+            if not serializer.validated_data.get('is_offer', False):
+                product_group = get_object_or_404(ProductGroupModel,
+                                                  sort=serializer.validated_data.pop('group_id'),
+                                                  shop__slug=shop_slug)
             serializer.save(shop=shop, product_group=product_group)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
