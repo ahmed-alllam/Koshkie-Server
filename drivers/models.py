@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 08/01/2020, 12:38
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 21:29
 import os
 import uuid
 
@@ -23,7 +23,7 @@ class DriverProfileModel(models.Model):
     profile_photo = models.ImageField(upload_to=photo_upload, null=True)
     phone_number = models.BigIntegerField()
     is_active = models.BooleanField(default=False)
-    last_time_online = models.TimeField(auto_now_add=True)
+    last_time_online = models.DateTimeField(auto_now_add=True)
     live_location_longitude = models.DecimalField(max_digits=9, decimal_places=6, default=0, validators=[
         MaxValueValidator(180),
         MinValueValidator(-180)
