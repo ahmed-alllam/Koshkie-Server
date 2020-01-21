@@ -1,9 +1,10 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 15:27
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 18:58
 
 from abc import ABC
 
 from django.contrib.auth import login, authenticate
 from django.db.models import F, Func
+from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view
 from rest_framework.generics import get_object_or_404
@@ -75,7 +76,8 @@ class ShopProfileView(viewsets.ViewSet):
                                                                  Sin(Rad(F('address__location_latitude')))
                                                                  )
                                                      ).filter(distance__lte=2.5, is_open=True,
-
+                                                              is_active=True, opens_at__lte=timezone.now(),
+                                                              closes_at__gt=timezone.now()
                                                               ).order_by('distance')
         if shop_type:
             queryset = queryset.filter(shop_type__iexact=shop_type)
@@ -239,16 +241,18 @@ class ProductView(viewsets.ViewSet):
 
     def list(self, request, shop_slug=None):
         queryset = ProductGroupModel.objects.filter(shop__slug=shop_slug)
-        best_selling_queryset = ProductModel.objects.filter(shop__slug=shop_slug,
+
+        best_selling_queryset = ProductModel.objects.filter(shop__slug=shop_slug, is_available=True,
                                                             num_sold__gt=0).order_by('num_sold')
         best_selling_serializer = ProductSerializer(best_selling_queryset[:5], many=True)
 
-        offers_queryset = ProductModel.objects.filter(shop__slug=shop_slug, is_offer=True)
+        offers_queryset = ProductModel.objects.filter(shop__slug=shop_slug, is_offer=True,
+                                                      is_available=True)
         offers_serializer = ProductSerializer(offers_queryset, many=True)
 
         paginator = LimitOffsetPagination()
-        paginator.default_limit = 10
-        paginator.max_limit = 100
+        paginator.default_limit = 5
+        paginator.max_limit = 10
         paginated_queryset = paginator.paginate_queryset(queryset, request)
         serializer = ProductGroupSerializer(paginated_queryset, many=True)
 

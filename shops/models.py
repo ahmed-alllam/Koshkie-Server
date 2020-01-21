@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 15:27
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 18:58
 import os
 import uuid
 
@@ -85,7 +85,7 @@ class ShopProfileModel(models.Model):
 class ProductGroupModel(models.Model):
     shop = models.ForeignKey(to=ShopProfileModel, related_name="product_groups", on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
-    sort = models.PositiveIntegerField()
+    sort = models.PositiveIntegerField(null=True)
 
     class Meta:
         unique_together = (("shop", "sort"), ("shop", "title"))
@@ -106,8 +106,7 @@ class ProductModel(models.Model):
     shop = models.ForeignKey(to=ShopProfileModel, related_name="products", on_delete=models.CASCADE)
     product_group = models.ForeignKey(to=ProductGroupModel, related_name="products",
                                       on_delete=models.CASCADE, null=True)
-    photo = models.ImageField(upload_to=product_photo_upload,
-                              null=True)  # null attr to be removed added just for testing
+    photo = models.ImageField(upload_to=product_photo_upload)
     title = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255)
     description = models.TextField()
@@ -150,7 +149,7 @@ class ProductModel(models.Model):
 class OptionGroupModel(models.Model):
     product = models.ForeignKey(to=ProductModel, related_name="option_groups", on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
-    sort = models.PositiveIntegerField()
+    sort = models.PositiveIntegerField(null=True)
     changes_price = models.BooleanField(default=False)
 
     class Meta:
@@ -177,7 +176,7 @@ class OptionGroupModel(models.Model):
 class OptionModel(models.Model):
     option_group = models.ForeignKey(to=OptionGroupModel, on_delete=models.CASCADE, related_name="options")
     title = models.CharField(max_length=255)
-    sort = models.PositiveIntegerField()
+    sort = models.PositiveIntegerField(null=True)
     price = models.FloatField(null=True)
 
     class Meta:

@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 19/01/2020, 16:44
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 18:58
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
@@ -8,6 +8,13 @@ from users.models import UserProfileModel
 
 
 class OrderModel(models.Model):
+    status = (
+        ('C', 'confirmed'),
+        ('PR', 'preparing'),
+        ('PI', 'picked'),
+        ('D', 'delivered')
+    )
+
     user = models.ForeignKey(to=UserProfileModel, on_delete=models.SET_NULL, related_name='orders', null=True)
     driver = models.ForeignKey(to=DriverProfileModel, on_delete=models.SET_NULL, related_name='served_orders',
                                null=True)
@@ -15,12 +22,12 @@ class OrderModel(models.Model):
     shipping_address = models.OneToOneField(to='orders.OrderAddressModel', on_delete=models.SET_NULL,
                                             null=True)
     ordered_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=2, choices=status, default='C')
     arrived = models.BooleanField(default=False)
     final_price = models.FloatField()
     subtotal = models.FloatField()
     delivery_fee = models.FloatField()
     vat = models.FloatField()
-    time_stamp = models.DateTimeField(auto_now_add=True)
 
 
 class OrderItemsGroupModel(models.Model):

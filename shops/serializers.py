@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 15:27
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 18:58
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -375,15 +375,12 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    reviews_count = serializers.SerializerMethodField(read_only=True, source='get_reviews_count')
+    reviews_count = serializers.SerializerMethodField(source='get_reviews_count')
 
     class Meta:
         model = ProductModel
-        fields = ('id', 'slug', 'photo', 'title', 'price', 'rating', 'reviews_count', 'is_offer')
-        extra_kwargs = {
-            'id': {'read_only': True},
-            'is_offer': {'write_only': True}
-        }
+        fields = ('id', 'slug', 'photo', 'title', 'price', 'is_available', 'rating',
+                  'reviews_count', 'is_offer')
 
     def __init__(self, *args, **kwargs):
         keep_only_fields = kwargs.pop('keep_only', None)
@@ -409,7 +406,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
 
 class ProductGroupSerializer(serializers.ModelSerializer):
-    products = ProductSerializer(many=True, read_only=True)
+    products = serializers.SerializerMethodField(read_only=True, source='get_products')
 
     class Meta:
         model = ProductGroupModel
@@ -417,6 +414,11 @@ class ProductGroupSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'sort': {'required': False}
         }
+
+    def get_products(self, obj):
+        queryset = obj.products.filter(is_available=True)
+        serializer = ProductSerializer(queryset, many=True)
+        return serializer.data
 
     def validate_sort(self, attrs):
         if not self.instance:

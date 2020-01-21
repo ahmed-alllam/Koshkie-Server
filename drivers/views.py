@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 15:27
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 18:58
 from abc import ABC
 
 from django.contrib.auth import login, authenticate
@@ -69,7 +69,7 @@ class DriverProfileView(viewsets.ViewSet):
                                                                    Sin(Rad(float(user_latitude))) *
                                                                    Sin(Rad(F('live_location_latitude')))
                                                                    )
-                                                       ).filter(distance__lte=2.5, is_busy=False,
+                                                       ).filter(distance__lte=2.5, is_busy=False, is_active=True,
                                                                 last_time_online__gte=min_active_time
                                                                 ).order_by('distance')
 

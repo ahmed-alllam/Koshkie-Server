@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 19/01/2020, 16:44
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 18:58
 from abc import ABC
 from math import acos, cos, sin, radians
 
@@ -72,6 +72,9 @@ class OrderItemSerializer(serializers.ModelSerializer):
         add_ons = data.get('add_ons_sorts', [])
         choices = data.get('choices', [])
 
+        if not product.is_available:
+            raise serializers.ValidationError("this product is not availabe right now")
+
         if add_ons:
             for add_on in add_ons:
                 if not product.add_ons.filter(sort=add_on).exists():
@@ -129,10 +132,11 @@ class OrderDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderModel
-        fields = ('id', 'user', 'driver', 'items', 'item_groups', 'ordered_at', 'shipping_address',
-                  'arrived', 'final_price', 'delivery_fee', 'vat')
-        read_only_fields = ('id', 'user', 'driver', 'ordered_at',
-                            'final_price', 'delivery_fee', 'vat')
+        fields = ('id', 'user', 'driver', 'items', 'item_groups', 'ordered_at', 'status',
+                  'shipping_address', 'arrived', 'final_price', 'delivery_fee', 'vat')
+
+        read_only_fields = ('id', 'user', 'driver', 'ordered_at', 'final_price',
+                            'delivery_fee', 'vat')
 
     def validate(self, attrs):
         user_longitude = attrs['shipping_address']['location_longitude']
@@ -161,6 +165,10 @@ class OrderDetailSerializer(serializers.ModelSerializer):
             shops = []
             if shop not in shops:
                 shops.append(shop)
+
+                if not shop.is_active or not shop.is_open or shop.opens_at > timezone.now() or shop.closes_at < timezone.now():
+                    raise serializers.ValidationError("this product's shop is not available right now")
+
                 shop_longitude = shop.address.location_longitude
                 shop_latitude = shop.address.location_latitude
                 distance = 6367 * acos(cos(radians(float(user_latitude))) *
@@ -175,9 +183,10 @@ class OrderDetailSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError("these products are not available in you area")
         return attrs
 
-    def create(self, validated_data):
-        validated_data.pop('arrived', None)
+    def validated_status(self, data):
+        pass
 
+    def create(self, validated_data):
         items_data = validated_data.pop('items')
         items = list()
 
@@ -243,8 +252,9 @@ class OrderDetailSerializer(serializers.ModelSerializer):
         driver.save()
 
         order = OrderModel.objects.create(driver=driver, shipping_address=shipping_address,
-                                          final_price=final_price, delivery_fee=delivery_fee,
-                                          vat=vat, subtotal=subtotal, **validated_data)
+                                          status='C', final_price=final_price,
+                                          delivery_fee=delivery_fee, vat=vat,
+                                          subtotal=subtotal, **validated_data)
         order.shops.set(shops)
         order.item_groups.set(item_groups)
         return order
@@ -265,4 +275,4 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderModel
-        fields = ('id', 'user', 'driver', 'shops', 'ordered_at', 'arrived', 'final_price')
+        fields = ('id', 'user', 'driver', 'shops', 'ordered_at', 'status', 'final_price')
