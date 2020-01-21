@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 18:58
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 21:11
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
@@ -10,8 +10,7 @@ from users.models import UserProfileModel
 class OrderModel(models.Model):
     status = (
         ('C', 'confirmed'),
-        ('PR', 'preparing'),
-        ('PI', 'picked'),
+        ('P', 'picked'),
         ('D', 'delivered')
     )
 

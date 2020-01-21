@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 18:58
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 21:11
 from abc import ABC
 from math import acos, cos, sin, radians
 
@@ -133,7 +133,7 @@ class OrderDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderModel
         fields = ('id', 'user', 'driver', 'items', 'item_groups', 'ordered_at', 'status',
-                  'shipping_address', 'arrived', 'final_price', 'delivery_fee', 'vat')
+                  'shipping_address', 'final_price', 'delivery_fee', 'vat')
 
         read_only_fields = ('id', 'user', 'driver', 'ordered_at', 'final_price',
                             'delivery_fee', 'vat')
@@ -184,7 +184,12 @@ class OrderDetailSerializer(serializers.ModelSerializer):
         return attrs
 
     def validated_status(self, data):
-        pass
+        status_options = {'C': 1, 'P': 3, 'D': 4}
+
+        if self.instance and status_options[data] - status_options[self.instance.status] < 0:
+            serializers.ValidationError("can't revert orders status")
+
+        return data
 
     def create(self, validated_data):
         items_data = validated_data.pop('items')
@@ -260,10 +265,12 @@ class OrderDetailSerializer(serializers.ModelSerializer):
         return order
 
     def update(self, instance, validated_data):
-        # make edits to status too
-        if not instance.arrived:
-            instance.arrived = validated_data.get('arrived', False)
-            instance.driver.update(is_busy=False)
+        status = validated_data.get('status', None)
+        if status:
+            instance.status = status
+            if status == 'D':
+                instance.driver.is_busy = False
+                instance.driver.update()
             instance.save()
         return instance
 

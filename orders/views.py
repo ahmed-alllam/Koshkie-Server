@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 15:27
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 21:11
 
 from rest_framework import viewsets, status
 from rest_framework.generics import get_object_or_404
@@ -50,10 +50,9 @@ class OrderView(viewsets.ViewSet):
 
     def partial_update(self, request, pk=None):
         order = get_object_or_404(OrderModel, pk=pk)
-        if order.driver == request.user.driver_profile:  # only the driver can update order arrived status
-            serializer = OrderDetailSerializer(order, data=request.data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response(status=status.HTTP_401_UNAUTHORIZED)
+        self.check_object_permissions(request, order)
+        serializer = OrderDetailSerializer(order, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
