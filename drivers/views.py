@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 10/01/2020, 18:25
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 15:27
 from abc import ABC
 
 from django.contrib.auth import login, authenticate
@@ -50,6 +50,7 @@ def driver_login(request):
 
 class DriverProfileView(viewsets.ViewSet):
     permission_classes = (DriverProfilePermissions,)
+    serializer_class = DriverProfileSerializer
 
     def list(self, request):
         try:
@@ -124,6 +125,7 @@ class DriverProfileView(viewsets.ViewSet):
 
 class DriverReviewView(viewsets.ViewSet):
     permission_classes = (DriverReviewPermissions,)
+    serializer_class = DriverReviewSerializer
 
     def list(self, request, username=None):
         queryset = DriverReviewModel.objects.filter(driver__account__username=username).all()

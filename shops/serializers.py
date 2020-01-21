@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 19/01/2020, 19:44
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 15:27
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -23,7 +23,7 @@ class AddOnSerializer(serializers.ModelSerializer):
         model = AddOnModel
         fields = ('sort', 'title', 'added_price')
         extra_kwargs = {
-            'sort': {'read_only': True}
+            'sort': {'required': False},
         }
 
     def __init__(self, *args, **kwargs):
@@ -37,14 +37,53 @@ class AddOnSerializer(serializers.ModelSerializer):
                 if field not in keep_only_fields:
                     self.fields.pop(field)
 
+    def validate_sort(self, attrs):
+        if not self.instance:
+            raise serializers.ValidationError("sort can't be specified before creation")
+        if attrs > self.instance.product.add_ons.count() or attrs < 1:
+            raise serializers.ValidationError("invalid sort number")
+        return attrs
+
+    def update(self, instance, validated_data):
+        instance.title = validated_data.get('title', instance.title)
+        instance.added_price = validated_data.get('added_price', instance.added_price)
+
+        if validated_data.get('sort', None):
+            old_sort = instance.sort
+            new_sort = validated_data.get('sort')
+
+            instance.sort = None
+            instance.save()
+
+            if new_sort - old_sort > 0:
+                addons = instance.product.add_ons.filter(sort__gt=old_sort,
+                                                         sort__lte=new_sort,
+                                                         sort__isnull=False)
+                for addon in addons:
+                    addon.sort -= 1
+                    addon.save()
+
+            elif new_sort - old_sort < 0:
+                addons = instance.product.add_ons.filter(sort__lt=old_sort,
+                                                         sort__gte=new_sort,
+                                                         sort__isnull=False).order_by('-sort')
+                for addon in addons:
+                    addon.sort += 1
+                    addon.save()
+
+            instance.sort = new_sort
+            instance.save()
+
+        return instance
+
 
 class OptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = OptionModel
         fields = ('sort', 'title', 'price')
         extra_kwargs = {
-            'sort': {'read_only': True},
-            'price': {'required': False}
+            'price': {'required': False},
+            'sort': {'required': False}
         }
 
     def __init__(self, *args, **kwargs):
@@ -67,12 +106,51 @@ class OptionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("option must have price")
         return data
 
+    def validate_sort(self, attrs):
+        if not self.instance:
+            raise serializers.ValidationError("sort can't be specified before creation")
+        if attrs > self.instance.option_group.options.count() or attrs < 1:
+            raise serializers.ValidationError("invalid sort number")
+        return attrs
+
     def to_representation(self, instance):
         if not instance.price:
             value = super(OptionSerializer, self).to_representation(instance)
             value.pop('price', {})
             return value
         return super(OptionSerializer, self).to_representation(instance)
+
+    def update(self, instance, validated_data):
+        instance.title = validated_data.get('title', instance.title)
+        instance.price = validated_data.get('price', instance.price)
+
+        if validated_data.get('sort', None):
+            old_sort = instance.sort
+            new_sort = validated_data.get('sort')
+
+            instance.sort = None
+            instance.save()
+
+            if new_sort - old_sort > 0:
+                options = instance.option_group.options.filter(sort__gt=old_sort,
+                                                               sort__lte=new_sort,
+                                                               sort__isnull=False)
+                for option in options:
+                    option.sort -= 1
+                    option.save()
+
+            elif new_sort - old_sort < 0:
+                options = instance.option_group.options.filter(sort__lt=old_sort,
+                                                               sort__gte=new_sort,
+                                                               sort__isnull=False).order_by('-sort')
+                for option in options:
+                    option.sort += 1
+                    option.save()
+
+            instance.sort = new_sort
+            instance.save()
+
+        return instance
 
 
 class OptionGroupSerializer(serializers.ModelSerializer):
@@ -83,7 +161,7 @@ class OptionGroupSerializer(serializers.ModelSerializer):
         model = OptionGroupModel
         fields = ('sort', 'title', 'changes_price', 'rely_on', 'options')
         extra_kwargs = {
-            'sort': {'read_only': True}
+            'sort': {'required': False},
         }
 
     def __init__(self, *args, **kwargs):
@@ -148,6 +226,13 @@ class OptionGroupSerializer(serializers.ModelSerializer):
 
         return data
 
+    def validate_sort(self, attrs):
+        if not self.instance:
+            raise serializers.ValidationError("sort can't be specified before creation")
+        if attrs > self.instance.product.option_groups.count() or attrs < 1:
+            raise serializers.ValidationError("invalid sort number")
+        return attrs
+
     def create(self, validated_data):
         product = self.context['product']
 
@@ -186,6 +271,32 @@ class OptionGroupSerializer(serializers.ModelSerializer):
 
         instance.title = validated_data.get('title', instance.title)
         instance.changes_price = validated_data.get('changes_price', instance.changes_price)
+
+        if validated_data.get('sort', None):
+            old_sort = instance.sort
+            new_sort = validated_data.get('sort')
+
+            instance.sort = None
+            instance.save()
+
+            if new_sort - old_sort > 0:
+                option_groups = instance.product.option_groups.filter(sort__gt=old_sort,
+                                                                      sort__lte=new_sort,
+                                                                      sort__isnull=False)
+                for option_group in option_groups:
+                    option_group.sort -= 1
+                    option_group.save()
+
+            elif new_sort - old_sort < 0:
+                option_groups = instance.product.option_groups.filter(sort__lt=old_sort,
+                                                                      sort__gte=new_sort,
+                                                                      sort__isnull=False).order_by('-sort')
+                for option_group in option_groups:
+                    option_group.sort += 1
+                    option_group.save()
+
+            instance.sort = new_sort
+
         instance.save()
 
         return instance
@@ -304,8 +415,46 @@ class ProductGroupSerializer(serializers.ModelSerializer):
         model = ProductGroupModel
         fields = ('title', 'sort', 'products')
         extra_kwargs = {
-            'sort': {'read_only': True}
+            'sort': {'required': False}
         }
+
+    def validate_sort(self, attrs):
+        if not self.instance:
+            raise serializers.ValidationError("sort can't be specified before creation")
+        if attrs > self.instance.shop.product_groups.count() or attrs < 1:
+            raise serializers.ValidationError("invalid sort number")
+        return attrs
+
+    def update(self, instance, validated_data):
+        instance.title = validated_data.get('title', instance.title)
+
+        if validated_data.get('sort', None):
+            old_sort = instance.sort
+            new_sort = validated_data.get('sort')
+
+            instance.sort = None
+            instance.save()
+
+            if new_sort - old_sort > 0:
+                product_groups = instance.shop.product_groups.filter(sort__gt=old_sort,
+                                                                     sort__lte=new_sort,
+                                                                     sort__isnull=False)
+                for product_group in product_groups:
+                    product_group.sort -= 1
+                    product_group.save()
+
+            elif new_sort - old_sort < 0:
+                product_groups = instance.shop.product_groups.filter(sort__lt=old_sort,
+                                                                     sort__gte=new_sort,
+                                                                     sort__isnull=False).order_by('-sort')
+                for product_group in product_groups:
+                    product_group.sort += 1
+                    product_group.save()
+
+            instance.sort = new_sort
+            instance.save()
+
+        return instance
 
 
 class ShopAddressSerializer(serializers.ModelSerializer):

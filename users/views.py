@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 10/01/2020, 18:25
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 15:27
 from django.contrib.auth import login, authenticate
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view
@@ -35,6 +35,7 @@ class UserProfileView(viewsets.ViewSet):
     """
 
     permission_classes = (UserProfilePermissions,)
+    serializer_class = UserProfileSerializer
 
     def retrieve(self, request, username=None):
         """Retrieves a user profile by its pk or retrieves
@@ -150,6 +151,7 @@ class UserAddressView(viewsets.ViewSet):
     """
 
     permission_classes = (UserAddressPermissions,)
+    serializer_class = UserAddressSerializer
 
     def list(self, request, username=None):
         """Lists all addresses the user has.

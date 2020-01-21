@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 19/01/2020, 19:44
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 15:27
 
 from abc import ABC
 
@@ -54,6 +54,7 @@ def shop_login(request):
 
 class ShopProfileView(viewsets.ViewSet):
     permission_classes = (ShopProfilePermissions,)
+    serializer_class = ShopProfileDetailSerializer
 
     def list(self, request):
         try:
@@ -136,6 +137,7 @@ class ShopProfileView(viewsets.ViewSet):
 
 class ShopReviewView(viewsets.ViewSet):
     permission_classes = (ShopReviewPermissions,)
+    serializer_class = ShopReviewSerializer
 
     def list(self, request, shop_slug=None):
         queryset = ShopReviewModel.objects.filter(shop__slug=shop_slug).all()
@@ -194,6 +196,7 @@ class ShopReviewView(viewsets.ViewSet):
 
 class ProductGroupView(viewsets.ViewSet):
     permission_classes = (ProductGroupPermissions,)
+    serializer_class = ProductGroupSerializer
 
     def create(self, request, shop_slug=None):
         shop = get_object_or_404(ShopProfileModel, slug=shop_slug)
@@ -232,6 +235,7 @@ class ProductGroupView(viewsets.ViewSet):
 
 class ProductView(viewsets.ViewSet):
     permission_classes = (ProductPermissions,)
+    serializer_class = ProductDetailsSerializer
 
     def list(self, request, shop_slug=None):
         queryset = ProductGroupModel.objects.filter(shop__slug=shop_slug)
@@ -298,6 +302,7 @@ class ProductView(viewsets.ViewSet):
 
 class ProductReviewView(viewsets.ViewSet):
     permission_classes = (ProductReviewPermissions,)
+    serializer_class = ProductReviewSerializer
 
     def list(self, request, shop_slug=None, product_slug=None):
         queryset = ProductReviewModel.objects.filter(product__shop__slug=shop_slug,
@@ -360,6 +365,7 @@ class ProductReviewView(viewsets.ViewSet):
 
 class OptionGroupView(viewsets.ViewSet):
     permission_classes = (OptionGroupPermissions,)
+    serializer_class = OptionGroupSerializer
 
     def create(self, request, shop_slug=None, product_slug=None):
         product = get_object_or_404(ProductModel, shop__slug=shop_slug, slug=product_slug)
@@ -401,6 +407,7 @@ class OptionGroupView(viewsets.ViewSet):
 
 class OptionView(viewsets.ViewSet):
     permission_classes = (OptionPermissions,)
+    serializer_class = OptionSerializer
 
     def create(self, request, shop_slug=None, product_slug=None, group_id=None):
         option_group = get_object_or_404(OptionGroupModel, product__shop__slug=shop_slug,
@@ -448,6 +455,7 @@ class OptionView(viewsets.ViewSet):
 
 class AddOnView(viewsets.ViewSet):
     permission_classes = (AddOnPermission,)
+    serializer_class = AddOnSerializer
 
     def create(self, request, shop_slug=None, product_slug=None):
         product = get_object_or_404(ProductModel, shop__slug=shop_slug, slug=product_slug)

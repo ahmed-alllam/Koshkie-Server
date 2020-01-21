@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 18/01/2020, 21:51
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 15:27
 
 from rest_framework import viewsets, status
 from rest_framework.generics import get_object_or_404
@@ -12,6 +12,7 @@ from orders.serializers import OrderSerializer, OrderDetailSerializer
 
 class OrderView(viewsets.ViewSet):
     permission_classes = (OrderPermissions,)
+    serializer_class = OrderDetailSerializer
 
     def list(self, request):
         queryset = None

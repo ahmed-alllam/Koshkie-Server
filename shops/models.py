@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 19/01/2020, 19:44
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 15:27
 import os
 import uuid
 
@@ -67,7 +67,10 @@ class ShopProfileModel(models.Model):
         self.reviews.filter(sort__gt=sort).update(sort=F('sort') - 1)
 
     def resort_product_groups(self, sort):
-        self.product_groups.filter(sort__gt=sort).update(sort=F('sort') - 1)
+        product_groups = self.product_groups.filter(sort__gt=sort)
+        for product_group in product_groups:
+            product_group.sort -= 1
+            product_group.save()
 
     def update_attrs(self, **kwargs):
         for key, value in kwargs.items():
@@ -132,10 +135,16 @@ class ProductModel(models.Model):
         self.reviews.filter(sort__gt=sort).update(sort=F('sort') - 1)
 
     def resort_addons(self, sort):
-        self.add_ons.filter(sort__gt=sort).update(sort=F('sort') - 1)
+        addons = self.add_ons.filter(sort__gt=sort)
+        for addon in addons:
+            addon.sort -= 1
+            addon.save()
 
     def resort_option_groups(self, sort):
-        self.option_groups.filter(sort__gt=sort).update(sort=F('sort') - 1)
+        option_groups = self.option_groups.filter(sort__gt=sort)
+        for option_group in option_groups:
+            option_group.sort -= 1
+            option_group.save()
 
 
 class OptionGroupModel(models.Model):
@@ -159,7 +168,10 @@ class OptionGroupModel(models.Model):
         super(OptionGroupModel, self).save(*args, **kwargs)
 
     def resort_options(self, sort):
-        self.options.filter(sort__gt=sort).update(sort=F('sort') - 1)
+        options = self.options.filter(sort__gt=sort)
+        for option in options:
+            option.sort -= 1
+            option.save()
 
 
 class OptionModel(models.Model):
@@ -187,7 +199,7 @@ class AddOnModel(models.Model):
     product = models.ForeignKey(to=ProductModel, related_name="add_ons", on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     added_price = models.FloatField()
-    sort = models.PositiveIntegerField()
+    sort = models.PositiveIntegerField(null=True)
 
     class Meta:
         unique_together = ("product", "sort")
