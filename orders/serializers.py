@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 21:11
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 21:30
 from abc import ABC
 from math import acos, cos, sin, radians
 
@@ -153,6 +153,7 @@ class OrderDetailSerializer(serializers.ModelSerializer):
                                                                            Sin(Rad(F('live_location_latitude')))
                                                                            )
                                                                ).filter(distance__lte=2.5, is_busy=False,
+                                                                        is_active=True,
                                                                         last_time_online__gte=min_active_time
                                                                         ).exists()
 
@@ -250,7 +251,7 @@ class OrderDetailSerializer(serializers.ModelSerializer):
                                                                  Sin(Rad(float(user_latitude))) *
                                                                  Sin(Rad(F('live_location_latitude')))
                                                                  )
-                                                     ).filter(distance__lte=2.5, is_busy=False,
+                                                     ).filter(distance__lte=2.5, is_busy=False, is_active=True,
                                                               last_time_online__gte=min_active_time
                                                               ).order_by('distance')[0]
         driver.is_busy = True
