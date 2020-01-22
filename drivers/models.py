@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 21:29
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 22/01/2020, 12:09
 import os
 import uuid
 
@@ -20,7 +20,7 @@ class DriverProfileModel(models.Model):
     ]
 
     account = models.OneToOneField(User, on_delete=models.CASCADE, related_name="driver_profile")
-    profile_photo = models.ImageField(upload_to=photo_upload, null=True)
+    profile_photo = models.ImageField(upload_to=photo_upload)
     phone_number = models.BigIntegerField()
     is_active = models.BooleanField(default=False)
     last_time_online = models.DateTimeField(auto_now_add=True)

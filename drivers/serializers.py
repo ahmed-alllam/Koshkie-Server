@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 10/01/2020, 18:25
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 22/01/2020, 12:09
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -14,10 +14,13 @@ class DriverProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = DriverProfileModel
         fields = ('id', 'account', 'profile_photo', 'phone_number', 'vehicle_type',
-                  'rating', 'reviews_count')
+                  'rating', 'reviews_count', 'is_active', 'is_busy', 'last_time_online',
+                  'live_location_longitude', 'live_location_latitude')
         extra_kwargs = {
             'id': {'read_only': True},
-            'rating': {'read_only': True}
+            'is_busy': {'read_only': True},
+            'last_time_online': {'read_only': True},
+            'rating': {'read_only': True},
         }
 
     def create(self, validated_data):
@@ -33,6 +36,11 @@ class DriverProfileSerializer(serializers.ModelSerializer):
         instance.profile_photo = validated_data.get('profile_photo', instance.profile_photo)
         instance.phone_number = validated_data.get('phone_number', instance.phone_number)
         instance.vehicle_type = validated_data.get('vehicle_type', instance.vehicle_type)
+        instance.is_active = validated_data.get('is_active', instance.is_active)
+        instance.live_location_longitude = validated_data.get('live_location_longitude',
+                                                              instance.live_location_longitude)
+        instance.live_location_latitude = validated_data.get('live_location_latitude',
+                                                             instance.live_location_latitude)
         instance.save()
 
         account_data = validated_data.pop('account', {})
