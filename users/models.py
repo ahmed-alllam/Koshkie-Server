@@ -1,11 +1,10 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/01/2020, 16:28
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 23/01/2020, 22:30
 import os
 import uuid
 
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.db.models import F
 
 
 def photo_upload(instance, filename):
@@ -28,13 +27,10 @@ class UserProfileModel(models.Model):
 
     account = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     profile_photo = models.ImageField(upload_to=photo_upload, null=True)
-    phone_number = models.BigIntegerField(null=True)
+    phone_number = models.BigIntegerField()
 
     def __str__(self):
         return self.account.username
-
-    def resort_addresses(self, sort):
-        self.addresses.filter(sort__gt=sort).update(sort=F('sort') - 1)
 
 
 class UserAddressModel(models.Model):
@@ -71,10 +67,3 @@ class UserAddressModel(models.Model):
 
     def __str__(self):
         return self.title
-
-    def save(self, *args, **kwargs):
-        if self.pk is None:
-            latest_sort = UserAddressModel.objects.filter(user=self.user).count()
-            self.sort = latest_sort + 1
-
-        super(UserAddressModel, self).save(*args, **kwargs)

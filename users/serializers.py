@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/01/2020, 19:52
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 23/01/2020, 22:30
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
@@ -22,7 +22,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = ('account', 'profile_photo', 'phone_number')
         extra_kwargs = {
             'profile_photo': {'required': False},
-            'phone_number': {'required': False}
         }
 
     def create(self, validated_data):
@@ -31,7 +30,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         account.set_password(account.password)
         account.save()
 
-        user_profile = UserProfileModel.objects.create(account=user, **validated_data)
+        user_profile = UserProfileModel.objects.create(account=account, **validated_data)
         return user_profile
 
     def update(self, instance, validated_data):

@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 15:27
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 23/01/2020, 22:30
 from django.contrib.auth import login, authenticate
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view
@@ -139,7 +139,6 @@ class UserProfileView(viewsets.ViewSet):
 
         user_profile = get_object_or_404(UserProfileModel, account__username=username)
         self.check_object_permissions(request, user_profile)
-        user_profile.account.delete()
         user_profile.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -272,8 +271,5 @@ class UserAddressView(viewsets.ViewSet):
         """
         address = get_object_or_404(UserAddressModel, sort=pk, user__account__username=username)
         self.check_object_permissions(request, address)
-        user = address.user
         address.delete()
-        user.resort_addresses(address.sort)
-
         return Response(status=status.HTTP_204_NO_CONTENT)
