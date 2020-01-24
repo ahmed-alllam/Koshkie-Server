@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 04/01/2020, 12:48
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 24/01/2020, 15:41
 from rest_framework import permissions
 
 from users.models import UserProfileModel
@@ -20,6 +20,8 @@ class UserProfilePermissions(permissions.BasePermission):
         return False
 
     def has_object_permission(self, request, view, obj):
+        """Checks if the user has permissions to update
+        or delete a user profile"""
         if obj.account == request.user:
             return True
         return False
@@ -37,6 +39,9 @@ class UserAddressPermissions(permissions.BasePermission):
         return False
 
     def has_object_permission(self, request, view, obj):
+        """Checks if the user has the permissions to see,
+         update or delete an address
+        """
         if type(obj) == UserProfileModel:
             if obj.account == request.user:
                 return True

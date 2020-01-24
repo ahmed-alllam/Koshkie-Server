@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 23/01/2020, 22:30
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 24/01/2020, 15:41
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
@@ -6,6 +6,7 @@ from users.models import UserProfileModel, UserAddressModel
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """The serializer for the django auth user model"""
     class Meta:
         model = User
         fields = ('first_name', 'last_name', 'username', 'password')
@@ -15,6 +16,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
+    """The serializer for the  user profile model"""
+
     account = UserSerializer()
 
     class Meta:
@@ -25,6 +28,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
+        """Creates a new user profile from the request's data"""
         account_data = validated_data.pop('account')
         account = User(**account_data)
         account.set_password(account.password)
@@ -34,6 +38,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return user_profile
 
     def update(self, instance, validated_data):
+        """Updates a certain user profile from the request's data"""
         instance.profile_photo = validated_data.get('profile_photo', instance.profile_photo)
         instance.phone_number = validated_data.get('phone_number', instance.phone_number)
         instance.save()
@@ -51,6 +56,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 
 class UserAddressSerializer(serializers.ModelSerializer):
+    """The serializer for the user address model"""
     class Meta:
         model = UserAddressModel
         exclude = ('id', 'user')
@@ -59,6 +65,7 @@ class UserAddressSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
+        """Creates a new address for that user and returns it"""
         user = UserProfileModel.objects.get(account__username=validated_data.pop('username'))
         address = UserAddressModel.objects.create(**validated_data, user=user)
         return address

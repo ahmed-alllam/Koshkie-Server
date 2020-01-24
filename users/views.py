@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 23/01/2020, 22:30
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 24/01/2020, 15:41
 from django.contrib.auth import login, authenticate
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view
@@ -31,42 +31,40 @@ def user_login(request):
 class UserProfileView(viewsets.ViewSet):
     """View for the user profile.
 
-    Retrieves, Updates and Deletes a User, requires user authentication.
+    Retrieves, Updates and Deletes a User Profile.
     """
 
     permission_classes = (UserProfilePermissions,)
     serializer_class = UserProfileSerializer
 
     def retrieve(self, request, username=None):
-        """Retrieves a user profile by its pk or retrieves
-        the profile of the current user.
+        """Retrieves a user profile by its username
 
-        Checks if a user profile with this pk exist,
+        Checks if a user profile with this username exist,
         if not, returns HTTP 404 Response.
         requires no permissions.
 
         Arguments:
-            request: the request data sent by the user, it is used to
-                     get the profile of the current use
-            username: the username of the user profile that the user want info about,
-                it should by an integer.
+            request: the request data sent by the user,
+                     it is not used here but required by django
+            username: the username of the user profile that the user wants info about.
 
         Returns:
             HTTP 404 Response if user profile is not found,
-            HTTP 401 if user isn't logged in and didn't pass a pk ,
-            if not, returns HTTP 200 Response with the address's JSON data.
+            HTTP 401 if user isn't logged in,
+            if not, returns HTTP 200 Response with the profile's JSON data.
         """
         user_profile = get_object_or_404(UserProfileModel, account__username=username)
-        serializer = UserProfileSerializer(user_profile)
+        serializer = self.serializer_class(user_profile)
         return Response(serializer.data)
 
     def create(self, request):
         """Creates A new user profile and Logs it In.
 
-        Checks if user is authenticated if true, return HTTP 403 Response,
+        Checks if user is authenticated if true, return HTTP 401 Response,
         then it Validates the post data if not valid,
-        return HTTP 400 Response, then creates the user and logs him in.
-        requires no permissions.
+        return HTTP 400 Response, then creates the user and logs him in,
+        and returns 201 Response.
 
         Arguments:
             request: the request data sent by the user, it is used
@@ -74,11 +72,13 @@ class UserProfileView(viewsets.ViewSet):
                      and to log the user in.
 
         Returns:
+             HTTP 400 Response if data is not valid,
+             HTTP 401 Response if user is already logged in,
              HTTP 201 Response with the JSON data of the created profile.
         """
 
         if not request.user.is_authenticated:
-            serializer = UserProfileSerializer(data=request.data)
+            serializer = self.serializer_class(data=request.data)
             if serializer.is_valid():
                 user_profile = serializer.save()
                 login(request, user_profile.account)
@@ -92,15 +92,19 @@ class UserProfileView(viewsets.ViewSet):
         Arguments:
             request: the request data sent by the user, it is used
                      to get the user profile.
+            username: the username of the user profile that will be updated
 
         Returns:
-             HTTP 400 Response if the data is not valid with the errors,
+             HTTP 400 Response if the data is not
+             valid with the errors,
+             HTTP 401 Response if the user is not
+             authorized to update that profile
              if not returns HTTP 200 Response with the update JSON data.
         """
 
         user_profile = get_object_or_404(UserProfileModel, account__username=username)
         self.check_object_permissions(request, user_profile)
-        serializer = UserProfileSerializer(user_profile, data=request.data)
+        serializer = self.serializer_class(user_profile, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -112,15 +116,18 @@ class UserProfileView(viewsets.ViewSet):
         Arguments:
             request: the request data sent by the user, it is used
                      to get the user profile and the post data.
+            username: the username of the user profile that will be updated
 
         Returns:
              HTTP 400 Response if the data is not valid with the errors,
+             HTTP 401 Response if the user is not
+             authorized to update that profile,
              if not returns HTTP 200 Response with the update JSON data.
         """
 
         user_profile = get_object_or_404(UserProfileModel, account__username=username)
         self.check_object_permissions(request, user_profile)
-        serializer = UserProfileSerializer(user_profile, data=request.data, partial=True)
+        serializer = self.serializer_class(user_profile, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -132,9 +139,13 @@ class UserProfileView(viewsets.ViewSet):
         Arguments:
             request: the request data sent by the user, it is used
                      to get the user profile.
+            username: the username of the user profile that will be deleted
 
         Returns:
-            returns HTTP 204 Response with no content.
+            HTTP 404 Response if user profile is not found
+            HTTP 401 Response if the user is not authorized
+            to update that profile,
+            if not returns HTTP 204 Response with no content.
         """
 
         user_profile = get_object_or_404(UserProfileModel, account__username=username)
@@ -158,8 +169,13 @@ class UserAddressView(viewsets.ViewSet):
         Arguments:
             request: the request data sent by the user, it is used
                      to get the user profile.
+            username: the username of the user profile
+                      whose addresses will be returned
 
         Returns:
+            HTTP 401 Response if the user is
+            not authorized to see that user's addresses,
+            HTTP 404 if user profile is not found,
             HTTP 200 Response with all addresses in
             the user's profile in JSON.
         """
@@ -172,7 +188,7 @@ class UserAddressView(viewsets.ViewSet):
         paginator.default_limit = 10
         paginator.max_limit = 100
         paginated_queryset = paginator.paginate_queryset(queryset, request)
-        serializer = UserAddressSerializer(paginated_queryset, many=True)
+        serializer = self.serializer_class(paginated_queryset, many=True)
 
         return Response(data={'limit': paginator.limit, 'offset': paginator.offset,
                               'count': paginator.count, 'addresses': serializer.data})
@@ -183,16 +199,20 @@ class UserAddressView(viewsets.ViewSet):
         Arguments:
             request: the request data sent by the user, it is used
                      to get the user profile.
-            pk: the id of the address that the user want info about,
+            username: the username of the user profile
+                      whose address will be returned
+            pk: the sort of the address that the user want info about,
                 it should by an integer.
 
         Returns:
+            HTTP 401 Response if the user is
+            not authorized to see that user's address,
             HTTP 404 Response if address is not found, if not,
             returns HTTP 200 Response with the address's JSON data.
         """
         address = get_object_or_404(UserAddressModel, sort=pk, user__account__username=username)
         self.check_object_permissions(request, address)
-        serializer = UserAddressSerializer(address)
+        serializer = self.serializer_class(address)
         return Response(serializer.data)
 
     def create(self, request, username=None):
@@ -201,14 +221,19 @@ class UserAddressView(viewsets.ViewSet):
         Arguments:
             request: the request data sent by the user, it is used
                      to get the user profile.
+            username: the username of the user profile
+                      which will be added a new address
 
         Returns:
+            HTTP 401 Response if the user is
+            not authorized to add an address to that user,
+            HTTP 404 if user profile is not found,
             HTTP 400 Response if the data is not valid, if not,
             returns HTTP 201 Response with the address's JSON data.
         """
         user = get_object_or_404(UserProfileModel, account__username=username)
         self.check_object_permissions(request, user)
-        serializer = UserAddressSerializer(data=request.data)
+        serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             serializer.save(username=username)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -220,17 +245,21 @@ class UserAddressView(viewsets.ViewSet):
         Arguments:
             request: the request data sent by the user, it is used
                      to get the user profile.
+            username: the username of the user profile
+                      whose address will be updated
             pk: the id of the address that the user wants to change,
                 it should by an integer.
 
         Returns:
+            HTTP 401 Response if the user is
+            not authorized to update an address to that user,
             HTTP 400 Response if the data is not valid with the errors,
             HTTP 404 Response if the address is not found
             if not returns HTTP 200 Response with the update JSON data.
         """
         address = get_object_or_404(UserAddressModel, sort=pk, user__account__username=username)
         self.check_object_permissions(request, address)
-        serializer = UserAddressSerializer(address, data=request.data)
+        serializer = self.serializer_class(address, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -242,17 +271,21 @@ class UserAddressView(viewsets.ViewSet):
         Arguments:
             request: the request data sent by the user, it is used
                      to get the user profile.
+            username: the username of the user profile
+                      whose address will be updated
             pk: the id of the address that the user wants to change,
                 it should by an integer.
 
         Returns:
+            HTTP 401 Response if the user is
+            not authorized to update an address to that user,
             HTTP 400 Response if the data is not valid with the errors,
             HTTP 404 Response if the address is not found
             if not returns HTTP 200 Response with the update JSON data.
         """
         address = get_object_or_404(UserAddressModel, sort=pk, user__account__username=username)
         self.check_object_permissions(request, address)
-        serializer = UserAddressSerializer(address, data=request.data, partial=True)
+        serializer = self.serializer_class(address, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -264,10 +297,15 @@ class UserAddressView(viewsets.ViewSet):
         Arguments:
             request: the request data sent by the user, it is used
                      to get the user profile.
+            username: the username of the user profile
+                      whose address will be deleted
             pk: the id of the address that the user wants to delete,
                 it should by an integer.
         Returns:
-            returns HTTP 204 Response with no content.
+            HTTP 404 Response if the address is not found
+            HTTP 401 Response if the user is
+            not authorized to delete an address to that user,
+            if not, returns HTTP 204 Response with no content.
         """
         address = get_object_or_404(UserAddressModel, sort=pk, user__account__username=username)
         self.check_object_permissions(request, address)
