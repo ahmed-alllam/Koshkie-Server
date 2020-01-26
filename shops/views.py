@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 26/01/2020, 17:48
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 26/01/2020, 17:51
 
 from django.contrib.auth import login, authenticate
 from django.db.models import F
@@ -62,9 +62,6 @@ class ShopProfileView(viewsets.ViewSet):
             queryset = queryset.filter(shop_type__iexact=shop_type)
         if search:
             queryset = queryset.filter(name__icontains=search)
-
-        for shop in queryset:
-            print(shop.distance)
 
         paginator = LimitOffsetPagination()
         paginator.default_limit = 25
