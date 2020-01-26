@@ -1,34 +1,17 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 21:30
-from abc import ABC
-from math import acos, cos, sin, radians
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 26/01/2020, 17:48
 
-from django.db.models import F, Func
+from django.db.models import F
 from django.utils import timezone
 from rest_framework import serializers
 
 from drivers.models import DriverProfileModel
 from drivers.serializers import DriverProfileSerializer
+from koshkie import haversine
 from orders.models import OrderModel, OrderItemModel, Choice, OrderAddressModel, OrderItemsGroupModel
 from shops.models import ProductModel
 from shops.serializers import (ShopProfileSerializer, ProductSerializer,
                                AddOnSerializer, OptionGroupSerializer, OptionSerializer)
 from users.serializers import UserProfileSerializer
-
-
-class Sin(Func, ABC):
-    function = 'SIN'
-
-
-class Cos(Func, ABC):
-    function = 'COS'
-
-
-class Acos(Func, ABC):
-    function = 'ACOS'
-
-
-class Rad(Func, ABC):
-    function = 'RADIANS'
 
 
 class ChoiceSerializer(serializers.ModelSerializer):
@@ -89,7 +72,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
                 if product.option_groups.filter(sort=choice.get('option_group_id')).exists():
                     if not product.option_groups.get(sort=choice.get('option_group_id')).options.filter(
-                            sort=choice.get('choosed_option_id')).exists():
+                        sort=choice.get('choosed_option_id')).exists():
                         raise serializers.ValidationError("chosen option doesn't exist")
                 else:
                     raise serializers.ValidationError("option group doesn't exist")
@@ -107,8 +90,8 @@ class OrderItemSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError("the rely-on required for this option group is not chosen")
             else:
                 if not hasattr(option_group, 'rely_on') or (hasattr(option_group, 'rely_on') and _is_choosed(
-                        option_group.rely_on.choosed_option_group.sort,
-                        option_group.rely_on.option.sort)):
+                    option_group.rely_on.choosed_option_group.sort,
+                    option_group.rely_on.option.sort)):
                     raise serializers.ValidationError("not all required option groups are chosen")
         return data
 
@@ -143,15 +126,9 @@ class OrderDetailSerializer(serializers.ModelSerializer):
         user_latitude = attrs['shipping_address']['location_latitude']
 
         min_active_time = timezone.now() - timezone.timedelta(seconds=10)
-        driver_available = DriverProfileModel.objects.annotate(distance=
-                                                               6367 * Acos(Cos(Rad(float(user_latitude))) *
-                                                                           Cos(Rad(F('live_location_longitude'))) *
-                                                                           Cos(Rad(F('live_location_latitude')) -
-                                                                               Rad(float(user_longitude))
-                                                                               ) +
-                                                                           Sin(Rad(float(user_latitude))) *
-                                                                           Sin(Rad(F('live_location_latitude')))
-                                                                           )
+        driver_available = DriverProfileModel.objects.annotate(distance=haversine(user_latitude, user_longitude,
+                                                                                  F('live_location_latitude'),
+                                                                                  F('live_location_longitude'))
                                                                ).filter(distance__lte=2.5, is_busy=False,
                                                                         is_active=True,
                                                                         last_time_online__gte=min_active_time
@@ -172,14 +149,8 @@ class OrderDetailSerializer(serializers.ModelSerializer):
 
                 shop_longitude = shop.address.location_longitude
                 shop_latitude = shop.address.location_latitude
-                distance = 6367 * acos(cos(radians(float(user_latitude))) *
-                                       cos(radians(shop_longitude)) *
-                                       cos(radians(shop_latitude) -
-                                           radians(float(user_longitude))
-                                           ) +
-                                       sin(radians(float(user_latitude))) *
-                                       sin(radians(shop_latitude))
-                                       )
+                distance = haversine(user_latitude, user_longitude, shop_latitude, shop_longitude)
+
                 if distance > 2.5:
                     raise serializers.ValidationError("these products are not available in you area")
         return attrs
@@ -242,15 +213,9 @@ class OrderDetailSerializer(serializers.ModelSerializer):
         user_longitude = shipping_address.location_longitude
         user_latitude = shipping_address.location_latitude
         min_active_time = timezone.now() - timezone.timedelta(seconds=10)
-        driver = DriverProfileModel.objects.annotate(distance=
-                                                     6367 * Acos(Cos(Rad(float(user_latitude))) *
-                                                                 Cos(Rad(F('live_location_longitude'))) *
-                                                                 Cos(Rad(F('live_location_latitude')) -
-                                                                     Rad(float(user_longitude))
-                                                                     ) +
-                                                                 Sin(Rad(float(user_latitude))) *
-                                                                 Sin(Rad(F('live_location_latitude')))
-                                                                 )
+        driver = DriverProfileModel.objects.annotate(distance=haversine(user_latitude, user_longitude,
+                                                                        F('live_location_latitude'),
+                                                                        F('live_location_longitude'))
                                                      ).filter(distance__lte=2.5, is_busy=False, is_active=True,
                                                               last_time_online__gte=min_active_time
                                                               ).order_by('distance')[0]

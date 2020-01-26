@@ -1,8 +1,7 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 18:58
-from abc import ABC
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 26/01/2020, 17:48
 
 from django.contrib.auth import login, authenticate
-from django.db.models import Func, F
+from django.db.models import F
 from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view
@@ -13,22 +12,7 @@ from rest_framework.response import Response
 from drivers.models import DriverProfileModel, DriverReviewModel
 from drivers.permissions import DriverProfilePermissions, DriverReviewPermissions
 from drivers.serializers import DriverProfileSerializer, DriverReviewSerializer
-
-
-class Sin(Func, ABC):
-    function = 'SIN'
-
-
-class Cos(Func, ABC):
-    function = 'COS'
-
-
-class Acos(Func, ABC):
-    function = 'ACOS'
-
-
-class Rad(Func, ABC):
-    function = 'RADIANS'
+from koshkie import haversine
 
 
 @api_view(['POST'])
@@ -60,15 +44,9 @@ class DriverProfileView(viewsets.ViewSet):
             return Response("invalid coordinates", status=status.HTTP_400_BAD_REQUEST)
 
         min_active_time = timezone.now() - timezone.timedelta(seconds=10)
-        queryset = DriverProfileModel.objects.annotate(distance=
-                                                       6367 * Acos(Cos(Rad(float(user_latitude))) *
-                                                                   Cos(Rad(F('live_location_longitude'))) *
-                                                                   Cos(Rad(F('live_location_latitude')) -
-                                                                       Rad(float(user_longitude))
-                                                                       ) +
-                                                                   Sin(Rad(float(user_latitude))) *
-                                                                   Sin(Rad(F('live_location_latitude')))
-                                                                   )
+        queryset = DriverProfileModel.objects.annotate(distance=haversine(user_latitude, user_longitude,
+                                                                          F('live_location_latitude'),
+                                                                          F('live_location_longitude'))
                                                        ).filter(distance__lte=2.5, is_busy=False, is_active=True,
                                                                 last_time_online__gte=min_active_time
                                                                 ).order_by('distance')

@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 18:58
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 26/01/2020, 17:48
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -568,8 +568,8 @@ class ShopProfileDetailSerializer(serializers.ModelSerializer):
 
 class ShopProfileSerializer(serializers.ModelSerializer):
     address = ShopAddressSerializer()
-    has_offers = serializers.SerializerMethodField(read_only=True, source='has_offer')
-    reviews_count = serializers.SerializerMethodField(read_only=True, source='get_reviews_count')
+    has_offers = serializers.SerializerMethodField(read_only=True)
+    reviews_count = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = ShopProfileModel
@@ -590,5 +590,5 @@ class ShopProfileSerializer(serializers.ModelSerializer):
     def get_reviews_count(self, obj):
         return obj.reviews.count()
 
-    def has_offer(self, obj):
+    def get_has_offers(self, obj):
         return obj.products.filter(is_offer=True).exists()

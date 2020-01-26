@@ -1,5 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Django's command-line utility for administrative tasks."""
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 26/01/2020, 17:48
+
 import os
 import sys
 

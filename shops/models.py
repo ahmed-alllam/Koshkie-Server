@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 18:58
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 26/01/2020, 17:48
 import os
 import uuid
 
@@ -32,8 +32,7 @@ class ShopProfileModel(models.Model):
     ]
 
     account = models.OneToOneField(User, on_delete=models.CASCADE, related_name="shop_profile")
-    profile_photo = models.ImageField(upload_to=shop_photo_upload,
-                                      null=True)  # null attr to be removed added just for testing
+    profile_photo = models.ImageField(upload_to=shop_photo_upload)
     phone_number = models.BigIntegerField()
     description = models.TextField()
     shop_type = models.CharField(max_length=1, choices=shop_type_choices)
@@ -227,11 +226,11 @@ class ShopAddressModel(models.Model):
     street = models.CharField(max_length=255)
     building = models.CharField(max_length=255)
     special_notes = models.TextField(blank=True)
-    location_longitude = models.DecimalField(max_digits=9, decimal_places=6, default=0, validators=[
+    location_longitude = models.FloatField(default=0, validators=[
         MaxValueValidator(180),
         MinValueValidator(-180)
     ])
-    location_latitude = models.DecimalField(max_digits=9, decimal_places=6, default=0, validators=[
+    location_latitude = models.FloatField(default=0, validators=[
         MaxValueValidator(90),
         MinValueValidator(-90)
     ])

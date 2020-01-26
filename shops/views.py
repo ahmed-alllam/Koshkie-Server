@@ -1,9 +1,7 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/01/2020, 18:58
-
-from abc import ABC
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 26/01/2020, 17:48
 
 from django.contrib.auth import login, authenticate
-from django.db.models import F, Func
+from django.db.models import F
 from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view
@@ -11,6 +9,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 
+from koshkie import haversine
 from shops.models import ShopProfileModel, ShopReviewModel, ProductGroupModel, ProductModel, ProductReviewModel, \
     AddOnModel, OptionGroupModel, OptionModel
 from shops.permissions import ShopProfilePermissions, ShopReviewPermissions, ProductPermissions, \
@@ -18,22 +17,6 @@ from shops.permissions import ShopProfilePermissions, ShopReviewPermissions, Pro
 from shops.serializers import (ShopProfileSerializer, ShopProfileDetailSerializer, ShopReviewSerializer,
                                ProductGroupSerializer, ProductDetailsSerializer, ProductReviewSerializer,
                                AddOnSerializer, OptionGroupSerializer, OptionSerializer, ProductSerializer)
-
-
-class Sin(Func, ABC):
-    function = 'SIN'
-
-
-class Cos(Func, ABC):
-    function = 'COS'
-
-
-class Acos(Func, ABC):
-    function = 'ACOS'
-
-
-class Rad(Func, ABC):
-    function = 'RADIANS'
 
 
 @api_view(['POST'])
@@ -67,15 +50,11 @@ class ShopProfileView(viewsets.ViewSet):
             return Response("invalid coordinates", status=status.HTTP_400_BAD_REQUEST)
 
         queryset = ShopProfileModel.objects.annotate(distance=
-                                                     6367 * Acos(Cos(Rad(float(user_latitude))) *
-                                                                 Cos(Rad(F('address__location_longitude'))) *
-                                                                 Cos(Rad(F('address__location_latitude')) -
-                                                                     Rad(float(user_longitude))
-                                                                     ) +
-                                                                 Sin(Rad(float(user_latitude))) *
-                                                                 Sin(Rad(F('address__location_latitude')))
-                                                                 )
-                                                     ).filter(distance__lte=2.5, is_open=True,
+                                                     haversine(user_latitude, user_longitude,
+                                                               F('address__location_latitude'),
+                                                               F('address__location_longitude'))
+                                                     ).filter(distance__lte=2.5,
+                                                              is_open=True,
                                                               is_active=True, opens_at__lte=timezone.now(),
                                                               closes_at__gt=timezone.now()
                                                               ).order_by('distance')
@@ -83,6 +62,9 @@ class ShopProfileView(viewsets.ViewSet):
             queryset = queryset.filter(shop_type__iexact=shop_type)
         if search:
             queryset = queryset.filter(name__icontains=search)
+
+        for shop in queryset:
+            print(shop.distance)
 
         paginator = LimitOffsetPagination()
         paginator.default_limit = 25
