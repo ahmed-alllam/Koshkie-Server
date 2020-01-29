@@ -2,6 +2,7 @@
 import os
 import uuid
 
+from django.utils import timezone
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -23,7 +24,7 @@ class DriverProfileModel(models.Model):
     profile_photo = models.ImageField(upload_to=photo_upload)
     phone_number = models.BigIntegerField()
     is_active = models.BooleanField(default=False)
-    last_time_online = models.DateTimeField(auto_now_add=True)
+    last_time_online = models.DateTimeField()
     live_location_longitude = models.DecimalField(max_digits=9, decimal_places=6, default=0, validators=[
         MaxValueValidator(180),
         MinValueValidator(-180)

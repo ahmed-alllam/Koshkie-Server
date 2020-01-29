@@ -1,9 +1,1 @@
 .idea
-db.sqlite3
-media
-static
-drivers/migrations
-orders/migrations
-shops/migrations
-users/migrations
-manage.py

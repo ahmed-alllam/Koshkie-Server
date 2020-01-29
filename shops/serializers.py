@@ -573,8 +573,8 @@ class ShopProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShopProfileModel
-        fields = ('slug', 'profile_photo', 'shop_type', 'name', 'rating', 'reviews_count',
-                  'has_offers', 'address')
+        fields = ('slug', 'profile_photo', 'name', 'rating', 'reviews_count', 'address',
+                  'currency', 'has_offers', 'minimum_charge', 'delivery_fee', 'vat')
 
     def __init__(self, *args, **kwargs):
         keep_only_fields = kwargs.pop('keep_only', None)

@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+ koshkie:
+   build:
+     context: .
+   ports:
+     - "80:8000"
+   volumes:
+     - .:/koshkie
+   command: >
+     sh -c "python3 manage.py makemigrations &&
+     python3 manage.py migrate &&
+     python3 manage.py runserver 0.0.0.0:8000"
+   environment:
+     - DB_HOST=postgresdb
+     - DB_NAME=koshkiedb
+     - DB_USER=postgresdb
+     - DB_PASS=supersecretpassword
+   depends_on:
+     - postgresdb
+ postgresdb:
+   image: postgres:12.1-alpine
+   ports:
+      - "5432:5432"
+   environment:
+     - POSTGRES_DB=koshkiedb
+     - POSTGRES_USER=postgresdb
+     - POSTGRES_PASSWORD=supersecretpassword
