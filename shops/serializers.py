@@ -1,11 +1,11 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 26/01/2020, 17:48
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 31/01/2020, 17:29
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
 from shops.models import (ShopProfileModel, ProductGroupModel, ProductModel,
                           OptionGroupModel, OptionModel, AddOnModel, RelyOn,
-                          ShopAddressModel, ShopReviewModel, ProductReviewModel)
+                          ShopAddressModel, ShopReviewModel, ProductReviewModel, ShopTagsModel)
 from users.serializers import UserProfileSerializer, UserSerializer
 
 
@@ -115,9 +115,9 @@ class OptionSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         if not instance.price:
-            value = super(OptionSerializer, self).to_representation(instance)
-            value.pop('price', {})
-            return value
+            rep = super(OptionSerializer, self).to_representation(instance)
+            rep.pop('price', {})
+            return rep
         return super(OptionSerializer, self).to_representation(instance)
 
     def update(self, instance, validated_data):
@@ -365,9 +365,9 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         if instance.option_groups.filter(changes_price=True).exists():
-            value = super(ProductDetailsSerializer, self).to_representation(instance)
-            value.pop('price')
-            return value
+            rep = super(ProductDetailsSerializer, self).to_representation(instance)
+            rep.pop('price')
+            return rep
         return super(ProductDetailsSerializer, self).to_representation(instance)
 
     def get_reviews_count(self, obj):
@@ -395,9 +395,9 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         if instance.option_groups.filter(changes_price=True).exists():
-            value = super(ProductSerializer, self).to_representation(instance)
-            value.pop('price')
-            return value
+            rep = super(ProductSerializer, self).to_representation(instance)
+            rep.pop('price')
+            return rep
 
         return super(ProductSerializer, self).to_representation(instance)
 
@@ -510,16 +510,19 @@ class ShopProfileDetailSerializer(serializers.ModelSerializer):
     account = UserSerializer()
     address = ShopAddressSerializer()
     reviews_count = serializers.SerializerMethodField(read_only=True, source='get_reviews_count')
+    shop_tags = serializers.ListField(child=serializers.CharField(max_length=10, min_length=1),
+                                      write_only=True, max_length=3)
 
     class Meta:
         model = ShopProfileModel
-        fields = ('slug', 'account', 'profile_photo', 'phone_number', 'description', 'shop_type', 'name',
-                  'rating', 'reviews_count', 'is_open', 'opens_at', 'closes_at', 'currency',
-                  'minimum_charge', 'delivery_fee', 'vat', 'address')
+        fields = ('slug', 'account', 'profile_photo', 'phone_number', 'description',
+                  'shop_type', 'name', 'tags', 'shop_tags', 'rating', 'reviews_count',
+                  'is_open', 'opens_at', 'closes_at', 'currency', 'minimum_charge',
+                  'delivery_fee', 'vat', 'address')
         extra_kwargs = {
             'slug': {'read_only': True},
+            'tags': {'read_only': True},
             'rating': {'read_only': True},
-            'is_open': {'write_only': True}
         }
 
     def __init__(self, *args, **kwargs):
@@ -529,8 +532,14 @@ class ShopProfileDetailSerializer(serializers.ModelSerializer):
 
         super(ShopProfileDetailSerializer, self).__init__(*args, **kwargs)
 
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep['tags'] = [x.tag for x in instance.tags.all()]
+        return rep
+
     def create(self, validated_data):
         address_data = validated_data.pop('address')
+        shop_tags = validated_data.pop('shop_tags')
 
         account_data = validated_data.pop('account')
         account = User(**account_data)
@@ -539,15 +548,27 @@ class ShopProfileDetailSerializer(serializers.ModelSerializer):
 
         shop_profile = ShopProfileModel.objects.create(account=account, **validated_data)
 
+        for tag in shop_tags:
+            ShopTagsModel.objects.create(tag=tag, shop=shop_profile)
+
         ShopAddressModel.objects.create(shop=shop_profile, **address_data)
 
         return shop_profile
 
     def update(self, instance, validated_data):
+        shop_tags = validated_data.pop('shop_tags', {})
 
         address_data = validated_data.pop('address', {})
         address = instance.address
         address.update_attrs(**address_data)
+
+        if shop_tags:
+            # deletes all tags and replaces them with new ones
+            for tag in instance.tags.all():
+                tag.delete()
+
+            for tag in shop_tags:
+                ShopTagsModel.objects.create(tag=tag, shop=instance)
 
         account_data = validated_data.pop('account', {})
         account = instance.account
@@ -567,14 +588,13 @@ class ShopProfileDetailSerializer(serializers.ModelSerializer):
 
 
 class ShopProfileSerializer(serializers.ModelSerializer):
-    address = ShopAddressSerializer()
     has_offers = serializers.SerializerMethodField(read_only=True)
     reviews_count = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = ShopProfileModel
-        fields = ('slug', 'profile_photo', 'name', 'rating', 'reviews_count', 'address',
-                  'currency', 'has_offers', 'minimum_charge', 'delivery_fee', 'vat')
+        fields = ('slug', 'profile_photo', 'name', 'tags', 'rating', 'reviews_count', 'currency',
+                  'has_offers', 'minimum_charge', 'delivery_fee', 'vat')
 
     def __init__(self, *args, **kwargs):
         keep_only_fields = kwargs.pop('keep_only', None)
@@ -586,6 +606,11 @@ class ShopProfileSerializer(serializers.ModelSerializer):
             for field in list(new_fields):
                 if field not in keep_only_fields:
                     self.fields.pop(field)
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep['tags'] = [x.tag for x in instance.tags.all()]
+        return rep
 
     def get_reviews_count(self, obj):
         return obj.reviews.count()

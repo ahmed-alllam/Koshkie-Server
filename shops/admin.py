@@ -1,13 +1,14 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 08/01/2020, 21:55
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 31/01/2020, 17:29
 
 from django.contrib import admin
 
 # Register your models here.
 from shops.models import (ShopProfileModel, ProductModel,
                           ShopReviewModel, ProductReviewModel, ProductGroupModel, ShopAddressModel, AddOnModel,
-                          OptionGroupModel, OptionModel, RelyOn)
+                          OptionGroupModel, OptionModel, RelyOn, ShopTagsModel)
 
 admin.site.register(ShopProfileModel)
+admin.site.register(ShopTagsModel)
 admin.site.register(ProductGroupModel)
 admin.site.register(ProductModel)
 admin.site.register(OptionGroupModel)

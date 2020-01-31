@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 26/01/2020, 17:48
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 31/01/2020, 17:29
 import os
 import uuid
 
@@ -79,6 +79,11 @@ class ShopProfileModel(models.Model):
                 raise KeyError("Failed to update non existing attribute {}.{}".format(
                     self.__class__.__name__, key))
         self.save()
+
+
+class ShopTagsModel(models.Model):
+    shop = models.ForeignKey(ShopProfileModel, on_delete=models.CASCADE, related_name='tags')
+    tag = models.CharField(max_length=10)
 
 
 class ProductGroupModel(models.Model):

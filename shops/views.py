@@ -1,4 +1,6 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 26/01/2020, 17:51
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 31/01/2020, 17:29
+
+from itertools import chain
 
 from django.contrib.auth import login, authenticate
 from django.db.models import F
@@ -61,7 +63,9 @@ class ShopProfileView(viewsets.ViewSet):
         if shop_type:
             queryset = queryset.filter(shop_type__iexact=shop_type)
         if search:
-            queryset = queryset.filter(name__icontains=search)
+            queryset_temp1 = queryset.filter(name__icontains=search)
+            queryset_temp2 = queryset.filter(tags__tag__icontains=search).exclude(name__icontains=search)
+            queryset = list(chain(queryset_temp1, queryset_temp2))
 
         paginator = LimitOffsetPagination()
         paginator.default_limit = 25
