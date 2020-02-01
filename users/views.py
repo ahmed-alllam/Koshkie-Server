@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 02/02/2020, 00:34
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 02/02/2020, 01:14
 from django.contrib.auth import login, authenticate
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view
@@ -109,6 +109,7 @@ class UserProfileView(viewsets.ViewSet):
         serializer = self.serializer_class(user_profile, data=request.data)
         if serializer.is_valid():
             serializer.save()
+            login(request, user_profile.account)
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -132,6 +133,7 @@ class UserProfileView(viewsets.ViewSet):
         serializer = self.serializer_class(user_profile, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
+            login(request, user_profile.account)
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

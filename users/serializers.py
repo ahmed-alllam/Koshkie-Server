@@ -1,5 +1,7 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 24/01/2020, 15:41
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 02/02/2020, 01:14
+import django.contrib.auth.password_validation as validators
 from django.contrib.auth.models import User
+from django.core import exceptions
 from rest_framework import serializers
 
 from users.models import UserProfileModel, UserAddressModel
@@ -13,6 +15,23 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'password': {'write_only': True},
         }
+
+    def validate(self, data):
+        """Validate user's password using django auth password validators"""
+
+        password = data.get('password', '')
+        if password:
+            user = User(**data)
+            errors = dict()
+            try:
+                validators.validate_password(password=password, user=user)
+            except exceptions.ValidationError as e:
+                errors['password'] = list(e.messages)
+
+            if errors:
+                raise serializers.ValidationError(errors)
+
+        return data
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -48,7 +67,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         account.first_name = account_data.get('first_name', account.first_name)
         account.last_name = account_data.get('last_name', account.last_name)
         account.username = account_data.get('username', account.username)
-        if account_data.get('password') is not None:
+        if account_data.get('password', None) is not None:
             account.set_password(account_data.get('password'))
         account.save()
 
