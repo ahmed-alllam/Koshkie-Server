@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 31/01/2020, 17:29
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 01/02/2020, 18:18
 import os
 import uuid
 
@@ -33,6 +33,7 @@ class ShopProfileModel(models.Model):
 
     account = models.OneToOneField(User, on_delete=models.CASCADE, related_name="shop_profile")
     profile_photo = models.ImageField(upload_to=shop_photo_upload)
+    cover_photo = models.ImageField(upload_to=shop_photo_upload)
     phone_number = models.BigIntegerField()
     description = models.TextField()
     shop_type = models.CharField(max_length=1, choices=shop_type_choices)
@@ -50,6 +51,7 @@ class ShopProfileModel(models.Model):
     ])
     opens_at = models.TimeField()
     closes_at = models.TimeField()
+    time_to_prepare = models.IntegerField()
 
     def __str__(self):
         return self.name

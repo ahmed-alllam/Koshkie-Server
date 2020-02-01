@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 31/01/2020, 17:29
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 01/02/2020, 18:18
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -515,10 +515,10 @@ class ShopProfileDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShopProfileModel
-        fields = ('slug', 'account', 'profile_photo', 'phone_number', 'description',
-                  'shop_type', 'name', 'tags', 'shop_tags', 'rating', 'reviews_count',
-                  'is_open', 'opens_at', 'closes_at', 'currency', 'minimum_charge',
-                  'delivery_fee', 'vat', 'address')
+        fields = ('slug', 'account', 'profile_photo', 'phone_number', 'cover_photo',
+                  'description', 'shop_type', 'name', 'tags', 'shop_tags', 'rating',
+                  'reviews_count', 'is_open', 'opens_at', 'closes_at', 'currency',
+                  'minimum_charge', 'delivery_fee', 'time_to_prepare', 'address')
         extra_kwargs = {
             'slug': {'read_only': True},
             'tags': {'read_only': True},
@@ -593,8 +593,9 @@ class ShopProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShopProfileModel
-        fields = ('slug', 'profile_photo', 'name', 'tags', 'rating', 'reviews_count', 'currency',
-                  'has_offers', 'minimum_charge', 'delivery_fee', 'vat')
+        fields = ('slug', 'profile_photo', 'cover_photo', 'name', 'tags', 'rating',
+                  'reviews_count', 'currency', 'has_offers', 'minimum_charge',
+                  'delivery_fee', 'time_to_prepare')
 
     def __init__(self, *args, **kwargs):
         keep_only_fields = kwargs.pop('keep_only', None)
