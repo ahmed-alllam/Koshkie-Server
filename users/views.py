@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 24/01/2020, 15:41
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 02/02/2020, 00:34
 from django.contrib.auth import login, authenticate
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view
@@ -13,6 +13,8 @@ from users.serializers import UserProfileSerializer, UserAddressSerializer
 
 @api_view(['POST'])
 def user_login(request):
+    """View for logging the users in"""
+
     if request.user.is_authenticated:
         return Response('User already logged in', status=status.HTTP_401_UNAUTHORIZED)
 
