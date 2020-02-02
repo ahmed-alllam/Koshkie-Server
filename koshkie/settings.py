@@ -10,7 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 02/02/2020, 01:14
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 02/02/2020, 23:44
 
 import os
 
@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'drivers',
-    'users',
+    'users.apps.UsersConfig',
     'orders',
     'shops',
 ]
