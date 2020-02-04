@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 04/02/2020, 15:08
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 04/02/2020, 16:13
 import json
 
 from django.contrib.auth.models import User
@@ -378,6 +378,10 @@ class TestAddresses(TestCase):
         UserAddressModel.objects.create(user=user_profile, title='title', area='area', type='A',
                                         street='street', building='building', location_longitude=0,
                                         location_latitude=0)
+        address2 = UserAddressModel.objects.create(user=user_profile, title='title', area='area', type='A',
+                                                   street='street', building='building', location_longitude=0,
+                                                   location_latitude=0)
+        self.assertEqual(address2.sort, 2)
         url = reverse('users:addresses-detail', kwargs={'username': 'username', 'pk': 1})
 
         # not logged
@@ -395,6 +399,8 @@ class TestAddresses(TestCase):
         self.client.force_login(user)
         response = self.client.delete(url)
         self.assertEqual(response.status_code, 204)
+        address2.refresh_from_db()
+        self.assertEqual(address2.sort, 1)  # resorted from signals
 
         # wrong username
         url = reverse('users:addresses-detail', kwargs={'username': 'non existing username', 'pk': 1})
