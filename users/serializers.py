@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 02/02/2020, 01:14
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 04/02/2020, 18:40
 import django.contrib.auth.password_validation as validators
 from django.contrib.auth.models import User
 from django.core import exceptions
@@ -9,6 +9,7 @@ from users.models import UserProfileModel, UserAddressModel
 
 class UserSerializer(serializers.ModelSerializer):
     """The serializer for the django auth user model"""
+
     class Meta:
         model = User
         fields = ('first_name', 'last_name', 'username', 'password')
