@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 02/02/2020, 18:54
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 04/02/2020, 15:08
 from django.contrib.auth import login, authenticate, update_session_auth_hash
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view
@@ -53,7 +53,7 @@ class UserProfileView(viewsets.ViewSet):
 
         Returns:
             HTTP 404 Response if user profile is not found,
-            HTTP 401 if user isn't logged in,
+            HTTP 403 if user isn't logged in,
             if not, returns HTTP 200 Response with the profile's JSON data.
         """
         user_profile = get_object_or_404(UserProfileModel, account__username=username)
@@ -75,7 +75,7 @@ class UserProfileView(viewsets.ViewSet):
 
         Returns:
              HTTP 400 Response if data is not valid,
-             HTTP 401 Response if user is already logged in,
+             HTTP 403 Response if user is already logged in,
              HTTP 201 Response with the JSON data of the created profile.
         """
 
@@ -99,7 +99,7 @@ class UserProfileView(viewsets.ViewSet):
         Returns:
              HTTP 400 Response if the data is not
              valid with the errors,
-             HTTP 401 Response if the user is not
+             HTTP 403 Response if the user is not
              authorized to update that profile
              if not returns HTTP 200 Response with the update JSON data.
         """
@@ -123,7 +123,7 @@ class UserProfileView(viewsets.ViewSet):
 
         Returns:
              HTTP 400 Response if the data is not valid with the errors,
-             HTTP 401 Response if the user is not
+             HTTP 403 Response if the user is not
              authorized to update that profile,
              if not returns HTTP 200 Response with the update JSON data.
         """
@@ -147,7 +147,7 @@ class UserProfileView(viewsets.ViewSet):
 
         Returns:
             HTTP 404 Response if user profile is not found
-            HTTP 401 Response if the user is not authorized
+            HTTP 403 Response if the user is not authorized
             to update that profile,
             if not returns HTTP 204 Response with no content.
         """
@@ -177,7 +177,7 @@ class UserAddressView(viewsets.ViewSet):
                       whose addresses will be returned
 
         Returns:
-            HTTP 401 Response if the user is
+            HTTP 403 Response if the user is
             not authorized to see that user's addresses,
             HTTP 404 if user profile is not found,
             HTTP 200 Response with all addresses in
@@ -209,7 +209,7 @@ class UserAddressView(viewsets.ViewSet):
                 it should by an integer.
 
         Returns:
-            HTTP 401 Response if the user is
+            HTTP 403 Response if the user is
             not authorized to see that user's address,
             HTTP 404 Response if address is not found, if not,
             returns HTTP 200 Response with the address's JSON data.
@@ -229,7 +229,7 @@ class UserAddressView(viewsets.ViewSet):
                       which will be added a new address
 
         Returns:
-            HTTP 401 Response if the user is
+            HTTP 403 Response if the user is
             not authorized to add an address to that user,
             HTTP 404 if user profile is not found,
             HTTP 400 Response if the data is not valid, if not,
@@ -255,7 +255,7 @@ class UserAddressView(viewsets.ViewSet):
                 it should by an integer.
 
         Returns:
-            HTTP 401 Response if the user is
+            HTTP 403 Response if the user is
             not authorized to update an address to that user,
             HTTP 400 Response if the data is not valid with the errors,
             HTTP 404 Response if the address is not found
@@ -281,7 +281,7 @@ class UserAddressView(viewsets.ViewSet):
                 it should by an integer.
 
         Returns:
-            HTTP 401 Response if the user is
+            HTTP 403 Response if the user is
             not authorized to update an address to that user,
             HTTP 400 Response if the data is not valid with the errors,
             HTTP 404 Response if the address is not found
@@ -307,7 +307,7 @@ class UserAddressView(viewsets.ViewSet):
                 it should by an integer.
         Returns:
             HTTP 404 Response if the address is not found
-            HTTP 401 Response if the user is
+            HTTP 403 Response if the user is
             not authorized to delete an address to that user,
             if not, returns HTTP 204 Response with no content.
         """
