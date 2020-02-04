@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 24/01/2020, 15:41
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 00:39
 import os
 import uuid
 
@@ -45,6 +45,8 @@ class UserAddressModel(models.Model):
     user = models.ForeignKey(to=UserProfileModel, related_name="addresses", on_delete=models.CASCADE)
     sort = models.PositiveIntegerField()
     title = models.CharField(max_length=255)
+    country = models.CharField(max_length=255, blank=True)  # only used in the admin dashboard
+    city = models.CharField(max_length=255, blank=True)
     area = models.CharField(max_length=255)
     type = models.CharField(max_length=1, choices=address_type_choices)
     street = models.CharField(max_length=255)

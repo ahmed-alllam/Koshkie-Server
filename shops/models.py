@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 01/02/2020, 18:18
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 00:39
 import os
 import uuid
 
@@ -229,6 +229,8 @@ class RelyOn(models.Model):
 
 class ShopAddressModel(models.Model):
     shop = models.OneToOneField(to=ShopProfileModel, related_name="address", on_delete=models.CASCADE)
+    country = models.CharField(max_length=255, blank=True)  # add signals for it
+    city = models.CharField(max_length=255, blank=True)
     area = models.CharField(max_length=255)
     street = models.CharField(max_length=255)
     building = models.CharField(max_length=255)
@@ -249,7 +251,7 @@ class ShopAddressModel(models.Model):
             else:
                 raise KeyError("Failed to update non existing attribute {}.{}".format(
                     self.__class__.__name__, key))
-        self.save(force_update=True)
+        self.save()
 
 
 class ShopReviewModel(models.Model):

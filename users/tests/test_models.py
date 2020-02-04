@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 04/02/2020, 16:13
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 00:39
 from django.contrib.auth.models import User
 from django.test import TestCase
 
@@ -42,6 +42,10 @@ class TestAddresses(TestCase):
                                                    location_longitude=0, location_latitude=0)
         self.assertEqual(address2.sort, 2)
         self.assertNotEquals(address1.sort, address2.sort)
+
+        address1.delete()
+        address2.refresh_from_db()
+        self.assertEqual(address2.sort, 1)  # resorted from signals
 
     def test_address_str(self):
         """test for adress __str__ unction"""

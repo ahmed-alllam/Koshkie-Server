@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 26/01/2020, 17:49
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 00:39
 import math
 from abc import ABC
 
@@ -21,7 +21,11 @@ class Sqrt(Func, ABC):
     function = 'SQRT'
 
 
+# for more info https://en.wikipedia.org/wiki/Haversine_formula
+
 def haversine(lat1, lon1, lat2, lon2):
+    """uses haversine formula to calculate distance
+    between two locations"""
     dlat = (lat2 - lat1) * math.pi / 180.0
     dlon = (lon2 - lon1) * math.pi / 180.0
 
