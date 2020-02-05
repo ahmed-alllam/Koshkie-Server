@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 00:39
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 20:26
 
 from django.contrib import admin
 from django.contrib.auth.models import Group
@@ -12,6 +12,9 @@ class UserProfileAdmin(admin.ModelAdmin):
     """Admin for users model"""
 
     list_display = ('username', 'profile_photo', 'phone_number')
+    search_fields = ('account__username', 'phone_number')
+    ordering = ('account__username',)
+    list_select_related = ('account',)
 
     def username(self, obj):
         return obj.account.username
@@ -22,6 +25,9 @@ class UserAddressAdmin(admin.ModelAdmin):
 
     list_display = ('title', 'user', 'country', 'city', 'area', 'type', 'phone_number')
     list_filter = ('country', 'city')
+    search_fields = ('city', 'user__phone_number')
+    ordering = ('city',)
+    list_select_related = ('user__account',)
     readonly_fields = ('sort', 'country', 'city')
 
     def user(self, obj):

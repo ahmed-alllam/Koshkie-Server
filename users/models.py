@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 00:39
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 20:26
 import os
 import uuid
 
@@ -46,7 +46,7 @@ class UserAddressModel(models.Model):
     sort = models.PositiveIntegerField()
     title = models.CharField(max_length=255)
     country = models.CharField(max_length=255, blank=True)  # only used in the admin dashboard
-    city = models.CharField(max_length=255, blank=True)
+    city = models.CharField(max_length=255, blank=True)  # only used in the admin dashboard
     area = models.CharField(max_length=255)
     type = models.CharField(max_length=1, choices=address_type_choices)
     street = models.CharField(max_length=255)

@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 26/01/2020, 17:48
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 20:26
 
 from django.db.models import F
 from django.utils import timezone
@@ -130,7 +130,7 @@ class OrderDetailSerializer(serializers.ModelSerializer):
                                                                                   F('live_location_latitude'),
                                                                                   F('live_location_longitude'))
                                                                ).filter(distance__lte=2.5, is_busy=False,
-                                                                        is_active=True,
+                                                                        is_active=True, is_available=True,
                                                                         last_time_online__gte=min_active_time
                                                                         ).exists()
 
@@ -216,7 +216,8 @@ class OrderDetailSerializer(serializers.ModelSerializer):
         driver = DriverProfileModel.objects.annotate(distance=haversine(user_latitude, user_longitude,
                                                                         F('live_location_latitude'),
                                                                         F('live_location_longitude'))
-                                                     ).filter(distance__lte=2.5, is_busy=False, is_active=True,
+                                                     ).filter(distance__lte=2.5, is_busy=False,
+                                                              is_active=True, is_available=True,
                                                               last_time_online__gte=min_active_time
                                                               ).order_by('distance')[0]
         driver.is_busy = True

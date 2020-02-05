@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 04/02/2020, 18:40
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 20:26
 import django.contrib.auth.password_validation as validators
 from django.contrib.auth.models import User
 from django.core import exceptions
@@ -36,7 +36,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    """The serializer for the  user profile model"""
+    """The serializer for the user profile model"""
 
     account = UserSerializer()
 
@@ -49,6 +49,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """Creates a new user profile from the request's data"""
+
         account_data = validated_data.pop('account')
         account = User(**account_data)
         account.set_password(account.password)
@@ -59,6 +60,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         """Updates a certain user profile from the request's data"""
+
         instance.profile_photo = validated_data.get('profile_photo', instance.profile_photo)
         instance.phone_number = validated_data.get('phone_number', instance.phone_number)
         instance.save()

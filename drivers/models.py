@@ -1,19 +1,30 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 22/01/2020, 12:09
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 20:26
 import os
 import uuid
 
-from django.utils import timezone
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.db.models import F, Avg
+from django.db.models import Avg
 
 
 def photo_upload(instance, filename):
+    """Gives a unique path to the saved photo in models.
+        Arguments:
+            instance: the photo itself, it is not used in this
+                      function but it's required by django.
+            filename: the name of the photo sent by user, it's
+                      used here to get the format of the file.
+
+        Returns:
+            The unique path that the file will be stored in the DB.
+        """
     return 'drivers/{0}.{1}'.format(uuid.uuid4().hex, os.path.splitext(filename))
 
 
 class DriverProfileModel(models.Model):
+    """The Model of the Driver Profile."""
+
     vehicle_type_choices = [
         ('C', 'Car'),
         ('M', 'Motorcycle'),
@@ -23,31 +34,33 @@ class DriverProfileModel(models.Model):
     account = models.OneToOneField(User, on_delete=models.CASCADE, related_name="driver_profile")
     profile_photo = models.ImageField(upload_to=photo_upload)
     phone_number = models.BigIntegerField()
-    is_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=False)  # is evaluated and confirmed in person
+    is_available = models.BooleanField(default=False)  # is ready for orders at the moment
     last_time_online = models.DateTimeField()
-    live_location_longitude = models.DecimalField(max_digits=9, decimal_places=6, default=0, validators=[
+    live_location_longitude = models.FloatField(default=0, validators=[
         MaxValueValidator(180),
         MinValueValidator(-180)
     ])
-    live_location_latitude = models.DecimalField(max_digits=9, decimal_places=6, default=0, validators=[
+    live_location_latitude = models.FloatField(default=0, validators=[
         MaxValueValidator(90),
         MinValueValidator(-90)
     ])
     vehicle_type = models.CharField(max_length=1, choices=vehicle_type_choices)
-    is_busy = models.BooleanField(default=False)
+    is_busy = models.BooleanField(default=False)  # on an order or not
     rating = models.DecimalField(default=0, decimal_places=1, max_digits=2)
 
     def __str__(self):
         return self.account.username
 
     def calculate_rating(self):
-        self.rating = self.reviews.aggregate(Avg('stars')) or 0
+        """Calculates the average rating of the driver from their reviews"""
 
-    def resort_reviews(self, sort):
-        self.reviews.filter(sort__gt=sort).update(sort=F('sort') - 1)
+        self.rating = self.reviews.aggregate(Avg('stars')) or 0
 
 
 class DriverReviewModel(models.Model):
+    """The Model of the Driver's Reviews."""
+
     user = models.ForeignKey(to='users.UserProfileModel', on_delete=models.SET_NULL, null=True)
     driver = models.ForeignKey(to=DriverProfileModel, on_delete=models.CASCADE, related_name='reviews')
     sort = models.PositiveIntegerField()
@@ -64,10 +77,3 @@ class DriverReviewModel(models.Model):
 
     def __str__(self):
         return self.text
-
-    def save(self, *args, **kwargs):
-        if self.pk is None:
-            latest_sort = DriverReviewModel.objects.filter(driver=self.driver).count()
-            self.sort = latest_sort + 1
-
-        super(DriverReviewModel, self).save(*args, **kwargs)

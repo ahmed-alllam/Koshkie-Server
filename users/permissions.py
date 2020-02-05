@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 24/01/2020, 15:41
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 20:26
 from rest_framework import permissions
 
 from users.models import UserProfileModel
@@ -6,6 +6,7 @@ from users.models import UserProfileModel
 
 class UserProfilePermissions(permissions.BasePermission):
     """The Permission class used by UserProfileView."""
+
     safe_methods = {'GET', 'POST', 'HEAD', 'OPTIONS'}
 
     def has_permission(self, request, view):

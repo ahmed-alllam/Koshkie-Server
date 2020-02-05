@@ -1,6 +1,7 @@
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 20:26
+
 from django.contrib import admin
 
-# Register your models here.
 from drivers.models import DriverReviewModel, DriverProfileModel
 
 admin.site.register(DriverProfileModel)

@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 14:19
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 20:26
 from django.contrib.auth import login, authenticate, update_session_auth_hash
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view
@@ -44,7 +44,6 @@ class UserProfileView(viewsets.ViewSet):
 
         Checks if a user profile with this username exist,
         if not, returns HTTP 404 Response.
-        requires no permissions.
 
         Arguments:
             request: the request data sent by the user,
@@ -53,7 +52,6 @@ class UserProfileView(viewsets.ViewSet):
 
         Returns:
             HTTP 404 Response if user profile is not found,
-            HTTP 403 if user isn't logged in,
             if not, returns HTTP 200 Response with the profile's JSON data.
         """
         user_profile = get_object_or_404(UserProfileModel, account__username=username)
@@ -93,10 +91,11 @@ class UserProfileView(viewsets.ViewSet):
 
         Arguments:
             request: the request data sent by the user, it is used
-                     to get the user profile.
+                     to check the user's permissions and get the data
             username: the username of the user profile that will be updated
 
         Returns:
+             HTTP 404 Response if user profile is not found,
              HTTP 400 Response if the data is not
              valid with the errors,
              HTTP 403 Response if the user is not
@@ -118,10 +117,11 @@ class UserProfileView(viewsets.ViewSet):
 
         Arguments:
             request: the request data sent by the user, it is used
-                     to get the user profile and the post data.
+                     to check the user's permissions and get the data
             username: the username of the user profile that will be updated
 
         Returns:
+             HTTP 404 Response if user profile is not found,
              HTTP 400 Response if the data is not valid with the errors,
              HTTP 403 Response if the user is not
              authorized to update that profile,
@@ -142,7 +142,7 @@ class UserProfileView(viewsets.ViewSet):
 
         Arguments:
             request: the request data sent by the user, it is used
-                     to get the user profile.
+                     to check the user's permissions
             username: the username of the user profile that will be deleted
 
         Returns:
@@ -161,7 +161,7 @@ class UserProfileView(viewsets.ViewSet):
 class UserAddressView(viewsets.ViewSet):
     """View for the user addresses.
 
-    Lists, Creates, Updates and Deletes an Address, requires user authentication.
+    Lists, Creates, Updates and Deletes an Address.
     """
 
     permission_classes = (UserAddressPermissions,)
@@ -172,7 +172,7 @@ class UserAddressView(viewsets.ViewSet):
 
         Arguments:
             request: the request data sent by the user, it is used
-                     to get the user profile.
+                     to check the user's permissions and in Pagination
             username: the username of the user profile
                       whose addresses will be returned
 
@@ -202,7 +202,7 @@ class UserAddressView(viewsets.ViewSet):
 
         Arguments:
             request: the request data sent by the user, it is used
-                     to get the user profile.
+                     to checks the user's permissions
             username: the username of the user profile
                       whose address will be returned
             pk: the sort of the address that the user want info about,
@@ -211,7 +211,7 @@ class UserAddressView(viewsets.ViewSet):
         Returns:
             HTTP 403 Response if the user is
             not authorized to see that user's address,
-            HTTP 404 Response if address is not found, if not,
+            HTTP 404 Response if address or user are not found, if not,
             returns HTTP 200 Response with the address's JSON data.
         """
         address = get_object_or_404(UserAddressModel, sort=pk, user__account__username=username)
@@ -224,7 +224,7 @@ class UserAddressView(viewsets.ViewSet):
 
         Arguments:
             request: the request data sent by the user, it is used
-                     to get the user profile.
+                     to check the user's permissions
             username: the username of the user profile
                       which will be added a new address
 
@@ -248,7 +248,7 @@ class UserAddressView(viewsets.ViewSet):
 
         Arguments:
             request: the request data sent by the user, it is used
-                     to get the user profile.
+                     to check the user's permissions
             username: the username of the user profile
                       whose address will be updated
             pk: the id of the address that the user wants to change,
@@ -256,7 +256,7 @@ class UserAddressView(viewsets.ViewSet):
 
         Returns:
             HTTP 403 Response if the user is
-            not authorized to update an address to that user,
+            not authorized to update that address,
             HTTP 400 Response if the data is not valid with the errors,
             HTTP 404 Response if the address is not found
             if not returns HTTP 200 Response with the update JSON data.
@@ -274,7 +274,7 @@ class UserAddressView(viewsets.ViewSet):
 
         Arguments:
             request: the request data sent by the user, it is used
-                     to get the user profile.
+                     to check the user's permissions
             username: the username of the user profile
                       whose address will be updated
             pk: the id of the address that the user wants to change,
@@ -300,7 +300,7 @@ class UserAddressView(viewsets.ViewSet):
 
         Arguments:
             request: the request data sent by the user, it is used
-                     to get the user profile.
+                     to check the user's permissions
             username: the username of the user profile
                       whose address will be deleted
             pk: the id of the address that the user wants to delete,
@@ -308,7 +308,7 @@ class UserAddressView(viewsets.ViewSet):
         Returns:
             HTTP 404 Response if the address is not found
             HTTP 403 Response if the user is
-            not authorized to delete an address to that user,
+            not authorized to delete that address,
             if not, returns HTTP 204 Response with no content.
         """
         address = get_object_or_404(UserAddressModel, sort=pk, user__account__username=username)

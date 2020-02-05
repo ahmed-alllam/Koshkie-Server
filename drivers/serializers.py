@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 22/01/2020, 12:09
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 20:26
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -8,22 +8,24 @@ from users.serializers import UserProfileSerializer, UserSerializer
 
 
 class DriverProfileSerializer(serializers.ModelSerializer):
+    """The serializer for the driver profile model"""
+
     account = UserSerializer()
-    reviews_count = serializers.IntegerField(read_only=True, source='get_reviews_count')
+    reviews_count = serializers.SerializerMethodField()
 
     class Meta:
         model = DriverProfileModel
-        fields = ('id', 'account', 'profile_photo', 'phone_number', 'vehicle_type',
-                  'rating', 'reviews_count', 'is_active', 'is_busy', 'last_time_online',
+        fields = ('id', 'account', 'profile_photo', 'phone_number',
+                  'vehicle_type', 'rating', 'reviews_count', 'is_available',
                   'live_location_longitude', 'live_location_latitude')
         extra_kwargs = {
             'id': {'read_only': True},
-            'is_busy': {'read_only': True},
-            'last_time_online': {'read_only': True},
             'rating': {'read_only': True},
         }
 
     def create(self, validated_data):
+        """Creates a new user profile from the request's data"""
+
         account_data = validated_data.pop('account')
         account = User(**account_data)
         account.set_password(account.password)
@@ -33,10 +35,12 @@ class DriverProfileSerializer(serializers.ModelSerializer):
         return driver_profile
 
     def update(self, instance, validated_data):
+        """Updates a certain user profile from the request's data"""
+
         instance.profile_photo = validated_data.get('profile_photo', instance.profile_photo)
         instance.phone_number = validated_data.get('phone_number', instance.phone_number)
         instance.vehicle_type = validated_data.get('vehicle_type', instance.vehicle_type)
-        instance.is_active = validated_data.get('is_active', instance.is_active)
+        instance.is_available = validated_data.get('is_available', instance.is_available)
         instance.live_location_longitude = validated_data.get('live_location_longitude',
                                                               instance.live_location_longitude)
         instance.live_location_latitude = validated_data.get('live_location_latitude',
@@ -55,10 +59,13 @@ class DriverProfileSerializer(serializers.ModelSerializer):
         return instance
 
     def get_reviews_count(self):
+        """returns the count of all review a driver has"""
         return self.instance.reviews.count()
 
 
 class DriverReviewSerializer(serializers.ModelSerializer):
+    """The serializer for the driver review model"""
+
     user = UserProfileSerializer(read_only=True)
 
     class Meta:
@@ -70,26 +77,11 @@ class DriverReviewSerializer(serializers.ModelSerializer):
         }
 
     def validate_stars(self, stars):
+        """validates the number of stars the user entered
+        for that review"""
+
         decimal_digits = str(stars - int(stars))[2:]
         print(decimal_digits)
         if len(decimal_digits) > 1 or int(decimal_digits) % 5 != 0:
             raise serializers.ValidationError("invalid number of stars")
         return stars
-
-    def create(self, validated_data):
-        driver = validated_data['driver']
-        review = DriverReviewModel.objects.create(**validated_data)
-
-        driver.calculate_rating()
-        driver.save()
-
-        return review
-
-    def update(self, instance, validated_data):
-        instance.stars = validated_data.get('stars', instance.stars)
-        instance.text = validated_data.get('text', instance.text)
-        instance.save()
-
-        instance.driver.calculate_rating()
-        instance.driver.save()
-        return instance
