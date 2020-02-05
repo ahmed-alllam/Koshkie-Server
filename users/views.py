@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 04/02/2020, 15:08
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 14:19
 from django.contrib.auth import login, authenticate, update_session_auth_hash
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view
@@ -75,7 +75,7 @@ class UserProfileView(viewsets.ViewSet):
 
         Returns:
              HTTP 400 Response if data is not valid,
-             HTTP 403 Response if user is already logged in,
+             HTTP 401 Response if user is already logged in,
              HTTP 201 Response with the JSON data of the created profile.
         """
 

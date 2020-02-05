@@ -1,15 +1,10 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 00:39
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 14:19
 from django.db.models import F
 from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
 from geopy import Nominatim
 
 from users.models import UserProfileModel, UserAddressModel
-
-
-def get_api_key():
-    with open('.keys', 'r') as file:
-        return file.read()
 
 
 @receiver(post_delete, sender=UserProfileModel)
@@ -42,9 +37,8 @@ def add_country_and_city(sender, **kwargs):
     geolocator = Nominatim()
     try:
         location = geolocator.reverse("{}, {}".format(longitude, latitude), language='en')
-        if location.raw:
-            address.country = location.raw['address'].get('country', '')
-            address.city = location.raw['address'].get('state', '')
+        address.country = location.raw.get('address', {}).get('country', '')
+        address.city = location.raw.get('address', {}).get('state', '')
     except Exception:
         pass
 
