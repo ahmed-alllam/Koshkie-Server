@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 21:06
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/02/2020, 16:49
 
 from django.test import TestCase
 from django.urls import reverse, resolve
@@ -20,7 +20,7 @@ class TestDrivers(TestCase):
         url = reverse('drivers:login')
         self.assertEqual(resolve(url).func, driver_login)
 
-    def test_driver_list(self):
+    def test_drivers_list(self):
         """test fro drivers list url"""
         url = reverse('drivers:list')
         self.assertEqual(resolve(url).func.__name__,
@@ -42,7 +42,7 @@ class TestDriverReviews(TestCase):
         self.assertEqual(resolve(url).func.__name__,
                          DriverReviewView.as_view({'get': 'list'}).__name__)
 
-    def test_reviews_detail(self):
+    def test_review_details(self):
         """test for drivers reviews details url"""
         url = reverse('drivers:reviews-detail', kwargs={'username': 'username', 'pk': 1})
         self.assertEqual(resolve(url).func.__name__,

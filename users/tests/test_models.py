@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 00:39
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/02/2020, 16:49
 from django.contrib.auth.models import User
 from django.test import TestCase
 
@@ -21,6 +21,14 @@ class TestUsers(TestCase):
         user = User.objects.create_user(username='username', password='password')
         user_profile = UserProfileModel.objects.create(account=user, phone_number=12345)
         self.assertEqual(user_profile.__str__(), user.username)
+
+    def test_driver_account_delete(self):
+        """test for account delete after profile deletion from signals"""
+
+        account = User.objects.create_user(username='username', password='password')
+        user_profile = UserProfileModel.objects.create(account=account, phone_number=12345)
+        user_profile.delete()
+        self.assertEqual(User.objects.filter(username='username').exists(), False)
 
 
 class TestAddresses(TestCase):
