@@ -2,10 +2,14 @@ language: python
 python:
   - "3.8"
 
+sudo: required
+
 services:
   - docker
 
-before_script: pip install docker-compose
+before_script:
+  - pip install docker-compose
+  - sudo chmod -R 777 /koshkie/media
 
 script:
   - docker-compose run --rm koshkie sh -c "python3 manage.py test"
