@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/02/2020, 21:40
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/02/2020, 23:11
 import json
 
 from django.conf import settings
@@ -12,14 +12,14 @@ from users.models import UserProfileModel, UserAddressModel
 
 
 def img_file():
-    path = '/media/drivers/sample.png'
+    path = '/drivers/tests/sample.jpg'
     file_path = settings.BASE_DIR + path
-    file_name = 'test_img.png'
+    file_name = 'test_img.jpg'
     content = open(file_path, 'rb').read()
 
     image_file = SimpleUploadedFile(name=file_name,
                                     content=content,
-                                    content_type='image/png')
+                                    content_type='image/jpg')
 
     return image_file
 
@@ -48,7 +48,7 @@ class TestDrivers(TestCase):
         self.assertEqual(response.status_code, 400)
 
         DriverProfileModel.objects.create(account=account, phone_number=12345,
-                                          profile_photo='/media/drivers/sample.png')
+                                          profile_photo='/drivers/tests/sample.jpg')
 
         # wrong login password
         response = self.client.post(url, {'username': 'username',
@@ -114,7 +114,7 @@ class TestDrivers(TestCase):
 
         user = User.objects.create_user(username='username', password='password')
         DriverProfileModel.objects.create(account=user, phone_number=12345,
-                                          profile_photo='/media/drivers/sample.png')
+                                          profile_photo='/drivers/tests/sample.jpg')
         url = reverse('drivers:details', kwargs={'username': 'username'})
 
         # right
@@ -170,6 +170,11 @@ class TestDrivers(TestCase):
         reponse = self.client.patch(url, {'account': {'first_name': 'my first name2'}},
                                     content_type='application/json')  # has only json no files
         self.assertEqual(reponse.status_code, 200)
+
+        # wrong data with patch
+        reponse = self.client.patch(url, {'account': {'username': 'username'}},  # duplicate
+                                    content_type='application/json')
+        self.assertEqual(reponse.status_code, 400)
 
         # right
         post_data = client.encode_multipart(client.BOUNDARY, {
@@ -392,6 +397,12 @@ class TestReviews(TestCase):
                                            'street': 'street', 'building': 'building'},
                                      content_type='application/json')
         self.assertEqual(response.status_code, 200)
+
+        # wrong data
+        response = self.client.patch(url, {'title': 'title', 'area': 'area', 'type': 'wrong',
+                                           'street': 'street', 'building': 'building'},
+                                     content_type='application/json')
+        self.assertEqual(response.status_code, 400)
 
         # wrong username
         url = reverse('users:addresses-detail', kwargs={'username': 'non existing username', 'pk': 1})

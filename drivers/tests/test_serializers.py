@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/02/2020, 21:40
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/02/2020, 23:11
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -9,15 +9,15 @@ from drivers.serializers import DriverProfileSerializer, DriverReviewSerializer
 from users.models import UserProfileModel
 
 
-def create_image_file(name, content_type):
-    path = '/media/drivers/sample.png'
+def img_file():
+    path = '/drivers/tests/sample.jpg'
     file_path = settings.BASE_DIR + path
-    file_name = name
+    file_name = 'test_img.jpg'
     content = open(file_path, 'rb').read()
 
     image_file = SimpleUploadedFile(name=file_name,
                                     content=content,
-                                    content_type=content_type)
+                                    content_type='jpg')
 
     return image_file
 
@@ -28,12 +28,10 @@ class TestDrivers(TestCase):
     def test_vehicle_type(self):
         """test for driver vehicle type"""
 
-        img_file = create_image_file('test_img.png', 'image/png')
-
         # true
         serializer = DriverProfileSerializer(data={'account': {'username': 'username',
                                                                'password': 'super_secret'},
-                                                   'profile_photo': img_file, 'phone_number': 1234,
+                                                   'profile_photo': img_file(), 'phone_number': 1234,
                                                    'vehicle_type': 'B', 'is_available': True,
                                                    'live_location_longitude': 30,
                                                    'live_location_latitude': 30})
@@ -42,7 +40,7 @@ class TestDrivers(TestCase):
         # wrong type
         serializer = DriverProfileSerializer(data={'account': {'username': 'username',
                                                                'password': 'super_secret'},
-                                                   'profile_photo': img_file, 'phone_number': 1234,
+                                                   'profile_photo': img_file(), 'phone_number': 1234,
                                                    'vehicle_type': 'W', 'is_available': True,
                                                    'live_location_longitude': 30,
                                                    'live_location_latitude': 30})
@@ -51,12 +49,10 @@ class TestDrivers(TestCase):
     def test_driver_location(self):
         """test for driver location"""
 
-        img_file = create_image_file('test_img.png', 'image/png')
-
         # true
         serializer = DriverProfileSerializer(data={'account': {'username': 'username',
                                                                'password': 'super_secret'},
-                                                   'profile_photo': img_file, 'phone_number': 1234,
+                                                   'profile_photo': img_file(), 'phone_number': 1234,
                                                    'vehicle_type': 'B', 'is_available': True,
                                                    'live_location_longitude': 30,
                                                    'live_location_latitude': 30})
@@ -65,7 +61,7 @@ class TestDrivers(TestCase):
         # wrong longitude
         serializer = DriverProfileSerializer(data={'account': {'username': 'username',
                                                                'password': 'super_secret'},
-                                                   'profile_photo': img_file, 'phone_number': 1234,
+                                                   'profile_photo': img_file(), 'phone_number': 1234,
                                                    'vehicle_type': 'B', 'is_available': True,
                                                    'live_location_longitude': 1000,
                                                    'live_location_latitude': 30})
@@ -74,7 +70,7 @@ class TestDrivers(TestCase):
         # wrong latitude
         serializer = DriverProfileSerializer(data={'account': {'username': 'username',
                                                                'password': 'super_secret'},
-                                                   'profile_photo': img_file, 'phone_number': 1234,
+                                                   'profile_photo': img_file(), 'phone_number': 1234,
                                                    'vehicle_type': 'B', 'is_available': True,
                                                    'live_location_longitude': 30,
                                                    'live_location_latitude': -200})
@@ -85,7 +81,7 @@ class TestDrivers(TestCase):
 
         account = User.objects.create_user(username='username', password='password')
         driver_profile = DriverProfileModel.objects.create(account=account, phone_number=12345,
-                                                           vehicle_type='M', profile_photo='/media/drivers/sample.png')
+                                                           vehicle_type='M', profile_photo='/drivers/tests/sample.jpg')
         account2 = User.objects.create_user(username='username2', password='password')
         user_profile = UserProfileModel.objects.create(account=account2, phone_number=12345)
 

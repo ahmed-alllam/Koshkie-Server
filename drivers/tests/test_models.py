@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/02/2020, 16:49
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/02/2020, 23:11
 from django.contrib.auth.models import User
 from django.test import TestCase
 
@@ -21,7 +21,7 @@ class TestDrivers(TestCase):
 
         account = User.objects.create_user(username='username', password='password')
         driver_profile = DriverProfileModel.objects.create(account=account, phone_number=12345,
-                                                           vehicle_type='M', profile_photo='/media/drivers/sample.png')
+                                                           vehicle_type='M', profile_photo='/drivers/tests/sample.jpg')
         self.assertEqual(driver_profile.__str__(), account.username)
 
     def test_driver_account_delete(self):
@@ -29,7 +29,7 @@ class TestDrivers(TestCase):
 
         account = User.objects.create_user(username='username', password='password')
         driver_profile = DriverProfileModel.objects.create(account=account, phone_number=12345,
-                                                           vehicle_type='M', profile_photo='/media/drivers/sample.png')
+                                                           vehicle_type='M', profile_photo='/drivers/tests/sample.jpg')
         driver_profile.delete()
         self.assertEqual(User.objects.filter(username='username').exists(), False)
 
@@ -42,7 +42,7 @@ class TestAddresses(TestCase):
 
         account = User.objects.create_user(username='username', password='password')
         driver_profile = DriverProfileModel.objects.create(account=account, phone_number=12345,
-                                                           vehicle_type='M', profile_photo='/media/drivers/sample.png')
+                                                           vehicle_type='M', profile_photo='/drivers/tests/sample.jpg')
 
         account2 = User.objects.create_user(username='username2', password='password')
         user_profile = UserProfileModel.objects.create(account=account2, phone_number=12345)
@@ -65,7 +65,7 @@ class TestAddresses(TestCase):
 
         account = User.objects.create_user(username='username', password='password')
         driver_profile = DriverProfileModel.objects.create(account=account, phone_number=12345,
-                                                           vehicle_type='M', profile_photo='/media/drivers/sample.png')
+                                                           vehicle_type='M', profile_photo='/drivers/tests/sample.jpg')
 
         account2 = User.objects.create_user(username='username2', password='password')
         user_profile = UserProfileModel.objects.create(account=account2, phone_number=12345)
@@ -79,7 +79,7 @@ class TestAddresses(TestCase):
 
         account = User.objects.create_user(username='username', password='password')
         driver_profile = DriverProfileModel.objects.create(account=account, phone_number=12345,
-                                                           vehicle_type='M', profile_photo='/media/drivers/sample.png')
+                                                           vehicle_type='M', profile_photo='/drivers/tests/sample.jpg')
 
         account2 = User.objects.create_user(username='username2', password='password')
         user_profile = UserProfileModel.objects.create(account=account2, phone_number=12345)

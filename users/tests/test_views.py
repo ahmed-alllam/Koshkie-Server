@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/02/2020, 21:40
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/02/2020, 23:11
 import json
 
 from django.contrib.auth.models import User
@@ -25,7 +25,7 @@ class TestUsers(TestCase):
         self.assertEqual(response.status_code, 400)
 
         DriverProfileModel.objects.create(account=user, phone_number=12345,
-                                          profile_photo='/media/drivers/sample.png')
+                                          profile_photo='/drivers/tests/sample.jpg')
 
         # user has a driver profile not a user profile
         response = self.client.post(url, {'username': 'username',
@@ -176,6 +176,11 @@ class TestUsers(TestCase):
         reponse = self.client.patch(url, {'account': {'first_name': 'my first name'}},
                                     content_type='application/json')
         self.assertEqual(reponse.status_code, 200)
+
+        # wrong data with patch
+        reponse = self.client.patch(url, {'account': {'username': 'username'}},  # duplicate
+                                    content_type='application/json')
+        self.assertEqual(reponse.status_code, 400)
 
         # right
         reponse = self.client.put(url, {'account': {
@@ -396,6 +401,12 @@ class TestAddresses(TestCase):
                                            'street': 'street', 'building': 'building'},
                                      content_type='application/json')
         self.assertEqual(response.status_code, 200)
+
+        # wrong data
+        response = self.client.patch(url, {'title': 'title', 'area': 'area', 'type': 'wrong',
+                                           'street': 'street', 'building': 'building'},
+                                     content_type='application/json')
+        self.assertEqual(response.status_code, 400)
 
         # wrong username
         url = reverse('users:addresses-detail', kwargs={'username': 'non existing username', 'pk': 1})
