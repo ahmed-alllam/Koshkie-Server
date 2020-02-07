@@ -9,7 +9,7 @@ services:
 
 before_script:
   - pip install docker-compose
-  - sudo chmod -R 777 /koshkie/media
+  - sudo chmod -R 777 /koshkie/
 
 script:
   - docker-compose run --rm koshkie sh -c "python3 manage.py test"
