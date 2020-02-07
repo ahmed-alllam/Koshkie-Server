@@ -1,6 +1,6 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 20:26
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/02/2020, 21:40
 
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, authenticate, update_session_auth_hash
 from django.db.models import F
 from django.utils import timezone
 from rest_framework import viewsets, status
@@ -148,6 +148,7 @@ class DriverProfileView(viewsets.ViewSet):
         serializer = DriverProfileSerializer(driver_profile, data=request.data)
         if serializer.is_valid():
             serializer.save()
+            update_session_auth_hash(request, driver_profile.account)
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -173,6 +174,7 @@ class DriverProfileView(viewsets.ViewSet):
         serializer = DriverProfileSerializer(driver_profile, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
+            update_session_auth_hash(request, driver_profile.account)
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

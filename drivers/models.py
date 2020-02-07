@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 06/02/2020, 16:49
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/02/2020, 21:40
 import os
 import uuid
 
@@ -34,7 +34,7 @@ class DriverProfileModel(models.Model):
     account = models.OneToOneField(User, on_delete=models.CASCADE, related_name="driver_profile")
     profile_photo = models.ImageField(upload_to=photo_upload)
     phone_number = models.BigIntegerField()
-    is_active = models.BooleanField(default=False)  # is evaluated and confirmed in person
+    is_active = models.BooleanField(default=False)  # is evaluated and confirmed in person from the company (not fake)
     is_available = models.BooleanField(default=False)  # is ready for orders at the moment
     last_time_online = models.DateTimeField(auto_now_add=True)
     live_location_longitude = models.FloatField(default=0, validators=[
@@ -55,7 +55,7 @@ class DriverProfileModel(models.Model):
     def calculate_rating(self):
         """Calculates the average rating of the driver from their reviews"""
 
-        self.rating = self.reviews.aggregate(Avg('stars'))['stars__avg'] or 0
+        self.rating = self.reviews.aggregate(Avg('stars')).get('stars__avg', 0)
 
 
 class DriverReviewModel(models.Model):

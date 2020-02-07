@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 20:26
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/02/2020, 21:40
 from rest_framework import permissions
 
 
@@ -16,7 +16,7 @@ class DriverProfilePermissions(permissions.BasePermission):
         """
         if request.method in self.safe_methods:
             return True
-        if request.user.is_authenticated and hasattr(request.user, 'shop_profile'):
+        if request.user.is_authenticated and hasattr(request.user, 'driver_profile'):
             return True
         return False
 

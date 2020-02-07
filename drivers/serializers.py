@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 20:26
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/02/2020, 21:40
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -15,11 +15,11 @@ class DriverProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DriverProfileModel
-        fields = ('id', 'account', 'profile_photo', 'phone_number',
-                  'vehicle_type', 'rating', 'reviews_count', 'is_available',
+        fields = ('account', 'profile_photo', 'phone_number', 'vehicle_type',
+                  'rating', 'reviews_count', 'is_available', 'is_active',
                   'live_location_longitude', 'live_location_latitude')
         extra_kwargs = {
-            'id': {'read_only': True},
+            'is_active': {'read_only': True},
             'rating': {'read_only': True},
         }
 
@@ -58,9 +58,9 @@ class DriverProfileSerializer(serializers.ModelSerializer):
 
         return instance
 
-    def get_reviews_count(self):
+    def get_reviews_count(self, obj):
         """returns the count of all review a driver has"""
-        return self.instance.reviews.count()
+        return obj.reviews.count()
 
 
 class DriverReviewSerializer(serializers.ModelSerializer):
@@ -81,7 +81,6 @@ class DriverReviewSerializer(serializers.ModelSerializer):
         for that review"""
 
         decimal_digits = str(stars - int(stars))[2:]
-        print(decimal_digits)
         if len(decimal_digits) > 1 or int(decimal_digits) % 5 != 0:
             raise serializers.ValidationError("invalid number of stars")
         return stars

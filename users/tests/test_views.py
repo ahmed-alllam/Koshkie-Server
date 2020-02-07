@@ -1,10 +1,11 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 04/02/2020, 16:13
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/02/2020, 21:40
 import json
 
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
+from drivers.models import DriverProfileModel
 from users.models import UserProfileModel, UserAddressModel
 
 
@@ -17,20 +18,30 @@ class TestUsers(TestCase):
         user = User.objects.create_user(username='username', password='password')
         url = reverse('users:login')
 
-        # wrong login password
-        response = self.client.post(url, {'username': 'username',
-                                          'password': 'a wrong password'},
-                                    content_type='application/json')
-        self.assertEqual(response.status_code, 400)
-
         # user has no profile not valid
         response = self.client.post(url, {'username': 'username',
                                           'password': 'password'},
                                     content_type='application/json')
         self.assertEqual(response.status_code, 400)
 
-        # right login
+        DriverProfileModel.objects.create(account=user, phone_number=12345,
+                                          profile_photo='/media/drivers/sample.png')
+
+        # user has a driver profile not a user profile
+        response = self.client.post(url, {'username': 'username',
+                                          'password': 'password'},
+                                    content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+
         UserProfileModel.objects.create(account=user, phone_number=12345)
+
+        # wrong login password
+        response = self.client.post(url, {'username': 'username',
+                                          'password': 'a wrong password'},
+                                    content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+
+        # right login
         response = self.client.post(url, {'username': 'username',
                                           'password': 'password'},
                                     content_type='application/json')
@@ -133,7 +144,21 @@ class TestUsers(TestCase):
         # not logged in as that user
         reponse = self.client.put(url, {'account': {
             'username': 'username',
-            'password': '123',
+            'password': 'super_secret',
+            'first_name': 'my first name',
+            'last_name': 'my last name'
+        },
+            'phone_number': 12345},
+                                  content_type='application/json')
+        self.assertEqual(reponse.status_code, 403)
+
+        # not logged in as that user
+        user2 = User.objects.create_user(username='username2', password='password')
+        UserProfileModel.objects.create(account=user2, phone_number=12345)
+        self.client.force_login(user2)
+        reponse = self.client.put(url, {'account': {
+            'username': 'username',
+            'password': 'super_secret',
             'first_name': 'my first name',
             'last_name': 'my last name'
         },
@@ -147,16 +172,27 @@ class TestUsers(TestCase):
                                   content_type='application/json')
         self.assertEqual(reponse.status_code, 400)
 
-        # un complete data passes the patch request
+        # uncomplete data passes the patch request right
         reponse = self.client.patch(url, {'account': {'first_name': 'my first name'}},
                                     content_type='application/json')
+        self.assertEqual(reponse.status_code, 200)
+
+        # right
+        reponse = self.client.put(url, {'account': {
+            'username': 'the_new_username',
+            'password': 'super_secret',
+            'first_name': 'my first name',
+            'last_name': 'my last name'
+        },
+            'phone_number': 12345},
+                                  content_type='application/json')
         self.assertEqual(reponse.status_code, 200)
 
         # wrong username
         url = reverse('users:details', kwargs={'username': 'non existing username'})
         reponse = self.client.put(url, {'account': {
             'username': 'username',
-            'password': '123',
+            'password': 'super_secret',
             'first_name': 'my first name',
             'last_name': 'my last name'
         },
@@ -172,6 +208,13 @@ class TestUsers(TestCase):
         url = reverse('users:details', kwargs={'username': 'username'})
 
         # is not logged in as that user
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 403)
+
+        # is not logged in as that user
+        user2 = User.objects.create_user(username='username2', password='password')
+        UserProfileModel.objects.create(account=user2, phone_number=12345)
+        self.client.force_login(user2)
         response = self.client.delete(url)
         self.assertEqual(response.status_code, 403)
 
