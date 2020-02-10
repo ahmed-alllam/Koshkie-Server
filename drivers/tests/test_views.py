@@ -1,5 +1,6 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/02/2020, 23:11
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 10/02/2020, 23:27
 import json
+import time
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -7,8 +8,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, client
 from django.urls import reverse
 
-from drivers.models import DriverProfileModel
-from users.models import UserProfileModel, UserAddressModel
+from drivers.models import DriverProfileModel, DriverReviewModel
+from users.models import UserProfileModel
 
 
 def img_file():
@@ -108,6 +109,34 @@ class TestDrivers(TestCase):
             'account.password': '123',
             'phone_number': 12345, 'vehicle_type': 'B', 'profile_photo': img_file()})
         self.assertEqual(response.status_code, 400)
+
+    def test_list_reviews(self):
+        """Test for drivers list view"""
+
+        user2 = User.objects.create_user(username='username2', password='password')
+        DriverProfileModel.objects.create(account=user2, phone_number=12345,
+                                          profile_photo='/drivers/tests/sample.jpg',
+                                          live_location_latitude=55.543,
+                                          live_location_longitude=15.13,
+                                          is_active=True, is_available=True)
+
+        url = reverse('drivers:list') + '?longitude=15.13&latitude=55.543'
+
+        # right
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.content)['count'], 1)
+
+        # no coordinates passed
+        url2 = reverse('drivers:list')
+        response = self.client.get(url2)
+        self.assertEqual(response.status_code, 400)
+
+        # driver's last time online more than 10 sec should not be in list
+        time.sleep(11)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.content)['count'], 0)
 
     def test_get_driver(self):
         """Test for drivers get view"""
@@ -236,212 +265,199 @@ class TestDrivers(TestCase):
 class TestReviews(TestCase):
     """Unit Test for drivers reviews views"""
 
-    def test_list_addresses(self):
-        """Test for users address list view"""
+    def test_list_reviews(self):
+        """Test for drivers reviews list view"""
 
         user = User.objects.create_user(username='username', password='password')
         user_profile = UserProfileModel.objects.create(account=user, phone_number=12345)
-        UserAddressModel.objects.create(user=user_profile, title='title', area='area', type='A',
-                                        street='street', building='building', location_longitude=0,
-                                        location_latitude=0)
-        url = reverse('users:addresses-list', kwargs={'username': 'username'})
-
-        # not logged
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 403)
-
-        # not logged in as that user
         user2 = User.objects.create_user(username='username2', password='password')
-        UserProfileModel.objects.create(account=user2, phone_number=12345)
-        self.client.force_login(user2)
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 403)
+        driver_profile = DriverProfileModel.objects.create(account=user2, phone_number=12345,
+                                                           profile_photo='/drivers/tests/sample.jpg')
+        DriverReviewModel.objects.create(user=user_profile, driver=driver_profile, stars=5,
+                                         text='text')
+        url = reverse('drivers:reviews-list', kwargs={'username': 'username2'})  # of the driver
 
         # right
-        self.client.force_login(user)
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
         # wrong username
-        url = reverse('users:addresses-list', kwargs={'username': 'non existing username'})
+        url = reverse('drivers:reviews-list', kwargs={'username': 'non existing username'})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
-    def test_get_address(self):
-        """Test for users address get view"""
+    def test_get_review(self):
+        """Test for drivers reviews get view"""
 
         user = User.objects.create_user(username='username', password='password')
         user_profile = UserProfileModel.objects.create(account=user, phone_number=12345)
-        UserAddressModel.objects.create(user=user_profile, title='title', area='area', type='A',
-                                        street='street', building='building', location_longitude=0,
-                                        location_latitude=0)
-        url = reverse('users:addresses-detail', kwargs={'username': 'username', 'pk': 1})
-
-        # not logged
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 403)
-
-        # not logged in as that user
         user2 = User.objects.create_user(username='username2', password='password')
-        UserProfileModel.objects.create(account=user2, phone_number=12345)
-        self.client.force_login(user2)
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 403)
+        driver_profile = DriverProfileModel.objects.create(account=user2, phone_number=12345,
+                                                           profile_photo='/drivers/tests/sample.jpg')
+        DriverReviewModel.objects.create(user=user_profile, driver=driver_profile, stars=5,
+                                         text='text')
+        url = reverse('drivers:reviews-detail', kwargs={'username': 'username2', 'pk': 1})
 
         # right
-        self.client.force_login(user)
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
         # wrong username
-        url = reverse('users:addresses-detail', kwargs={'username': 'non existing username',
+        url = reverse('drivers:reviews-detail', kwargs={'username': 'non existing username',
                                                         'pk': 1})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
         # wrong address pk
-        url = reverse('users:addresses-detail', kwargs={'username': 'username', 'pk': 123})
+        url = reverse('drivers:reviews-detail', kwargs={'username': 'username', 'pk': 123})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
-    def test_create_address(self):
-        """Test for users address create view"""
+    def test_create_review(self):
+        """Test for driver reviews create view"""
 
         user = User.objects.create_user(username='username', password='password')
         UserProfileModel.objects.create(account=user, phone_number=12345)
-        url = reverse('users:addresses-list', kwargs={'username': 'username'})
+        user2 = User.objects.create_user(username='username2', password='password')
+        DriverProfileModel.objects.create(account=user2, phone_number=12345,
+                                          profile_photo='/drivers/tests/sample.jpg')
+
+        url = reverse('drivers:reviews-list', kwargs={'username': 'username2'})
 
         # not logged
-        response = self.client.post(url, {'title': 'title', 'area': 'area', 'type': 'A',
-                                          'street': 'street', 'building': 'building',
-                                          'location_longitude': 0, 'location_latitude': 0},
+        response = self.client.post(url, {'text': 'text', 'stars': 3},
                                     content_type='application/json')
         self.assertEqual(response.status_code, 403)
 
-        # not logged in as that user
-        user2 = User.objects.create_user(username='username2', password='password')
-        UserProfileModel.objects.create(account=user2, phone_number=12345)
+        # not logged in as invalid user user (driver or a shop user)
         self.client.force_login(user2)
-        response = self.client.post(url, {'title': 'title', 'area': 'area', 'type': 'A',
-                                          'street': 'street', 'building': 'building',
-                                          'location_longitude': 0, 'location_latitude': 0},
+        response = self.client.post(url, {'text': 'text', 'stars': 3},
                                     content_type='application/json')
         self.assertEqual(response.status_code, 403)
 
         # right
         self.client.force_login(user)
-        response = self.client.post(url, {'title': 'title', 'area': 'area', 'type': 'A',
-                                          'street': 'street', 'building': 'building',
-                                          'location_longitude': 0, 'location_latitude': 0},
+        response = self.client.post(url, {'text': 'text', 'stars': 3},
                                     content_type='application/json')
         self.assertEqual(response.status_code, 201)
         self.assertEqual(json.loads(response.content)['sort'], 1)  # check for sort from signals
 
         # wrong data
-        response = self.client.post(url, {'title': 'title', 'area': 'area', 'type': 'wrong type',
-                                          'street': 'street', 'building': 'building'},  # missing attrs
+        response = self.client.post(url, {'text': 'text', 'stars': 300},
                                     content_type='application/json')
         self.assertEqual(response.status_code, 400)
 
         # wrong username
-        url = reverse('users:addresses-list', kwargs={'username': 'non existing username'})
-        response = self.client.post(url, {'title': 'title', 'area': 'area', 'type': 'A',
-                                          'street': 'street', 'building': 'building',
-                                          'location_longitude': 0, 'location_latitude': 0},
+        url = reverse('drivers:reviews-list', kwargs={'username': 'non existing username'})
+        response = self.client.post(url, {'text': 'text', 'stars': 3},
                                     content_type='application/json')
         self.assertEqual(response.status_code, 404)
 
-    def test_update_address(self):
-        """Test for users address update view"""
+    def test_update_review(self):
+        """Test for drivers review update view"""
 
         user = User.objects.create_user(username='username', password='password')
         user_profile = UserProfileModel.objects.create(account=user, phone_number=12345)
-        UserAddressModel.objects.create(user=user_profile, title='title', area='area', type='A',
-                                        street='street', building='building', location_longitude=0,
-                                        location_latitude=0)
-        url = reverse('users:addresses-detail', kwargs={'username': 'username', 'pk': 1})
+        user2 = User.objects.create_user(username='username2', password='password')
+        driver_profile = DriverProfileModel.objects.create(account=user2, phone_number=12345,
+                                                           profile_photo='/drivers/tests/sample.jpg')
+        DriverReviewModel.objects.create(user=user_profile, driver=driver_profile, stars=5,
+                                         text='text')
+        url = reverse('drivers:reviews-detail', kwargs={'username': 'username2', 'pk': '1'})
 
         # not logged
-        response = self.client.put(url, {'title': 'title', 'area': 'area', 'type': 'A',
-                                         'street': 'street', 'building': 'building',
-                                         'location_longitude': 0, 'location_latitude': 0},
+        response = self.client.put(url, {'text': 'text', 'stars': 3},
                                    content_type='application/json')
         self.assertEqual(response.status_code, 403)
 
         # not logged in as that user
-        user2 = User.objects.create_user(username='username2', password='password')
-        UserProfileModel.objects.create(account=user2, phone_number=12345)
-        self.client.force_login(user2)
-        response = self.client.put(url, {'title': 'title', 'area': 'area', 'type': 'A',
-                                         'street': 'street', 'building': 'building',
-                                         'location_longitude': 0, 'location_latitude': 0},
+        user3 = User.objects.create_user(username='username3', password='password')
+        UserProfileModel.objects.create(account=user3, phone_number=12345)
+        self.client.force_login(user3)
+        response = self.client.put(url, {'text': 'text', 'stars': 3},
+                                   content_type='application/json')
+        self.assertEqual(response.status_code, 403)
+
+        # logged in with invalid user (driver or shop)
+        user4 = User.objects.create_user(username='username4', password='password')
+        DriverProfileModel.objects.create(account=user4, phone_number=12345,
+                                          profile_photo='/drivers/tests/sample.jpg')
+        self.client.force_login(user4)
+        response = self.client.put(url, {'text': 'text', 'stars': 3},
                                    content_type='application/json')
         self.assertEqual(response.status_code, 403)
 
         # right
         self.client.force_login(user)
-        response = self.client.put(url, {'title': 'title', 'area': 'area', 'type': 'A',
-                                         'street': 'street', 'building': 'building',
-                                         'location_longitude': 0, 'location_latitude': 0},
+        response = self.client.put(url, {'text': 'text', 'stars': 3},
                                    content_type='application/json')
         self.assertEqual(response.status_code, 200)
 
         # wrong data for put
-        response = self.client.put(url, {'title': 'title', 'area': 'area', 'type': 'wrong type',
-                                         'street': 'street', 'building': 'building'},  # missing attrs
+        response = self.client.put(url, {'text': 'text'},  # missing attrs
+                                   content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+
+        # wrong data
+        response = self.client.put(url, {'text': 'text', 'stars': 300},
                                    content_type='application/json')
         self.assertEqual(response.status_code, 400)
 
         # right for patch
-        response = self.client.patch(url, {'title': 'title', 'area': 'area', 'type': 'A',
-                                           'street': 'street', 'building': 'building'},
+        response = self.client.patch(url, {'text': 'text'},
                                      content_type='application/json')
         self.assertEqual(response.status_code, 200)
 
         # wrong data
-        response = self.client.patch(url, {'title': 'title', 'area': 'area', 'type': 'wrong',
-                                           'street': 'street', 'building': 'building'},
+        response = self.client.patch(url, {'stars': 300},
                                      content_type='application/json')
         self.assertEqual(response.status_code, 400)
 
         # wrong username
-        url = reverse('users:addresses-detail', kwargs={'username': 'non existing username', 'pk': 1})
-        response = self.client.put(url, {'title': 'title', 'area': 'area', 'type': 'A',
-                                         'street': 'street', 'building': 'building',
-                                         'location_longitude': 0, 'location_latitude': 0},
+        url = reverse('drivers:reviews-detail', kwargs={'username': 'non existing username', 'pk': 1})
+        response = self.client.put(url, {'text': 'text', 'stars': 3},
                                    content_type='application/json')
         self.assertEqual(response.status_code, 404)
 
-        # wrong address pk
-        url = reverse('users:addresses-detail', kwargs={'username': 'username', 'pk': 123})
-        response = self.client.put(url, {'title': 'title', 'area': 'area', 'type': 'A',
-                                         'street': 'street', 'building': 'building',
-                                         'location_longitude': 0, 'location_latitude': 0},
+        # wrong reviews pk
+        url = reverse('drivers:reviews-detail', kwargs={'username': 'username', 'pk': 123})
+        response = self.client.put(url, {'text': 'text', 'stars': 3},
                                    content_type='application/json')
         self.assertEqual(response.status_code, 404)
 
-    def test_delete_address(self):
-        """Test for users address delete view"""
+    def test_delete_review(self):
+        """Test for drivers review delete view"""
 
         user = User.objects.create_user(username='username', password='password')
         user_profile = UserProfileModel.objects.create(account=user, phone_number=12345)
-        UserAddressModel.objects.create(user=user_profile, title='title', area='area', type='A',
-                                        street='street', building='building', location_longitude=0,
-                                        location_latitude=0)
-        address2 = UserAddressModel.objects.create(user=user_profile, title='title', area='area', type='A',
-                                                   street='street', building='building', location_longitude=0,
-                                                   location_latitude=0)
-        self.assertEqual(address2.sort, 2)
-        url = reverse('users:addresses-detail', kwargs={'username': 'username', 'pk': 1})
+        user2 = User.objects.create_user(username='username2', password='password')
+        driver_profile = DriverProfileModel.objects.create(account=user2, phone_number=12345,
+                                                           profile_photo='/drivers/tests/sample.jpg')
+        review = DriverReviewModel.objects.create(user=user_profile, driver=driver_profile, stars=5,
+                                                  text='text')
+        review2 = DriverReviewModel.objects.create(user=user_profile, driver=driver_profile, stars=5,
+                                                   text='text')
+        self.assertEqual(review.sort, 1)
+        self.assertEqual(review2.sort, 2)
+
+        url = reverse('drivers:reviews-detail', kwargs={'username': 'username2', 'pk': '1'})
 
         # not logged
         response = self.client.delete(url)
         self.assertEqual(response.status_code, 403)
 
         # not logged in as that user
-        user2 = User.objects.create_user(username='username2', password='password')
-        UserProfileModel.objects.create(account=user2, phone_number=12345)
-        self.client.force_login(user2)
+        user3 = User.objects.create_user(username='username3', password='password')
+        UserProfileModel.objects.create(account=user3, phone_number=12345)
+        self.client.force_login(user3)
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 403)
+
+        # logged in with invalid user (driver or shop)
+        user4 = User.objects.create_user(username='username4', password='password')
+        DriverProfileModel.objects.create(account=user4, phone_number=12345,
+                                          profile_photo='/drivers/tests/sample.jpg')
+        self.client.force_login(user4)
         response = self.client.delete(url)
         self.assertEqual(response.status_code, 403)
 
@@ -449,15 +465,15 @@ class TestReviews(TestCase):
         self.client.force_login(user)
         response = self.client.delete(url)
         self.assertEqual(response.status_code, 204)
-        address2.refresh_from_db()
-        self.assertEqual(address2.sort, 1)  # resorted from signals
+        review2.refresh_from_db()
+        self.assertEqual(review2.sort, 1)  # resorted from signals
 
         # wrong username
-        url = reverse('users:addresses-detail', kwargs={'username': 'non existing username', 'pk': 1})
+        url = reverse('drivers:reviews-detail', kwargs={'username': 'non existing username', 'pk': 1})
         response = self.client.delete(url)
         self.assertEqual(response.status_code, 404)
 
         # wrong address pk
-        url = reverse('users:addresses-detail', kwargs={'username': 'username', 'pk': 123})
+        url = reverse('drivers:reviews-detail', kwargs={'username': 'username', 'pk': 123})
         response = self.client.delete(url)
         self.assertEqual(response.status_code, 404)

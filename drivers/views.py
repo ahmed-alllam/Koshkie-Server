@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/02/2020, 21:40
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 10/02/2020, 23:27
 
 from django.contrib.auth import login, authenticate, update_session_auth_hash
 from django.db.models import F
@@ -52,6 +52,7 @@ class DriverProfileView(viewsets.ViewSet):
 
         Returns:
             returns HTTP 200 Response with the drivers' JSON data.
+            if there are no coordinates given will return 400 Response.
         """
 
         try:
@@ -222,7 +223,8 @@ class DriverReviewView(viewsets.ViewSet):
             the driver's profile in JSON.
         """
 
-        queryset = DriverReviewModel.objects.filter(driver__account__username=username).all()
+        driver = get_object_or_404(DriverProfileModel, account__username=username)
+        queryset = driver.reviews.all()
         paginator = LimitOffsetPagination()
         paginator.default_limit = 25
         paginator.max_limit = 100

@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/02/2020, 23:11
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 10/02/2020, 23:27
 import json
 
 from django.contrib.auth.models import User
@@ -254,10 +254,16 @@ class TestAddresses(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
 
-        # not logged in as that user
+        # looged in as a user that has no valid user profile
         user2 = User.objects.create_user(username='username2', password='password')
-        UserProfileModel.objects.create(account=user2, phone_number=12345)
         self.client.force_login(user2)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+
+        # not logged in as that user
+        user3 = User.objects.create_user(username='username3', password='password')
+        UserProfileModel.objects.create(account=user3, phone_number=12345)
+        self.client.force_login(user3)
         response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
 
