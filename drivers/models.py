@@ -1,4 +1,5 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 07/02/2020, 21:40
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 11/02/2020, 20:13
+
 import os
 import uuid
 
@@ -35,8 +36,9 @@ class DriverProfileModel(models.Model):
     profile_photo = models.ImageField(upload_to=photo_upload)
     phone_number = models.BigIntegerField()
     is_active = models.BooleanField(default=False)  # is evaluated and confirmed in person from the company (not fake)
-    is_available = models.BooleanField(default=False)  # is ready for orders at the moment
-    last_time_online = models.DateTimeField(auto_now_add=True)
+    is_available = models.BooleanField(default=False)  # is opening the app and connected to the internet
+    is_busy = models.BooleanField(default=False)  # on an order or not
+    last_time_online = models.DateTimeField(default=None, null=True)  # changed by websockets
     live_location_longitude = models.FloatField(default=0, validators=[
         MaxValueValidator(180),
         MinValueValidator(-180)
@@ -46,7 +48,6 @@ class DriverProfileModel(models.Model):
         MinValueValidator(-90)
     ])
     vehicle_type = models.CharField(max_length=1, choices=vehicle_type_choices)
-    is_busy = models.BooleanField(default=False)  # on an order or not
     rating = models.DecimalField(default=0, decimal_places=1, max_digits=2)
 
     def __str__(self):

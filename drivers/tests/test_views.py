@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 10/02/2020, 23:27
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 11/02/2020, 20:13
 import json
 import time
 
@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, client
 from django.urls import reverse
+from django.utils import timezone
 
 from drivers.models import DriverProfileModel, DriverReviewModel
 from users.models import UserProfileModel
@@ -118,7 +119,8 @@ class TestDrivers(TestCase):
                                           profile_photo='/drivers/tests/sample.jpg',
                                           live_location_latitude=55.543,
                                           live_location_longitude=15.13,
-                                          is_active=True, is_available=True)
+                                          is_active=True, is_available=True,
+                                          last_time_online=timezone.now())
 
         url = reverse('drivers:list') + '?longitude=15.13&latitude=55.543'
 

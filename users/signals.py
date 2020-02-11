@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 14:19
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 11/02/2020, 20:13
 from django.db.models import F
 from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
@@ -38,7 +38,8 @@ def add_country_and_city(sender, **kwargs):
     try:
         location = geolocator.reverse("{}, {}".format(longitude, latitude), language='en')
         address.country = location.raw.get('address', {}).get('country', '')
-        address.city = location.raw.get('address', {}).get('state', '')
+        address.city = location.raw.get('address', {}).get('state', '') or location.raw.get('address', {}).get('city',
+                                                                                                               '')
     except Exception:
         pass
 
