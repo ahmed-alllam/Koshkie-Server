@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 20:26
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 14/02/2020, 14:50
 from django.contrib.auth import login, authenticate, update_session_auth_hash
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view
@@ -33,7 +33,7 @@ def user_login(request):
 class UserProfileView(viewsets.ViewSet):
     """View for the user profile.
 
-    Retrieves, Updates and Deletes a User Profile.
+    Retrieves, creates, Updates and Deletes a User Profile.
     """
 
     permission_classes = (UserProfilePermissions,)
@@ -224,7 +224,7 @@ class UserAddressView(viewsets.ViewSet):
 
         Arguments:
             request: the request data sent by the user, it is used
-                     to check the user's permissions
+                     to check the user's permissions and get the data.
             username: the username of the user profile
                       which will be added a new address
 
@@ -248,7 +248,7 @@ class UserAddressView(viewsets.ViewSet):
 
         Arguments:
             request: the request data sent by the user, it is used
-                     to check the user's permissions
+                     to check the user's permissions and get the data.
             username: the username of the user profile
                       whose address will be updated
             pk: the id of the address that the user wants to change,
@@ -274,7 +274,7 @@ class UserAddressView(viewsets.ViewSet):
 
         Arguments:
             request: the request data sent by the user, it is used
-                     to check the user's permissions
+                     to check the user's permissions and get the data.
             username: the username of the user profile
                       whose address will be updated
             pk: the id of the address that the user wants to change,

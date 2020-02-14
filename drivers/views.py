@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 10/02/2020, 23:27
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 14/02/2020, 14:50
 
 from django.contrib.auth import login, authenticate, update_session_auth_hash
 from django.db.models import F
@@ -47,7 +47,7 @@ class DriverProfileView(viewsets.ViewSet):
 
         Arguments:
             request: the request data sent by the user,
-                     it is used to get the quieres entered by user,
+                     it is used to get the queries entered by user,
                      and for Pagination
 
         Returns:
@@ -261,7 +261,7 @@ class DriverReviewView(viewsets.ViewSet):
 
         Arguments:
             request: the request data sent by the user, it is used
-                     to check the user's permissions
+                     to check the user's permissions and get the data
             username: the username of the driver profile
                       which will be added a new review
 
@@ -285,7 +285,7 @@ class DriverReviewView(viewsets.ViewSet):
 
         Arguments:
             request: the request data sent by the user, it is used
-                     to check the user's permissions
+                     to check the user's permissions and get the data
             username: the username of the driver profile
                       whose review will be updated
             pk: the id of the review that the user wants to change,
@@ -312,7 +312,7 @@ class DriverReviewView(viewsets.ViewSet):
 
         Arguments:
             request: the request data sent by the user, it is used
-                     to check the user's permissions
+                     to check the user's permissions and get the data
             username: the username of the driver profile
                       whose review will be updated
             pk: the id of the review that the user wants to change,
