@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 14/02/2020, 14:50
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 14/02/2020, 17:57
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
@@ -20,6 +20,8 @@ class OrderModel(models.Model):
     driver = models.ForeignKey(to=DriverProfileModel, on_delete=models.SET_NULL, related_name='served_orders',
                                null=True)
     shops = models.ManyToManyField(to=ShopProfileModel, related_name='served_orders')
+    shipping_address = models.OneToOneField(to='orders.OrderAddressModel', on_delete=models.SET_NULL,
+                                            null=True)
     ordered_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=2, choices=status, default='C')
     arrived = models.BooleanField(default=False)
@@ -32,8 +34,13 @@ class OrderModel(models.Model):
 class OrderItemsGroupModel(models.Model):
     """The Model of the Order's items' groups."""
 
-    order = models.ForeignKey(OrderModel, on_delete=models.CASCADE, related_name='item_groups', null=True)
+    order = models.ForeignKey(OrderModel, on_delete=models.CASCADE, related_name='item_groups',
+                              null=True)
     shop = models.ForeignKey(ShopProfileModel, on_delete=models.SET_NULL, null=True)
+
+    def __str__(self):
+        if self.order and self.shop:  # may be null
+            return '%s: %s' % (self.order.pk, self.shop.slug)
 
 
 class OrderItemModel(models.Model):
@@ -48,7 +55,9 @@ class OrderItemModel(models.Model):
     price = models.FloatField(default=0)
 
     def __str__(self):
-        return self.product.title
+        if self.product:
+            return self.product.title
+        return super(OrderItemModel, self).__str__()
 
     def get_add_ons_price(self):
         """Calculates and adds all add-ons prices"""
@@ -82,8 +91,9 @@ class OrderAddressModel(models.Model):
         ('O', 'Office'),
         ('A', 'Apartment')
     ]
-    order = models.OneToOneField(OrderModel, on_delete=models.CASCADE,
-                                 related_name='shipping_address')
+
+    country = models.CharField(max_length=255)
+    city = models.CharField(max_length=255)
     area = models.CharField(max_length=255)
     type = models.CharField(max_length=1, choices=address_type_choices)
     street = models.CharField(max_length=255)
@@ -100,11 +110,20 @@ class OrderAddressModel(models.Model):
         MinValueValidator(-90)
     ])
 
+    def __str__(self):
+        return '%s, %s, %s, %s, %s' % (self.country, self.city, self.area,
+                                       self.street, self.building)
+
 
 class Choice(models.Model):
     """The Model of the Order's item choice."""
 
     order_item = models.ForeignKey(to=OrderItemModel, related_name='choices',
-                                   on_delete=models.CASCADE)
+                                   on_delete=models.CASCADE, null=True)
     option_group = models.ForeignKey(to=OptionGroupModel, on_delete=models.SET_NULL, null=True)
     choosed_option = models.ForeignKey(to=OptionModel, on_delete=models.SET_NULL, null=True)
+
+    def __str__(self):
+        if self.option_group and self.choosed_option:  # can be null
+            return '%s: %s' % (self.option_group.title, self.choosed_option.title)
+        return super(Choice, self).__str__()

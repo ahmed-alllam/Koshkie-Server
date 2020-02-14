@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 11/02/2020, 20:13
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 14/02/2020, 17:57
 
 import os
 import uuid
@@ -11,15 +11,16 @@ from django.db.models import Avg
 
 def photo_upload(instance, filename):
     """Gives a unique path to the saved photo in models.
-        Arguments:
-            instance: the photo itself, it is not used in this
-                      function but it's required by django.
-            filename: the name of the photo sent by user, it's
-                      used here to get the format of the file.
 
-        Returns:
-            The unique path that the file will be stored in the DB.
-        """
+    Arguments:
+        instance: the photo itself, it is not used in this
+                  function but it's required by django.
+        filename: the name of the photo sent by user, it's
+                  used here to get the format of the file.
+
+    Returns:
+        The unique path that the file will be stored in the DB.
+    """
     return 'drivers/{0}.{1}'.format(uuid.uuid4().hex, os.path.splitext(filename))
 
 

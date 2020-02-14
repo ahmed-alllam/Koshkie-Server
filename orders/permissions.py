@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 14/02/2020, 14:50
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 14/02/2020, 17:57
 from rest_framework import permissions
 
 
@@ -59,3 +59,5 @@ class OrderPermissions(permissions.BasePermission):
                 if obj.driver == request.user.driver_profile:
                     return True
             return False
+
+        return False

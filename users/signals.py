@@ -1,8 +1,9 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 11/02/2020, 20:13
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 14/02/2020, 17:57
 from django.db.models import F
 from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
 from geopy import Nominatim
+from geopy.exc import GeocoderTimedOut
 
 from users.models import UserProfileModel, UserAddressModel
 
@@ -29,7 +30,7 @@ def add_sort_to_address(sender, **kwargs):
 @receiver(pre_save, sender=UserAddressModel)
 def add_country_and_city(sender, **kwargs):
     """The receiver called before a user address is saved
-    to the country and city from location coordinates"""
+    to get the country and city from location coordinates"""
 
     address = kwargs['instance']
     longitude = address.location_longitude
@@ -40,8 +41,8 @@ def add_country_and_city(sender, **kwargs):
         address.country = location.raw.get('address', {}).get('country', '')
         address.city = location.raw.get('address', {}).get('state', '') or location.raw.get('address', {}).get('city',
                                                                                                                '')
-    except Exception:
-        pass
+    except GeocoderTimedOut:
+        return add_country_and_city(sender, **kwargs)  # recursion
 
 
 @receiver(post_delete, sender=UserAddressModel)
