@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 14/02/2020, 17:57
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/02/2020, 20:11
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
@@ -21,10 +21,9 @@ class OrderModel(models.Model):
                                null=True)
     shops = models.ManyToManyField(to=ShopProfileModel, related_name='served_orders')
     shipping_address = models.OneToOneField(to='orders.OrderAddressModel', on_delete=models.SET_NULL,
-                                            null=True)
+                                            null=True, related_name='order')
     ordered_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=2, choices=status, default='C')
-    arrived = models.BooleanField(default=False)
     final_price = models.FloatField()
     subtotal = models.FloatField()
     delivery_fee = models.FloatField()
