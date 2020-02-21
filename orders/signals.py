@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 14/02/2020, 17:57
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/02/2020, 17:27
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from geopy import Nominatim
@@ -22,4 +22,6 @@ def add_country_and_city(sender, **kwargs):
         address.city = location.raw.get('address', {}).get('state', '') or location.raw.get('address', {}).get('city',
                                                                                                                '')
     except GeocoderTimedOut:
-        return add_country_and_city(sender, **kwargs)  # recursion
+        return add_country_and_city(sender, **kwargs)  # recursion if timeout
+    except Exception:
+        pass

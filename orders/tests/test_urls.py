@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 11/02/2020, 22:16
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/02/2020, 17:27
 from django.test import TestCase
 from django.urls import reverse, resolve
 
@@ -16,6 +16,6 @@ class OrdersTest(TestCase):
 
     def test_orders_detail(self):
         """test for orders detail url"""
-        url = reverse('orders:orders-detail', kwargs={'pk': '1'})
+        url = reverse('orders:orders-detail', kwargs={'pk': 1})
         self.assertEqual(resolve(url).func.__name__,
                          OrderView.as_view({'get': 'retrieve'}).__name__)

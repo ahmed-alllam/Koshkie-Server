@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 14/02/2020, 14:50
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/02/2020, 17:27
 
 from django.db.models import F
 from django.utils import timezone
@@ -32,7 +32,7 @@ class OrderAddressSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderAddressModel
-        exclude = ('id',)
+        exclude = ('id', 'country', 'city')
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -41,7 +41,6 @@ class OrderItemSerializer(serializers.ModelSerializer):
     ordered_product = ProductSerializer(read_only=True, keep_only=('id', 'title'), source='product')
     product = serializers.PrimaryKeyRelatedField(write_only=True,
                                                  queryset=ProductModel.objects.all())
-
     add_ons_sorts = serializers.ListField(child=serializers.IntegerField(), required=False,
                                           write_only=True)
     add_ons = AddOnSerializer(many=True, read_only=True, keep_only=('sort', 'title'))
@@ -151,39 +150,41 @@ class OrderDetailSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         """checks if send order data is valid"""
 
-        user_longitude = attrs['shipping_address']['location_longitude']
-        user_latitude = attrs['shipping_address']['location_latitude']
+        if not self.instance:
+            # does this validation only if the user is creating a new order not updating
 
-        # checks if there are any drivers available at user's location
-        min_active_time = timezone.now() - timezone.timedelta(seconds=10)
-        driver_available = DriverProfileModel.objects.annotate(distance=haversine(user_latitude, user_longitude,
-                                                                                  F('live_location_latitude'),
-                                                                                  F('live_location_longitude'))
-                                                               ).filter(distance__lte=2.5, is_busy=False,
-                                                                        is_active=True, is_available=True,
-                                                                        last_time_online__gte=min_active_time
-                                                                        ).exists()
+            user_longitude = float(attrs.get('shipping_address', '').get('location_longitude', ''))
+            user_latitude = float(attrs.get('shipping_address', '').get('location_latitude', ''))
 
-        if not driver_available:
-            raise serializers.ValidationError("there are no drivers in your area")
+            # checks if there are any drivers available at user's location
+            min_active_time = timezone.now() - timezone.timedelta(seconds=10)
+            driver_available = DriverProfileModel.objects.annotate(distance=haversine(user_latitude, user_longitude,
+                                                                                      F('live_location_latitude'),
+                                                                                      F('live_location_longitude'))
+                                                                   ).filter(distance__lte=2.5, is_busy=False,
+                                                                            is_active=True, is_available=True,
+                                                                            last_time_online__gte=min_active_time
+                                                                            ).exists()
 
-        # checks if every item's shop is available and near the user's location
-        for item in attrs['items']:
-            product = item['product']
-            shop = product.shop
-            shops = []
-            if shop not in shops:
-                shops.append(shop)
+            if not driver_available:
+                raise serializers.ValidationError("there are no drivers in your area")
 
-                if not shop.is_active or not shop.is_open or shop.opens_at > timezone.now() or shop.closes_at < timezone.now():
-                    raise serializers.ValidationError("this product's shop is not available right now")
+            # checks if every item's shop is available and near the user's location
+            for item in attrs['items']:
+                product = item['product']
+                shop = product.shop
+                shops = []
+                if shop not in shops:
+                    shops.append(shop)
 
-                shop_longitude = shop.address.location_longitude
-                shop_latitude = shop.address.location_latitude
-                distance = haversine(user_latitude, user_longitude, shop_latitude, shop_longitude)
+                    if not shop.is_active or not shop.is_open or shop.opens_at > timezone.now().time() or shop.closes_at < timezone.now().time():
+                        raise serializers.ValidationError("this product's shop is not available right now")
 
-                if distance > 2.5:
-                    raise serializers.ValidationError("these products are not available in you area")
+                    shop_longitude = shop.address.location_longitude
+                    shop_latitude = shop.address.location_latitude
+                    distance = haversine(user_latitude, user_longitude, shop_latitude, shop_longitude)
+                    if distance > 2.5:
+                        raise serializers.ValidationError("these products are not available in you area")
         return attrs
 
     def validated_status(self, data):
@@ -251,8 +252,8 @@ class OrderDetailSerializer(serializers.ModelSerializer):
         address_data = validated_data.pop('shipping_address')
         shipping_address = OrderAddressModel.objects.create(**address_data)
 
-        user_longitude = shipping_address.location_longitude
-        user_latitude = shipping_address.location_latitude
+        user_longitude = float(shipping_address.location_longitude)
+        user_latitude = float(shipping_address.location_latitude)
         min_active_time = timezone.now() - timezone.timedelta(seconds=10)
         # gets the nearest driver available
         driver = DriverProfileModel.objects.annotate(distance=haversine(user_latitude, user_longitude,

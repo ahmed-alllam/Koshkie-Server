@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 05/02/2020, 20:26
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/02/2020, 17:27
 import django.contrib.auth.password_validation as validators
 from django.contrib.auth.models import User
 from django.core import exceptions
@@ -81,7 +81,7 @@ class UserAddressSerializer(serializers.ModelSerializer):
     """The serializer for the user address model"""
     class Meta:
         model = UserAddressModel
-        exclude = ('id', 'user')
+        exclude = ('id', 'user', 'country', 'city')
         extra_kwargs = {
             'sort': {'read_only': True}
         }

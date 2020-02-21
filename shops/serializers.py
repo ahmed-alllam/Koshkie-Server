@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 01/02/2020, 18:18
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/02/2020, 17:27
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -462,7 +462,7 @@ class ProductGroupSerializer(serializers.ModelSerializer):
 class ShopAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopAddressModel
-        exclude = ('shop', 'id')
+        exclude = ('shop', 'id', 'country', 'city')
         extra_kwargs = {
             'special_notes': {'required': False},
         }

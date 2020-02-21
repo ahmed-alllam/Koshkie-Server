@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 14/02/2020, 17:57
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/02/2020, 17:27
 from django.db.models import F
 from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
@@ -43,6 +43,8 @@ def add_country_and_city(sender, **kwargs):
                                                                                                                '')
     except GeocoderTimedOut:
         return add_country_and_city(sender, **kwargs)  # recursion
+    except Exception:
+        pass
 
 
 @receiver(post_delete, sender=UserAddressModel)
