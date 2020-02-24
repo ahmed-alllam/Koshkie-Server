@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/02/2020, 17:27
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 24/02/2020, 12:36
 import json
 
 from django.contrib.auth.models import User
@@ -117,7 +117,7 @@ class TestOrders(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
 
-        # has a valid profile - right but it order no saved yes 404
+        # has a valid profile - right but it order no saved yet 404
         user2 = User.objects.create(username='username2', password='password')
         user_profile = UserProfileModel.objects.create(account=user2, phone_number=123)
         self.client.force_login(user2)
@@ -127,6 +127,7 @@ class TestOrders(TestCase):
         # right and has an order
         order = OrderModel.objects.create(user=user_profile, final_price=0,
                                           subtotal=0, delivery_fee=0, vat=0)
+        url = reverse('orders:orders-detail', kwargs={'pk': order.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 

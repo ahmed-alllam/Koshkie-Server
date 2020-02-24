@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/02/2020, 17:27
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 24/02/2020, 12:36
 
 from django.db.models import F
 from django.utils import timezone
@@ -187,15 +187,15 @@ class OrderDetailSerializer(serializers.ModelSerializer):
                         raise serializers.ValidationError("these products are not available in you area")
         return attrs
 
-    def validated_status(self, data):
+    def validate_status(self, data):
         """validates the status attr in the order send data"""
 
-        status_options = {'C': 1, 'P': 3, 'D': 4}
+        status_options = {'C': 1, 'P': 2, 'D': 3}
         # status is update-only and can't change to a previous one
         # for example a delivered order can't be reverted
         # back to a still-preparing order
         if self.instance and status_options[data] - status_options[self.instance.status] < 0:
-            serializers.ValidationError("can't revert orders status")
+            raise serializers.ValidationError("can't revert orders status")
 
         return data
 
