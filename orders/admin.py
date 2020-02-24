@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 21/02/2020, 20:11
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 24/02/2020, 22:25
 
 from django.contrib import admin
 from django.contrib.admin import ModelAdmin
@@ -38,12 +38,14 @@ class OrderItemsGroupAdmin(ModelAdmin):
     """admin customization for orders items group model"""
 
     list_display = ('order', 'shop')
+    search_fields = ('order__id',)
 
 
 class OrderItemAdmin(ModelAdmin):
     """admin customization for order items model"""
 
     list_display = ('product', 'quantity', 'price')
+    search_fields = ('item_group__order__id',)
 
     def product(self, obj):
         """returns the name of the product"""
@@ -55,7 +57,7 @@ class OrderAddressAdmin(ModelAdmin):
 
     list_display = ('user', 'country', 'city', 'area', 'type', 'phone_number')
     list_filter = ('country', 'city')
-    search_fields = ('city', 'order__user__phone_number')
+    search_fields = ('city', 'order__user__phone_number', 'order__id')
     ordering = ('city',)
     list_select_related = ('order__user__account',)
     readonly_fields = ('country', 'city')
@@ -75,6 +77,7 @@ class ChoiceAdmin(ModelAdmin):
     list_display = ('order', 'shop', 'product',
                     'option_group', 'choosed_option')
     list_select_related = ('order_item__item_group__order', 'order_item__product__shop')
+    search_fields = ('order_item__item_group__order__id',)
 
     def order(self, obj):
         """returns the orders pk"""
