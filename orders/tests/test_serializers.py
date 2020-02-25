@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 25/02/2020, 21:29
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 25/02/2020, 22:30
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.utils import timezone
@@ -30,6 +30,15 @@ class TestOrder(TestCase):
         self.product = ProductModel.objects.create(shop=self.shop, photo='/orders/tests/sample.jpg',
                                                    title='product', slug='product', price=5,
                                                    description='text')
+        # product with option groups and addons
+        self.product2 = ProductModel.objects.create(shop=self.shop, photo='/orders/tests/sample.jpg',
+                                                    title="product", slug='product2', price=5,
+                                                    description='text')
+        self.addon = AddOnModel.objects.create(product=self.product2, title='addon1', added_price=5)
+        self.option_group = OptionGroupModel.objects.create(product=self.product2, title='group1',
+                                                            changes_price=True)
+        self.option = OptionModel.objects.create(option_group=self.option_group, title='option1',
+                                                 price=3.2)
 
         driver_user = User.objects.create(username='driver_user', password='password')
         self.driver = DriverProfileModel.objects.create(account=driver_user, phone_number=123,
@@ -75,13 +84,93 @@ class TestOrder(TestCase):
         self.assertTrue(serializer.is_valid())
 
         # far away from the product's shop
+        self.shop_address.location_longitude = 12
+        self.shop_address.location_latitude = 54
+        self.shop_address.save()
+
         serializer = OrderDetailSerializer(data={'items': [{'product': self.product.pk}],
                                                  'shipping_address': {'area': 'area', 'type': 'A',
                                                                       'street': 'street',
                                                                       'building': 'building',
-                                                                      'location_longitude': 12,
-                                                                      'location_latitude': 46}})
+                                                                      'location_longitude': 30,
+                                                                      'location_latitude': 30}})
         self.assertFalse(serializer.is_valid())
+
+    def test_shop_available(self):
+        """test if product's shop is available"""
+
+        # test for is_active
+        self.shop.is_active = False
+        self.shop.save()
+
+        # wrong because shop is not active
+        serializer = OrderDetailSerializer(data={'items': [{'product': self.product.pk}],
+                                                 'shipping_address': {'area': 'area', 'type': 'A',
+                                                                      'street': 'street',
+                                                                      'building': 'building',
+                                                                      'location_longitude': 30,
+                                                                      'location_latitude': 30}})
+        self.assertFalse(serializer.is_valid())
+        # revert it back
+        self.shop.is_active = True
+        self.shop.save()
+
+        # test for is_open
+        self.shop.is_open = False
+        self.shop.save()
+
+        # wrong because shop is not active
+        serializer = OrderDetailSerializer(data={'items': [{'product': self.product.pk}],
+                                                 'shipping_address': {'area': 'area', 'type': 'A',
+                                                                      'street': 'street',
+                                                                      'building': 'building',
+                                                                      'location_longitude': 30,
+                                                                      'location_latitude': 30}})
+        self.assertFalse(serializer.is_valid())
+        # revert it back
+        self.shop.is_open = True
+        self.shop.save()
+
+        # test for opens_at
+        self.shop.opens_at = timezone.now() + timezone.timedelta(hours=2)  # two hours after now (not open yet)
+        self.shop.save()
+
+        # wrong because shop is not active
+        serializer = OrderDetailSerializer(data={'items': [{'product': self.product.pk}],
+                                                 'shipping_address': {'area': 'area', 'type': 'A',
+                                                                      'street': 'street',
+                                                                      'building': 'building',
+                                                                      'location_longitude': 30,
+                                                                      'location_latitude': 30}})
+        self.assertFalse(serializer.is_valid())
+        # revert it back
+        self.shop.opens_at = timezone.now() - timezone.timedelta(hours=2)
+        self.shop.save()
+
+        # test for closes_at
+        self.shop.closes_at = timezone.now() - timezone.timedelta(hours=2)  # closed two hours before now (closed now)
+        self.shop.save()
+
+        # wrong because shop is not active
+        serializer = OrderDetailSerializer(data={'items': [{'product': self.product.pk}],
+                                                 'shipping_address': {'area': 'area', 'type': 'A',
+                                                                      'street': 'street',
+                                                                      'building': 'building',
+                                                                      'location_longitude': 30,
+                                                                      'location_latitude': 30}})
+        self.assertFalse(serializer.is_valid())
+        # revert it back
+        self.shop.closes_at = timezone.now() + timezone.timedelta(hours=2)
+        self.shop.save()
+
+        # true
+        serializer = OrderDetailSerializer(data={'items': [{'product': self.product.pk}],
+                                                 'shipping_address': {'area': 'area', 'type': 'A',
+                                                                      'street': 'street',
+                                                                      'building': 'building',
+                                                                      'location_longitude': 30,
+                                                                      'location_latitude': 30}})
+        self.assertTrue(serializer.is_valid())
 
     def test_order_status(self):
         """test for order status post validate"""
@@ -120,6 +209,23 @@ class TestOrder(TestCase):
                                                                       'location_longitude': 30,
                                                                       'location_latitude': 30}})
         self.assertFalse(serializer.is_valid())
+
+    def test_nothing(self):
+        """this is NOT a test but i needed this
+        function to run with other tests"""
+
+        serializer = OrderDetailSerializer(data={'items': [{'product': self.product.pk},
+                                                           {'product': self.product2.pk,
+                                                            'choices': [{'option_group_id': self.option_group.sort,
+                                                                         'choosed_option_id': self.option.sort}],
+                                                            'add_ons_sorts': [self.addon.sort]}],
+                                                 'shipping_address': {'area': 'area', 'type': 'A',
+                                                                      'street': 'street',
+                                                                      'building': 'building',
+                                                                      'location_longitude': 30,
+                                                                      'location_latitude': 30}})
+        self.assertTrue(serializer.is_valid())
+        serializer.save()
 
 
 class TestOrderItem(TestCase):

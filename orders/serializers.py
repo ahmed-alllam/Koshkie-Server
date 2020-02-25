@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 25/02/2020, 21:29
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 25/02/2020, 22:30
 
 from django.db.models import F
 from django.utils import timezone
@@ -288,7 +288,7 @@ class OrderDetailSerializer(serializers.ModelSerializer):
                 # the driver will be marked as not busy and
                 # can deliver other orders
                 instance.driver.is_busy = False
-                instance.driver.update()
+                instance.driver.save()
             instance.save()
         return instance
 

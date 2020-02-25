@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 25/02/2020, 21:29
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 25/02/2020, 22:30
 import json
 
 from django.contrib.auth.models import User
@@ -275,14 +275,15 @@ class TestOrders(TestCase):
 
         # right
         user3 = User.objects.create(username='username3', password='password')
-        driver = DriverProfileModel.objects.create(account=user3, phone_number=123,
+        driver = DriverProfileModel.objects.create(account=user3, phone_number=123, is_busy=True,
                                                    profile_photo='/orders/tests/sample.jpg')
         order.driver = driver
         order.save()
         self.client.force_login(user3)
-        response = self.client.patch(url, {'status': 'P'},
+        response = self.client.patch(url, {'status': 'D'},
                                      content_type='application/json')
         self.assertEqual(response.status_code, 200)
+        self.assertFalse(self.driver.is_busy)
 
         # wrong data
         response = self.client.patch(url, {'status': 'wrong'},
