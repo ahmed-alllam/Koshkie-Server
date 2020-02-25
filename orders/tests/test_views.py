@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 24/02/2020, 12:36
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 25/02/2020, 21:29
 import json
 
 from django.contrib.auth.models import User
@@ -31,12 +31,12 @@ class TestOrders(TestCase):
         self.product = ProductModel.objects.create(shop=shop, photo='/orders/tests/sample.jpg',
                                                    title='product', slug='product', price=5,
                                                    description='text')
-        DriverProfileModel.objects.create(account=user, phone_number=123,
-                                          profile_photo='/orders/tests/sample.jpg',
-                                          is_active=True, is_available=True,
-                                          last_time_online=timezone.now(),
-                                          live_location_longitude=30,
-                                          live_location_latitude=30)
+        self.driver = DriverProfileModel.objects.create(account=user, phone_number=123,
+                                                        profile_photo='/orders/tests/sample.jpg',
+                                                        is_active=True, is_available=True,
+                                                        last_time_online=timezone.now(),
+                                                        live_location_longitude=30,
+                                                        live_location_latitude=30)
 
     def test_list_orders(self):
         """test for orders list view"""
@@ -215,6 +215,8 @@ class TestOrders(TestCase):
         self.assertEqual(response.status_code, 403)
 
         # right
+        last_sold_num = self.product.num_sold
+
         user3 = User.objects.create(username='username3', password='password')
         UserProfileModel.objects.create(account=user3, phone_number=123)
         self.client.force_login(user3)
@@ -225,6 +227,15 @@ class TestOrders(TestCase):
                                           'items': [{'product': self.product.pk}]},
                                     content_type='application/json')
         self.assertEqual(response.status_code, 201)
+        # must be increased by one
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.num_sold, last_sold_num + 1)
+        # driver must be set to be busy after getting this order
+        self.driver.refresh_from_db()
+        self.assertTrue(self.driver.is_busy)
+        # reset it for other tests
+        self.driver.is_busy = False
+        self.driver.save()
 
         # wrong data
         response = self.client.post(url, {'shipping_address': {'area': 'area', 'type': 'A',

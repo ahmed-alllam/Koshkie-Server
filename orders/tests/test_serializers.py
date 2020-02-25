@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 24/02/2020, 22:25
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 25/02/2020, 21:29
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.utils import timezone
@@ -6,7 +6,8 @@ from django.utils import timezone
 from drivers.models import DriverProfileModel
 from orders.models import OrderModel
 from orders.serializers import OrderDetailSerializer, OrderItemSerializer, OrderAddressSerializer
-from shops.models import ShopProfileModel, ProductModel, ShopAddressModel, AddOnModel, OptionGroupModel, OptionModel
+from shops.models import ShopProfileModel, ProductModel, ShopAddressModel, AddOnModel, OptionGroupModel, OptionModel, \
+    RelyOn
 
 
 class TestOrder(TestCase):
@@ -268,13 +269,65 @@ class TestOrderItem(TestCase):
         self.assertFalse(serializer.is_valid())
 
     def test_rely_choosed(self):
-        """test if a relyon choosed or not"""
-        pass
+        """test if a rely_on choosed or not"""
+
+        # add rely on for test option group2
+        RelyOn.objects.create(option_group=self.option_group2,
+                              choosed_option_group=self.option_group1, option=self.option1)
+
+        # right and rely_on requirement for option_group2 is fulfilled
+        serializer = OrderItemSerializer(data={'product': self.product2.pk,
+                                               'choices': [{'option_group_id': self.option_group1.sort,
+                                                            'choosed_option_id': self.option1.sort},
+                                                           {'option_group_id': self.option_group2.sort,
+                                                            'choosed_option_id': self.option3.sort}]})
+        self.assertTrue(serializer.is_valid())
+
+        # wrong because rely_on requirement {option_group2: option1} is not fulfilled
+        serializer = OrderItemSerializer(data={'product': self.product2.pk,
+                                               'choices': [{'option_group_id': self.option_group1.sort,
+                                                            'choosed_option_id': self.option2.sort},  # not 1
+                                                           {'option_group_id': self.option_group2.sort,
+                                                            'choosed_option_id': self.option3.sort}]})
+        self.assertFalse(serializer.is_valid())
 
     def test_missing_choice_for_option_group(self):
         """test if any choices missing for an option
         group in the product"""
-        pass
+
+        # right and all choices are choosed
+        serializer = OrderItemSerializer(data={'product': self.product2.pk,
+                                               'choices': [{'option_group_id': self.option_group1.sort,
+                                                            'choosed_option_id': self.option1.sort},
+                                                           {'option_group_id': self.option_group2.sort,
+                                                            'choosed_option_id': self.option3.sort}]})
+        self.assertTrue(serializer.is_valid())
+
+        # missing a choice (option group2 not choosed)
+        serializer = OrderItemSerializer(data={'product': self.product2.pk,
+                                               'choices': [{'option_group_id': self.option_group1.sort,
+                                                            'choosed_option_id': self.option1.sort}]})
+        self.assertFalse(serializer.is_valid())
+
+        # add rely on for test option group2
+        RelyOn.objects.create(option_group=self.option_group2,
+                              choosed_option_group=self.option_group1, option=self.option1)
+
+        # wrong because it is not choosed and has a rely on {option_group1: option1}
+        # which is choosed, which makes it required
+        serializer = OrderItemSerializer(data={'product': self.product2.pk,
+                                               'choices': [{'option_group_id': self.option_group1.sort,
+                                                            'choosed_option_id': self.option1.sort}]})
+        self.assertFalse(serializer.is_valid())
+
+        # right
+        # missing a choice but as option group2 relys on choosing {option_group1: option1}
+        # which is no choosed, which is makes it unable to be choosed,
+        # no error is thrown
+        serializer = OrderItemSerializer(data={'product': self.product2.pk,
+                                               'choices': [{'option_group_id': self.option_group1.sort,
+                                                            'choosed_option_id': self.option2.sort}]})
+        self.assertTrue(serializer.is_valid())
 
 
 class TestOrderAddress(TestCase):

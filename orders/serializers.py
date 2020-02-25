@@ -1,4 +1,4 @@
-#  Copyright (c) Code Written and Tested by Ahmed Emad in 24/02/2020, 12:36
+#  Copyright (c) Code Written and Tested by Ahmed Emad in 25/02/2020, 21:29
 
 from django.db.models import F
 from django.utils import timezone
@@ -100,7 +100,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
                 #  on another option which is not choosed in that item
                 if hasattr(option_group, 'rely_on') and not _is_choosed(option_group.rely_on.choosed_option_group.sort,
                                                                         option_group.rely_on.option.sort):
-                    raise serializers.ValidationError("the rely-on required for this option group is not chosen")
+                    raise serializers.ValidationError("the rely-on required for this option group is not choosed")
             else:
                 # only option group which have (rely_on which is not choosed) can't be choosed
                 # for example if you have an option group called meal type which
@@ -108,7 +108,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
                 # and there is another option group called cola type
                 # which has options (diet cola, sprite)
                 # that option group (cola type must have rely on attr which has value
-                # of (meal typ :with cola))
+                # of (meal type :with cola))
                 # because if the user choosed without cola, he shouldn't choose the cola type
 
                 if not hasattr(option_group, 'rely_on') or (hasattr(option_group, 'rely_on') and _is_choosed(
