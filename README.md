@@ -1,4 +1,5 @@
 # Introduction
+[![Build Status](https://travis-ci.org/ahmedemad3965/Koshkie-Server)](https://travis-ci.org/ahmedemad3965/Koshkie-Server)
 This is a RESTful API for a system called **Koshkie**.
 Koshkie is a food, groceries and medicines delivery app.
 The API is designed using Django and Postgres database.
